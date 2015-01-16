@@ -12,7 +12,7 @@ Persistence handles the following general categories, each one is handled differ
    and their resource and literal properties (collectively called _facts_).
    Facts are scoped:
    1. _global_ facts, applies to all robots
-   2, _group_ facts, applies to some robots joining a specific group
+   2. _group_ facts, applies to some robots joining a specific group
    3. _instance_ facts, applies to an individual robot
    Writes to _group_ and _instance_ facts are normally also written to audit history,
    in order to provide insight who, when, and why was the fact recorded.
