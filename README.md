@@ -161,7 +161,7 @@ If `replyTo` is given, will reply will a `Fact` summary:
   "id": "id_1xidad2_1xk_uv85ns", 
   "subject": {
     "@type": "SemanticEntity",
-    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie"
+    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie",
     "rdfs:label": "Bacharuddin Jusuf Habibie",
     "skos:prefLabel": "Bacharuddin Jusuf Habibie"
   },
