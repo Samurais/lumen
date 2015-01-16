@@ -95,14 +95,20 @@ TODO.
 
 #### /queue/lumen.AGENT_ID.persistence.fact
 
+##### Ask with Single Answer
+
 Ask and require a single `Fact` answer: (`replyTo` required)
 
 ```json
 {
   "@type": "Question",
   "multipleAnswers": false,
-  "subject": "http://mpii.mpg.de/yago#B.J._Habibie",
-  "property": "wasBornOnDate"
+  "subject": {
+    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie"
+  },
+  "property": {
+    "@id": "http://yago-knowledge.org/resource/wasBornOnDate"
+  }
 }
 ```
 
@@ -112,9 +118,61 @@ Reply:
 {
   "@type": "Fact",
   "id": "id_1xidad2_1xk_uv85ns", 
-  "subject": "http://mpii.mpg.de/yago#B.J._Habibie",
-  "property": "wasBornOnDate",
-  "wasBornOnDate": "1936-06-25"
+  "subject": {
+    "@type": "SemanticEntity",
+    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie"
+    "rdfs:label": "Bacharuddin Jusuf Habibie",
+    "skos:prefLabel": "Bacharuddin Jusuf Habibie"
+  },
+  "property": {
+    "@type": "SemanticProperty",
+    "@id": "http://yago-knowledge.org/resource/wasBornOnDate",
+  },
+  "object": {
+    "@type": "LocalDate",
+    "value": "1936-06-25"
+  }
+}
+```
+
+##### Assert A Fact
+
+```json
+{
+  "@type": "Fact",
+  "subject": {
+    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie"
+  },
+  "property": {
+    "@id": "http://yago-knowledge.org/resource/wasBornOnDate",
+  },
+  "object": {
+    "@type": "LocalDate",
+    "value": "1936-06-25"
+  }
+}
+```
+
+If `replyTo` is given, will reply will a `Fact` summary:
+
+```json
+{
+  "@type": "Fact",
+  "id": "id_1xidad2_1xk_uv85ns", 
+  "subject": {
+    "@type": "SemanticEntity",
+    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie"
+    "rdfs:label": "Bacharuddin Jusuf Habibie",
+    "skos:prefLabel": "Bacharuddin Jusuf Habibie"
+  },
+  "property": {
+    "@type": "SemanticProperty",
+    "@id": "http://yago-knowledge.org/resource/wasBornOnDate",
+  },
+  "object": {
+    "@type": "LocalDate",
+    "value": "1936-06-25"
+  }
 }
 ```
 
@@ -123,3 +181,6 @@ Reply:
 TODO.
 
 Stored in Neo4j. Mimics [OpenCog AtomSpace Nodes and Links](http://wiki.opencog.org/w/AtomSpace).
+
+It may be useful to reuse [Suggested Upper Merged Ontology (SUMO)](http://www.adampease.org/OP/)'s
+_axiomatic knowledge_, which can be integrated with YAGO, see [YAGO-SUMO](http://people.mpi-inf.mpg.de/~gdemelo/yagosumo/).
