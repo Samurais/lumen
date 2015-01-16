@@ -36,46 +36,87 @@ Fact persistence also have quick graph traversal performance, because backed by 
 
 For person B.J. Habibie (taken from https://gate.d5.mpi-inf.mpg.de/webyago3spotlx/Browser?entity=%3CB._J._Habibie%3E):
 
-| ID                     | Subject        | Property      | Object                            | Time       | Location  | Keywords                      |
-|------------------------|----------------|---------------|-----------------------------------|------------|-----------|-------------------------------|
-| id_1xidad2_1xk_uv85ns  | <B.J._Habibie> | wasBornOnDate | 1936-06-25                        | 1936-06-25 | Pare-pare | Hasri Ainun Besari, Gorontalo |
-|                        | <B.J._Habibie> | label         | "Bacharuddin Jusuf Habibie"@ind   |            |           |                               |
-| id_1xidad2_1sz_1iw0bpy | <B.J._Habibie> | prefLabel     | "B.J. Habibie"@eng                |            |           |                               |
-| id_1xidad2_10x_1m2huro | <B.J._Habibie> | graduatedFrom | <Bandung_Institute_of_Technology> |            | Bandung   |                               |
-| id_1xidad2_16x_n6kx1s  | <B.J._Habibie> | isMarriedTo   | <Hasri_Ainun_Habibie>             |            |           |                               |
-| id_1xidad2_p3m_zkjp59  | <B.J._Habibie> | hasGender     | male                              |            |           |                               |
+| Fact ID                | Subject             | Property      | Object                                 | Time       | Location  | Keywords                      |
+|------------------------|---------------------|---------------|----------------------------------------|------------|-----------|-------------------------------|
+| id_1xidad2_1xk_uv85ns  | <yago:B.J._Habibie> | wasBornOnDate | 1936-06-25                             | 1936-06-25 | Pare-pare | Hasri Ainun Besari, Gorontalo |
+|                        | <yago:B.J._Habibie> | label         | "Bacharuddin Jusuf Habibie"@ind        |            |           |                               |
+| id_1xidad2_1sz_1iw0bpy | <yago:B.J._Habibie> | prefLabel     | "B.J. Habibie"@eng                     |            |           |                               |
+| id_1xidad2_10x_1m2huro | <yago:B.J._Habibie> | graduatedFrom | <yago:Bandung_Institute_of_Technology> |            | Bandung   |                               |
+| id_1xidad2_16x_n6kx1s  | <yago:B.J._Habibie> | isMarriedTo   | <yago:Hasri_Ainun_Habibie>             |            |           |                               |
+| id_1xidad2_p3m_zkjp59  | <yago:B.J._Habibie> | hasGender     | male                                   |            |           |                               |
 
-### Relationship Types for Meta-Properties
+### Facts as Relationships
 
-Meta-Property Relationships connects a Fact node with its subject, time, location, or keywords.
+A simple `Fact` is direct relationship from a subject node to object node.
+A `Fact` relationship has a stable referenceable `id` (the Fact ID, usually a UUID), and may contain any number of additional
+metadata (temporal and spatial) as Neo4j properties.
 
-| No. | Yago2s Property        | Neo4j Relationship Type |
-|-----|------------------------|-------------------------|
-|   1 | rdf:type               | type                    |
-|   2 | extractionSource       | extractionSource        |
-|   3 | occursIn               | occursIn                |
-|   4 | placedIn               | placedIn                |
-|   5 | occursSince            | occursSince             |
-|   6 | occursUntil            | occursUntil             |
-|   7 | startsExistingOnDate   | startsExistingOnDate    |
-|   8 | endsExistingOnDate     | endsExistingOnDate      |
+### Future Consideration: Reified Facts
+
+Since a `Fact` is a relationship and not a node, it cannot be connected to any
+other node (perhaps another reified fact). If that is required, a `Fact` can be turned into a
+[singleton property](http://mor.nlm.nih.gov/pubs/pdf/2014-www-vn.pdf) fact or via RDF-style reification.
+
+Meta-Property Relationships connects a (singleton property) Fact node with its subject, time, location, or keywords.
+
+| No. | Yago2s Property          | Neo4j Relationship Type   |
+|-----|--------------------------|---------------------------|
+|   1 | `rdf:type`               | `type`                    |
+|   2 | `extractionSource`       | `extractionSource`        |
+|   3 | `occursIn`               | `occursIn`                |
+|   4 | `placedIn`               | `placedIn`                |
+|   5 | `occursSince`            | `occursSince`             |
+|   6 | `occursUntil`            | `occursUntil`             |
+|   7 | `startsExistingOnDate`   | `startsExistingOnDate`    |
+|   8 | `endsExistingOnDate`     | `endsExistingOnDate`      |
+
+### LiteralFact
+
+A `LiteralFact` has `type`, `value`, and `language` as Neo4j properties.
 
 ### Recognized Properties
 
 Here are the recognized properties along with Yago2s Semantic Structure Mapping to Neo4j Relationship Types.
 
-| No. | Yago2s Property        | Neo4j Relationship Type |
-|-----|------------------------|-------------------------|
-|   1 | rdfs:label             | label                   |
-|   2 | skos:prefLabel         | prefLabel               |
-|   4 | graduatedFrom          | graduatedFrom           |
-|   5 | hasGender              | hasGender               |
-|   6 | isMarriedTo            | isMarriedTo             |
-|   7 | wasBornOnDate          | wasnBornOnDate          |
+| No. | Yago2s Property          | Neo4j Relationship Type |
+|-----|--------------------------|-------------------------|
+|   1 | `rdfs:label`             | `label`                 |
+|   2 | `skos:prefLabel`         | `prefLabel`             |
+|   4 | `graduatedFrom`          | `graduatedFrom`         |
+|   5 | `hasGender`              | `hasGender`             |
+|   6 | `isMarriedTo`            | `isMarriedTo`           |
+|   7 | `wasBornOnDate`          | `wasBornOnDate`         |
 
 ### Messaging Topics & Queues
 
+#### /topic/lumen.AGENT_ID.persistence.fact
+
 TODO.
+
+#### /queue/lumen.AGENT_ID.persistence.fact
+
+Ask and require a single `Fact` answer: (`replyTo` required)
+
+```json
+{
+  "@type": "Question",
+  "multipleAnswers": false,
+  "subject": "http://mpii.mpg.de/yago#B.J._Habibie",
+  "property": "wasBornOnDate"
+}
+```
+
+Reply:
+
+```json
+{
+  "@type": "Fact",
+  "id": "id_1xidad2_1xk_uv85ns", 
+  "subject": "http://mpii.mpg.de/yago#B.J._Habibie",
+  "property": "wasBornOnDate",
+  "wasBornOnDate": "1936-06-25"
+}
+```
 
 ## Knowledge Persistence
 
