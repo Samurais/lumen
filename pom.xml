@@ -26,6 +26,46 @@
 	</organization>
 	<developers>
 		<developer>
+			<id>arysetijadi</id>
+			<name>Ary Setijadi Prihatmanto</name>
+		</developer>
+		<developer>
+			<id>Marzuki001</id>
+			<name>Marzuki Syahfirin</name>
+		</developer>
+		<developer>
+			<id>yudi_alcampari</id>
+			<name>Wahyudi</name>
+		</developer>
+		<developer>
+			<id>taufiq_nuzwir</id>
+			<name>Taufiq Nuzwir Nizar</name>
+		</developer>
+		<developer>
+			<id>budhi_yulianto</id>
+			<name>Budhi Yulianto</name>
+		</developer>
+		<developer>
+			<id>syarif</id>
+			<name>Ahmad Syarif</name>
+		</developer>
+		<developer>
+			<id>putri_nhirun</id>
+			<name>Putri Nhirun</name>
+		</developer>
+		<developer>
+			<id>setyaki</id>
+			<name>Setyaki Sholata Sya</name>
+		</developer>
+		<developer>
+			<id>iwan_awaludin</id>
+			<name>Iwan Awaludin</name>
+		</developer>
+		<developer>
+			<id>maria_shusanti</id>
+			<name>Maria Shusanti</name>
+		</developer>
+		<developer>
 			<id>ceefour</id>
 			<name>Hendy Irawan</name>
 			<url>http://www.hendyirawan.com/</url>
