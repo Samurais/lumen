@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>id.ac.itb.lumen</groupId>
-	<artifactId>id.ac.itb.lumen.persistence</artifactId>
+	<artifactId>id.ac.itb.lumen.social</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>Lumen Persistence</name>
-	<description>Persistence module for Lumen Social Robot</description>
+	<name>Lumen Social</name>
+	<description>Social network integration for Lumen</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -20,7 +20,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>id.ac.itb.lumen.persistence.LumenPersistenceApplication</start-class>
+		<start-class>id.ac.itb.lumen.social.LumenSocialApplication</start-class>
 		<java.version>1.8</java.version>
 	</properties>
 
