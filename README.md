@@ -1,4 +1,4 @@
-= Lumen Social Robot Foundation Modules
+# Lumen Social Robot Foundation Modules
 
 This repository contains foundation modules for Lumen Social Robot.
 All modules should be self-contained, i.e. an error in one module shouldn't
