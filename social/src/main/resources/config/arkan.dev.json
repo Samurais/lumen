@@ -1,0 +1,14 @@
+{
+  "id": "arkan",
+  "name": "Arkan Lumen",
+  "email": "arkan.lumen@gmail.com",
+  "facebook": {
+    "facebookProfileId": "100007930095303",
+    "facebookProfileName": "Arkan Lumen"
+  },
+  "facebookSys": {
+    "facebookAppId": "1425887797693485",
+    "facebookAppSecret": "",
+    "facebookTenantAccessToken": ""
+  }
+}
