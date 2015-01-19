@@ -150,4 +150,15 @@
 		</plugins>
 	</build>
 
+	<distributionManagement>
+		<snapshotRepository>
+			<id>soluvas-public-snapshots</id>
+			<url>http://nexus.bippo.co.id/nexus/content/repositories/soluvas-public-snapshots/</url>
+		</snapshotRepository>
+		<repository>
+			<id>soluvas-public-releases</id>
+			<url>http://nexus.bippo.co.id/nexus/content/repositories/soluvas-public-releases/</url>
+		</repository>
+	</distributionManagement>
+
 </project>

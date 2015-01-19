@@ -25,8 +25,10 @@ class AgentRepository extends AbstractCrudRepository<AgentSocialConfig, String> 
     protected final ImmutableMap<String, AgentSocialConfig> agents
 
     AgentRepository() {
+        final pattern = "file:config/agent/*.json"
+        log.info('Searching "{}" in "{}"...', pattern, System.getProperty('user.dir'))
         final mapper = new ObjectMapper()
-        final resources = new PathMatchingResourcePatternResolver(AgentRepository.classLoader).getResources("config/agent/*.json")
+        final resources = new PathMatchingResourcePatternResolver(AgentRepository.classLoader).getResources(pattern)
         agents = FluentIterable.from(Arrays.asList(resources))
             .filter({ Resource it -> !FilenameUtils.getBaseName(it.getFilename()).contains(".") } as Predicate<Resource>)
             .transform({ Resource it -> mapper.readValue(it.getURL(), AgentSocialConfig.class) } as Function<Resource, AgentSocialConfig>)
