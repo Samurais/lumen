@@ -8,6 +8,7 @@ import com.sun.javafx.collections.ImmutableObservableList
 import facebook4j.Post
 import groovy.transform.CompileStatic
 import id.ac.itb.lumen.core.Channel
+import id.ac.itb.lumen.core.ImageObject
 import id.ac.itb.lumen.core.Person
 import id.ac.itb.lumen.core.SocialChannel
 import id.ac.itb.lumen.core.StatusUpdate
@@ -214,9 +215,13 @@ Body: {
                       final fbPost = it.in.body as Post
                       final statusUpdate = new StatusUpdate()
                       statusUpdate.thingId = fbPost.id
+                      statusUpdate.url = 'https://www.facebook.com/' + fbPost.id
                       statusUpdate.from = new Person()
                       statusUpdate.from.thingId = fbPost.from.id
                       statusUpdate.from.name = fbPost.from.name
+                      statusUpdate.from.url = 'https://www.facebook.com/' + fbPost.from.id
+                      statusUpdate.from.photo = new ImageObject()
+                      statusUpdate.from.photo.url = 'https://graph.facebook.com/' + fbPost.from.id + '/picture'
                       statusUpdate.message = fbPost.message != null ? fbPost.message : fbPost.story
                       statusUpdate.dateCreated = new DateTime(fbPost.createdTime)
                       statusUpdate.datePublished = new DateTime(fbPost.createdTime)
