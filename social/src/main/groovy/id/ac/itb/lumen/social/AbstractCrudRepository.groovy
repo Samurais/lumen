@@ -5,7 +5,7 @@ import org.springframework.data.repository.CrudRepository
 /**
  * Created by ceefour on 1/19/15.
  */
-class AbstractCrudRepository<T, ID extends Serializable> implements CrudRepository<T, ID> {
+abstract class AbstractCrudRepository<T, ID extends Serializable> implements CrudRepository<T, ID> {
     @Override
     def <S extends T> S save(S entity) {
         return null

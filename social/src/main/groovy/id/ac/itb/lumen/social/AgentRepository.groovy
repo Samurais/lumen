@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository
  */
 @CompileStatic
 @Repository
-class AgentRepository implements CrudRepository<AgentSocialConfig, String> {
+class AgentRepository extends AbstractCrudRepository<AgentSocialConfig, String> {
 
     private static final Logger log = LoggerFactory.getLogger(AgentRepository.class)
     protected final ImmutableMap<String, AgentSocialConfig> agents
@@ -34,10 +34,10 @@ class AgentRepository implements CrudRepository<AgentSocialConfig, String> {
         log.info("Loaded {} agents: {}", [agents.size(), agents.keySet()] as Object[])
     }
 
-    @Override
-    def <S extends AgentSocialConfig> S save(S entity) {
-        throw new UnsupportedOperationException()
-    }
+//    @Override
+//    def <S extends AgentSocialConfig> S save(S entity) {
+//        throw new UnsupportedOperationException()
+//    }
 
     // FIXME: how to override type-safely?
 //    @Override
