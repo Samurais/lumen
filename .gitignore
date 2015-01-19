@@ -34,4 +34,4 @@ out/
 .idea_modules/
 atlassian-ide-plugin.xml
 
-social/src/main/resources/config/arkan.json
+social/src/main/resources/config/agent/arkan.json
