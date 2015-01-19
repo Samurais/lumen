@@ -9,6 +9,6 @@
   "facebookSys": {
     "facebookAppId": "1425887797693485",
     "facebookAppSecret": "",
-    "facebookTenantAccessToken": ""
+    "facebookAccessToken": ""
   }
 }
