@@ -3,8 +3,14 @@ package id.ac.itb.lumen.social
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.google.common.collect.ImmutableList
+import com.rabbitmq.client.ConnectionFactory
 import com.sun.javafx.collections.ImmutableObservableList
+import facebook4j.Post
 import groovy.transform.CompileStatic
+import id.ac.itb.lumen.core.Channel
+import id.ac.itb.lumen.core.Person
+import id.ac.itb.lumen.core.SocialChannel
+import id.ac.itb.lumen.core.StatusUpdate
 import org.apache.camel.CamelContext
 import org.apache.camel.Component
 import org.apache.camel.builder.RouteBuilder
@@ -29,6 +35,17 @@ class LumenRouteConfig {
 
     @Inject
     protected AgentRepository agentRepo
+    @Inject
+    protected ToJson toJson
+
+    @Bean
+    ConnectionFactory amqpConnFactory() {
+      final connFactory = new ConnectionFactory()
+      connFactory.host = 'localhost'
+      connFactory.username = 'guest'
+      connFactory.password = 'guest'
+      return connFactory
+    }
 
     @Bean
     def RouteBuilder facebookRouteBuilder() {
@@ -189,11 +206,28 @@ Body: {
 //                    facebookHome.configuration.setOAuthAppSecret(it.facebookSys.facebookAppSecret)
 //                    facebookHome.configuration.setOAuthAccessToken(it.facebookSys.facebookAccessToken)
 
+//                    from(facebookHome).bean(toJson).process {
+//                      log.debug('Headers: {}', it.in.headers)
+////                      log.debug('Body: {}', it.in.body)
+//                    }.to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
                     from(facebookHome).process {
-                        it.in.body = mapper.writeValueAsString(it.in.body)
-                        log.debug('Headers: {}', it.in.headers)
-                        log.debug('Body: {}', it.in.body)
-                    }.to("log:lumen." + it.id)
+                      final fbPost = it.in.body as Post
+                      final statusUpdate = new StatusUpdate()
+                      statusUpdate.thingId = fbPost.id
+                      statusUpdate.from = new Person()
+                      statusUpdate.from.thingId = fbPost.from.id
+                      statusUpdate.from.name = fbPost.from.name
+                      statusUpdate.message = fbPost.message != null ? fbPost.message : fbPost.story
+                      statusUpdate.dateCreated = new DateTime(fbPost.createdTime)
+                      statusUpdate.datePublished = new DateTime(fbPost.createdTime)
+                      statusUpdate.dateModified = fbPost.updatedTime != null ? new DateTime(fbPost.updatedTime) : null
+                      statusUpdate.channel = new SocialChannel()
+                      statusUpdate.channel.thingId = 'facebook'
+                      statusUpdate.channel.name = 'Facebook'
+                      it.in.body = statusUpdate
+                    }.bean(toJson)
+                            .to('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.SOCIAL_PERCEPTION.key(it.id))
+                            .to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
                 }
             }
         }
