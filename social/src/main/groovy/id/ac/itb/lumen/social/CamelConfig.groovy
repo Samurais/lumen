@@ -16,6 +16,7 @@ class CamelConfig {
     @Bean
     CamelContextFactoryBean camelContext() {
         final camelContextFactory = new CamelContextFactoryBean()
+        camelContextFactory.id = 'camelContext'
         camelContextFactory
     }
 
