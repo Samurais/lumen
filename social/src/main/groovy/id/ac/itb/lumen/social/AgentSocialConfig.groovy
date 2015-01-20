@@ -13,5 +13,7 @@ class AgentSocialConfig {
     String email
     FacebookSocialConfig facebook
     FacebookSysConfig facebookSys
+    TwitterSocialConfig twitter
+    TwitterSysConfig twitterSys
 
 }

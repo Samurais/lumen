@@ -10,5 +10,15 @@
     "facebookAppId": "1425887797693485",
     "facebookAppSecret": "",
     "facebookAccessToken": ""
+  },
+  "twitter": {
+    "twitterUserId": 2799195116,
+    "twitterScreenName": "ArkanLumen"
+  },
+  "twitterSys": {
+    "twitterApiKey": "",
+    "twitterApiSecret": "",
+    "twitterToken": "",
+    "twitterTokenSecret": ""
   }
 }

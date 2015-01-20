@@ -5,6 +5,9 @@ package id.ac.itb.lumen.social
  */
 class FacebookSocialConfig {
 
+    /**
+     * Can be either a numeric ID or a username.
+     */
     String facebookProfileId
     String facebookProfileName
 

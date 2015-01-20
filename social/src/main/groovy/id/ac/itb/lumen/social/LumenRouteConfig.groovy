@@ -2,6 +2,7 @@ package id.ac.itb.lumen.social
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.google.common.collect.FluentIterable
 import com.google.common.collect.ImmutableList
 import com.rabbitmq.client.ConnectionFactory
 import com.sun.javafx.collections.ImmutableObservableList
@@ -9,19 +10,24 @@ import facebook4j.Post
 import groovy.transform.CompileStatic
 import id.ac.itb.lumen.core.Channel
 import id.ac.itb.lumen.core.ImageObject
+import id.ac.itb.lumen.core.Mention
 import id.ac.itb.lumen.core.Person
+import id.ac.itb.lumen.core.PrivateMessage
 import id.ac.itb.lumen.core.SocialChannel
 import id.ac.itb.lumen.core.StatusUpdate
 import org.apache.camel.CamelContext
 import org.apache.camel.Component
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.facebook.FacebookEndpoint
+import org.apache.camel.component.twitter.TwitterEndpoint
 import org.apache.camel.spring.javaconfig.CamelConfiguration
 import org.joda.time.DateTime
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import twitter4j.DirectMessage
+import twitter4j.Status
 
 import javax.inject.Inject
 
@@ -60,7 +66,9 @@ class LumenRouteConfig {
 //                final facebook = getContext().getComponent('facebook')
 //                final facebookHome = getContext().getEndpoint('facebook://home', FacebookEndpoint.class)
                 final sometimeAgo = (new DateTime().minusDays(1).getMillis() / 1000) as long
-                agentRepo.findAll().each {
+                FluentIterable.from(agentRepo.findAll())
+                        .filter { it.facebookSys?.facebookAppSecret != null }
+                        .each {
                     final facebookHome = getContext().getEndpoint("facebook://home?consumer.delay=15000&oAuthAppId=${it.facebookSys.facebookAppId}&oAuthAppSecret=${it.facebookSys.facebookAppSecret}&oAuthAccessToken=${it.facebookSys.facebookAccessToken}&reading.since=${sometimeAgo}&reading.limit=20",
                         FacebookEndpoint.class)
 /*
@@ -247,7 +255,9 @@ Body: {
             @Override
             void configure() throws Exception {
                 final sometimeAgo = (new DateTime().minusDays(1).getMillis() / 1000) as long
-                agentRepo.findAll().each {
+                FluentIterable.from(agentRepo.findAll())
+                        .filter { it.facebookSys?.facebookAppSecret != null }
+                        .each {
                     final facebookHome = getContext().getEndpoint("facebook://feed?consumer.delay=15000&oAuthAppId=${it.facebookSys.facebookAppId}&oAuthAppSecret=${it.facebookSys.facebookAppSecret}&oAuthAccessToken=${it.facebookSys.facebookAccessToken}&reading.since=${sometimeAgo}&reading.limit=20",
                         FacebookEndpoint.class)
 
@@ -283,6 +293,135 @@ Body: {
                     }.bean(toJson)
                             .to('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.SOCIAL_PERCEPTION.key(it.id))
                             .to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
+                }
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder twitterHomeRouteBuilder() {
+        log.info('Initializing twitterHome RouteBuilder')
+        final mapper = new ObjectMapper()
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                FluentIterable.from(agentRepo.findAll())
+                        .filter { it.twitterSys?.twitterTokenSecret != null }
+                        .each {
+                    final twitterHome = getContext().getEndpoint("twitter://timeline/home?consumerKey=${it.twitterSys.twitterApiKey}&consumerSecret=${it.twitterSys.twitterApiSecret}&accessToken=${it.twitterSys.twitterToken}&accessTokenSecret=${it.twitterSys.twitterTokenSecret}",
+                            TwitterEndpoint.class)
+                    from(twitterHome)
+                            .to('log:twitter-home')
+                            .process {
+                        final twitterStatus = it.in.body as Status
+                        final statusUpdate = new StatusUpdate()
+                        statusUpdate.thingId = twitterStatus.id
+                        statusUpdate.url = 'https://twitter.com/' + twitterStatus.user.screenName + '/statuses/' + twitterStatus.id
+                        statusUpdate.from = new Person()
+                        statusUpdate.from.thingId = twitterStatus.user.id
+                        statusUpdate.from.slug = twitterStatus.user.screenName
+                        statusUpdate.from.name = twitterStatus.user.name
+                        statusUpdate.from.url = 'https://twitter.com/' + twitterStatus.user.screenName
+                        statusUpdate.from.photo = new ImageObject()
+                        statusUpdate.from.photo.url = twitterStatus.user.profileImageURLHttps
+                        statusUpdate.message = twitterStatus.text
+                        statusUpdate.dateCreated = new DateTime(twitterStatus.createdAt)
+                        statusUpdate.datePublished = new DateTime(twitterStatus.createdAt)
+                        statusUpdate.dateModified = new DateTime(twitterStatus.createdAt)
+                        statusUpdate.channel = new SocialChannel()
+                        statusUpdate.channel.thingId = 'twitter'
+                        statusUpdate.channel.name = 'Twitter'
+                        it.in.body = statusUpdate
+                    }.bean(toJson)
+                        .to('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.SOCIAL_PERCEPTION.key(it.id))
+                        .to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
+                }
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder twitterMentionsRouteBuilder() {
+        log.info('Initializing twitterMentions RouteBuilder')
+        final mapper = new ObjectMapper()
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                FluentIterable.from(agentRepo.findAll())
+                        .filter { it.twitterSys?.twitterTokenSecret != null }
+                        .each {
+                    final twitterHome = getContext().getEndpoint("twitter://timeline/mentions?type=polling&consumerKey=${it.twitterSys.twitterApiKey}&consumerSecret=${it.twitterSys.twitterApiSecret}&accessToken=${it.twitterSys.twitterToken}&accessTokenSecret=${it.twitterSys.twitterTokenSecret}",
+                            TwitterEndpoint.class)
+                    from(twitterHome)
+                            .to('log:twitter-mentions')
+                            .process {
+                        final twitterStatus = it.in.body as Status
+                        final mention = new Mention()
+                        mention.thingId = twitterStatus.id
+                        mention.url = 'https://twitter.com/' + twitterStatus.user.screenName + '/statuses/' + twitterStatus.id
+                        mention.from = new Person()
+                        mention.from.thingId = twitterStatus.user.id
+                        mention.from.slug = twitterStatus.user.screenName
+                        mention.from.name = twitterStatus.user.name
+                        mention.from.url = 'https://twitter.com/' + twitterStatus.user.screenName
+                        mention.from.photo = new ImageObject()
+                        mention.from.photo.url = twitterStatus.user.profileImageURLHttps
+                        mention.message = twitterStatus.text
+                        mention.dateCreated = new DateTime(twitterStatus.createdAt)
+                        mention.datePublished = new DateTime(twitterStatus.createdAt)
+                        mention.dateModified = new DateTime(twitterStatus.createdAt)
+                        mention.channel = new SocialChannel()
+                        mention.channel.thingId = 'twitter'
+                        mention.channel.name = 'Twitter'
+                        it.in.body = mention
+                    }.bean(toJson)
+                        .to('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.SOCIAL_PERCEPTION.key(it.id))
+                        .to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
+                }
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder twitterDirectMessageRouteBuilder() {
+        log.info('Initializing twitterDirectMessage RouteBuilder')
+        final mapper = new ObjectMapper()
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                FluentIterable.from(agentRepo.findAll())
+                        .filter { it.twitterSys?.twitterTokenSecret != null }
+                        .each {
+                    final twitterHome = getContext().getEndpoint("twitter://directmessage?type=polling&consumerKey=${it.twitterSys.twitterApiKey}&consumerSecret=${it.twitterSys.twitterApiSecret}&accessToken=${it.twitterSys.twitterToken}&accessTokenSecret=${it.twitterSys.twitterTokenSecret}",
+                            TwitterEndpoint.class)
+                    from(twitterHome)
+                            .to('log:twitter-directmessage')
+                            .process {
+                        final directMessage = it.in.body as DirectMessage
+                        final privateMessage = new PrivateMessage()
+                        privateMessage.thingId = directMessage.id
+//                        statusUpdate.url = 'https://twitter.com/' + twitterStatus.id
+                        privateMessage.from = new Person()
+                        privateMessage.from.thingId = directMessage.sender.id
+                        privateMessage.from.slug = directMessage.sender.screenName
+                        privateMessage.from.name = directMessage.sender.name
+                        privateMessage.from.url = 'https://twitter.com/' + directMessage.sender.screenName
+                        privateMessage.from.photo = new ImageObject()
+                        privateMessage.from.photo.url = directMessage.sender.profileImageURLHttps
+                        privateMessage.message = directMessage.text
+                        privateMessage.dateCreated = new DateTime(directMessage.createdAt)
+                        privateMessage.datePublished = new DateTime(directMessage.createdAt)
+                        privateMessage.dateModified = new DateTime(directMessage.createdAt)
+                        privateMessage.channel = new SocialChannel()
+                        privateMessage.channel.thingId = 'twitter'
+                        privateMessage.channel.name = 'Twitter'
+                        it.in.body = privateMessage
+                    }.bean(toJson)
+                        .to('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.SOCIAL_PERCEPTION.key(it.id))
+                        .to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
                 }
             }
         }
