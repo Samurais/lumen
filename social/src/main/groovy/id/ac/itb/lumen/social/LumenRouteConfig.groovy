@@ -48,9 +48,9 @@ class LumenRouteConfig {
       return connFactory
     }
 
-    @Bean
-    def RouteBuilder facebookRouteBuilder() {
-        log.info('Initializing facebookRouteBuilder')
+    //@Bean
+    def RouteBuilder facebookHomeRouteBuilder() {
+        log.info('Initializing facebookHome RouteBuilder')
         final mapper = new ObjectMapper()
         mapper.enable(SerializationFeature.INDENT_OUTPUT)
         new RouteBuilder() {
@@ -59,7 +59,7 @@ class LumenRouteConfig {
 //                from("timer:1").to("log:timer")
 //                final facebook = getContext().getComponent('facebook')
 //                final facebookHome = getContext().getEndpoint('facebook://home', FacebookEndpoint.class)
-                final sometimeAgo = new DateTime().minusDays(1)
+                final sometimeAgo = (new DateTime().minusDays(1).getMillis() / 1000) as long
                 agentRepo.findAll().each {
                     final facebookHome = getContext().getEndpoint("facebook://home?consumer.delay=15000&oAuthAppId=${it.facebookSys.facebookAppId}&oAuthAppSecret=${it.facebookSys.facebookAppSecret}&oAuthAccessToken=${it.facebookSys.facebookAccessToken}&reading.since=${sometimeAgo}&reading.limit=20",
                         FacebookEndpoint.class)
@@ -200,6 +200,76 @@ Body: {
   "updatedTime" : 1421629664000
 }
 */
+
+                    // TODO: depends on https://issues.apache.org/jira/browse/CAMEL-8257
+//                    final facebookHome = getContext().getEndpoint("facebook://home", FacebookEndpoint.class)
+//                    facebookHome.configuration.setOAuthAppId(it.facebookSys.facebookAppId)
+//                    facebookHome.configuration.setOAuthAppSecret(it.facebookSys.facebookAppSecret)
+//                    facebookHome.configuration.setOAuthAccessToken(it.facebookSys.facebookAccessToken)
+
+//                    from(facebookHome).bean(toJson).process {
+//                      log.debug('Headers: {}', it.in.headers)
+////                      log.debug('Body: {}', it.in.body)
+//                    }.to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
+                    from(facebookHome).process {
+                      final fbPost = it.in.body as Post
+                      final statusUpdate = new StatusUpdate()
+                      statusUpdate.thingId = fbPost.id
+                      statusUpdate.url = 'https://www.facebook.com/' + fbPost.id
+                      statusUpdate.from = new Person()
+                      statusUpdate.from.thingId = fbPost.from.id
+                      statusUpdate.from.name = fbPost.from.name
+                      statusUpdate.from.url = 'https://www.facebook.com/' + fbPost.from.id
+                      statusUpdate.from.photo = new ImageObject()
+                      statusUpdate.from.photo.url = 'https://graph.facebook.com/' + fbPost.from.id + '/picture'
+                      statusUpdate.message = fbPost.message != null ? fbPost.message : fbPost.story
+                      statusUpdate.dateCreated = new DateTime(fbPost.createdTime)
+                      statusUpdate.datePublished = new DateTime(fbPost.createdTime)
+                      statusUpdate.dateModified = fbPost.updatedTime != null ? new DateTime(fbPost.updatedTime) : null
+                      statusUpdate.channel = new SocialChannel()
+                      statusUpdate.channel.thingId = 'facebook'
+                      statusUpdate.channel.name = 'Facebook'
+                      it.in.body = statusUpdate
+                    }.bean(toJson)
+                            .to('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.SOCIAL_PERCEPTION.key(it.id))
+                            .to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
+                }
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder facebookFeedRouteBuilder() {
+        log.info('Initializing facebookFeed RouteBuilder')
+
+//        final String authUser = "hendyirawan";
+//        final String authPassword = "password";
+//        Authenticator.setDefault(
+//                new Authenticator() {
+//                    public PasswordAuthentication getPasswordAuthentication() {
+//                        return new PasswordAuthentication(
+//                                authUser, authPassword.toCharArray());
+//                    }
+//                }
+//        );
+//        System.setProperty("http.proxyHost", 'cache.itb.ac.id');
+//        System.setProperty("http.proxyPort", '8080');
+//        System.setProperty("http.proxyUser", authUser);
+//        System.setProperty("http.proxyPassword", authPassword);
+//        System.setProperty("https.proxyHost", 'cache.itb.ac.id');
+//        System.setProperty("https.proxyPort", '8080');
+//        System.setProperty("https.proxyUser", authUser);
+//        System.setProperty("https.proxyPassword", authPassword);
+
+        final mapper = new ObjectMapper()
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                final sometimeAgo = (new DateTime().minusDays(1).getMillis() / 1000) as long
+                agentRepo.findAll().each {
+                    final facebookHome = getContext().getEndpoint("facebook://feed?consumer.delay=15000&oAuthAppId=${it.facebookSys.facebookAppId}&oAuthAppSecret=${it.facebookSys.facebookAppSecret}&oAuthAccessToken=${it.facebookSys.facebookAccessToken}&reading.since=${sometimeAgo}&reading.limit=20",
+                        FacebookEndpoint.class)
 
                     // TODO: depends on https://issues.apache.org/jira/browse/CAMEL-8257
 //                    final facebookHome = getContext().getEndpoint("facebook://home", FacebookEndpoint.class)
