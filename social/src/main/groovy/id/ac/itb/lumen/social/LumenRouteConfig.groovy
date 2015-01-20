@@ -241,26 +241,6 @@ Body: {
     @Bean
     def RouteBuilder facebookFeedRouteBuilder() {
         log.info('Initializing facebookFeed RouteBuilder')
-
-//        final String authUser = "hendyirawan";
-//        final String authPassword = "password";
-//        Authenticator.setDefault(
-//                new Authenticator() {
-//                    public PasswordAuthentication getPasswordAuthentication() {
-//                        return new PasswordAuthentication(
-//                                authUser, authPassword.toCharArray());
-//                    }
-//                }
-//        );
-//        System.setProperty("http.proxyHost", 'cache.itb.ac.id');
-//        System.setProperty("http.proxyPort", '8080');
-//        System.setProperty("http.proxyUser", authUser);
-//        System.setProperty("http.proxyPassword", authPassword);
-//        System.setProperty("https.proxyHost", 'cache.itb.ac.id');
-//        System.setProperty("https.proxyPort", '8080');
-//        System.setProperty("https.proxyUser", authUser);
-//        System.setProperty("https.proxyPassword", authPassword);
-
         final mapper = new ObjectMapper()
         mapper.enable(SerializationFeature.INDENT_OUTPUT)
         new RouteBuilder() {
