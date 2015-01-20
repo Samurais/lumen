@@ -299,6 +299,42 @@ Body: {
     }
 
     @Bean
+    def RouteBuilder expressionRouteBuilder() {
+        log.info('Initializing expression RouteBuilder')
+        final mapper = new ObjectMapper()
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                FluentIterable.from(agentRepo.findAll())
+                        .each {
+                    final facebookFeed = "facebook://postStatusMessage?oAuthAppId=${it.facebookSys?.facebookAppId}&oAuthAppSecret=${it.facebookSys?.facebookAppSecret}&oAuthAccessToken=${it.facebookSys?.facebookAccessToken}"
+                    final twitterTimelineUser = "twitter://timeline/user?consumerKey=${it.twitterSys?.twitterApiKey}&consumerSecret=${it.twitterSys?.twitterApiSecret}&accessToken=${it.twitterSys?.twitterToken}&accessTokenSecret=${it.twitterSys?.twitterTokenSecret}"
+                    from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.SOCIAL_EXPRESSION.key(it.id))
+                        .to('log:social-expression')
+                        .process {
+                        final statusUpdate = toJson.mapper.readValue(it.in.body as byte[], StatusUpdate)
+                        switch (statusUpdate.channel.thingId) {
+                            case 'facebook':
+                                it.in.headers['network.id'] = 'facebook'
+                                it.in.headers['CamelFacebook.message'] = statusUpdate.message
+                                it.in.body = null
+                                break
+                            case 'twitter':
+                                it.in.headers['network.id'] = 'twitter'
+                                it.in.body = statusUpdate.message
+                                break
+                        }
+                    }.choice()
+                            .when(header('network.id').isEqualTo('facebook')).to(facebookFeed).to('log:facebook-postStatusMessage')
+                            .when(header('network.id').isEqualTo('twitter')).to(twitterTimelineUser).to('log:twitter-timeline-user')
+                            .otherwise().to('log:expression-unknown')
+                }
+            }
+        }
+    }
+
+    @Bean
     def RouteBuilder twitterHomeRouteBuilder() {
         log.info('Initializing twitterHome RouteBuilder')
         final mapper = new ObjectMapper()
@@ -395,7 +431,7 @@ Body: {
                 FluentIterable.from(agentRepo.findAll())
                         .filter { it.twitterSys?.twitterTokenSecret != null }
                         .each {
-                    final twitterHome = getContext().getEndpoint("twitter://directmessage?type=polling&consumerKey=${it.twitterSys.twitterApiKey}&consumerSecret=${it.twitterSys.twitterApiSecret}&accessToken=${it.twitterSys.twitterToken}&accessTokenSecret=${it.twitterSys.twitterTokenSecret}",
+                    final twitterHome = getContext().getEndpoint("twitter://directmessage?type=polling&delay=60&consumerKey=${it.twitterSys.twitterApiKey}&consumerSecret=${it.twitterSys.twitterApiSecret}&accessToken=${it.twitterSys.twitterToken}&accessTokenSecret=${it.twitterSys.twitterTokenSecret}",
                             TwitterEndpoint.class)
                     from(twitterHome)
                             .to('log:twitter-directmessage')

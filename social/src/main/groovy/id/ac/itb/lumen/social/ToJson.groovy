@@ -15,18 +15,22 @@ import java.util.function.Function
 @Service
 class ToJson implements Function<Object, String> {
 
-    protected ObjectMapper om
+    protected ObjectMapper mapper
 
     ToJson() {
-        om = new ObjectMapper()
-        om.registerModule(new JodaModule())
-        om.registerModule(new GuavaModule())
-        om.enable(SerializationFeature.INDENT_OUTPUT)
-        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        mapper = new ObjectMapper()
+        mapper.registerModule(new JodaModule())
+        mapper.registerModule(new GuavaModule())
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     }
 
     @Override
     String apply(@Body Object o) {
-        return o != null ? om.writeValueAsString(o) : null
+        return o != null ? mapper.writeValueAsString(o) : null
+    }
+
+    ObjectMapper getMapper() {
+        return mapper
     }
 }
