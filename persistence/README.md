@@ -45,6 +45,41 @@ For person B.J. Habibie (taken from https://gate.d5.mpi-inf.mpg.de/webyago3spotl
 | id_1xidad2_16x_n6kx1s  | <yago:B.J._Habibie> | isMarriedTo   | <yago:Hasri_Ainun_Habibie>             |            |           |                               |
 | id_1xidad2_p3m_zkjp59  | <yago:B.J._Habibie> | hasGender     | male                                   |            |           |                               |
 
+### Sample Data
+
+    CREATE (person:Class {uri: 'http://yago-knowledge.org/resource/Person', label: 'Person'})
+    CREATE (city:Class {uri: 'http://yago-knowledge.org/resource/City', label: 'City'})
+    CREATE (Budhi_Yulianto:Person {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/Budhi_Yulianto', label: 'Budhi Yulianto'})
+    CREATE (Budhi_Yulianto_label:String {value: 'Budhi Yulianto', language: 'ind'})
+    CREATE (Bandung:City {uri: 'http://yago-knowledge.org/resource/Bandung', label: 'Bandung'})
+    CREATE (Bandung_label:String {value: 'Bandung', language: 'ind'})
+    CREATE (Bandung_label2:String {value: 'Parijs van Java', language: 'ind'})
+    
+    CREATE (Budhi_Yulianto) -[:instanceOf]-> (Person)
+    CREATE (Budhi_Yulianto) -[:label]-> (Budhi_Yulianto_label)
+    CREATE (Bandung) -[:instanceOf]-> (City)
+    CREATE (Bandung) -[:label]-> (Bandung_label)
+    CREATE (Bandung) -[:label]-> (Bandung_label2)
+    CREATE (Budhi_Yulianto) -[:wasBornIn]-> (Bandung)
+    
+    RETURN Budhi_Yulianto
+
+### To Delete All
+    
+    /* to delete all
+    MATCH (a)-[r]-(b) DELETE r
+    MATCH n DELETE n
+    */
+
+### Sample to Create from Existing Nodes
+    
+    /* sample to create from existing nodes
+    MATCH Person WHERE Person.uri = 'http://yago-knowledge.org/resource/Person'
+    MATCH Budhi_Yulianto WHERE Budhi_Yulianto.uri = 'http://lumen.lskk.ee.itb.ac.id/resource/Budhi_Yulianto'
+    CREATE (Budhi_Yulianto)-[:instanceOf]->(Person) 
+    RETURN Budhi_Yulianto
+    */
+
 ### Facts as Relationships
 
 A simple `Fact` is direct relationship from a subject node to object node.
