@@ -15,7 +15,8 @@ import groovy.transform.CompileStatic
 @JsonSubTypes(@JsonSubTypes.Type(name="FindAllQuery", value=FindAllQuery.class))
 class FindAllQuery {
     /**
-     * Classname of the entities to be queried.
+     * Class URI of the entities to be queried, for example
+     * {@code http://yago-knowledge.org/resource/wordnet_person_100007846}
      */
-    String className
+    String classUri
 }

@@ -31,6 +31,7 @@ class LumenPersistenceApplication implements CommandLineRunner {
         person = personRepo.save(person)
         final people = ImmutableList.copyOf(personRepo.findAll())
         log.info('People: {}', people)
+        Thread.currentThread().join()
     }
 
     static void main(String[] args) {
