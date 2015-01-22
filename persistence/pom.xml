@@ -26,6 +26,12 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>id.ac.itb.lumen</groupId>
+			<artifactId>id.ac.itb.lumen.core</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-neo4j</artifactId>
 			<version>3.2.1.RELEASE</version>
