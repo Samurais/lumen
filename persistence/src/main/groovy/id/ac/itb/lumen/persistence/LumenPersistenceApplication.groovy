@@ -22,7 +22,7 @@ import javax.inject.Inject
 class LumenPersistenceApplication implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(LumenPersistenceApplication)
-    static final LUMEN_NAMESPACE = 'http://lumen.lskk.ee.itb.ac.id/resource/'
+    static final String LUMEN_NAMESPACE = 'http://lumen.lskk.ee.itb.ac.id/resource/'
     
     @Inject
     protected PersonRepository personRepo
@@ -36,7 +36,6 @@ class LumenPersistenceApplication implements CommandLineRunner {
         person = personRepo.save(person)
         final people = ImmutableList.copyOf(personRepo.findAll())
         log.info('People: {}', people)
-        Thread.currentThread().join()
     }
 
     static void main(String[] args) {

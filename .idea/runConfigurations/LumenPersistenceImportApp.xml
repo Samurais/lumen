@@ -7,8 +7,8 @@
       </pattern>
     </extension>
     <option name="MAIN_CLASS_NAME" value="id.ac.itb.lumen.persistence.LumenPersistenceImportApp" />
-    <option name="VM_PARAMETERS" value="" />
-    <option name="PROGRAM_PARAMETERS" value="" />
+    <option name="VM_PARAMETERS" value="-Xmx4g" />
+    <option name="PROGRAM_PARAMETERS" value="/together/yago2s" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
     <option name="ALTERNATIVE_JRE_PATH" value="" />

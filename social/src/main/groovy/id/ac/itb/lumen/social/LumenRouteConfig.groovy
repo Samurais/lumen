@@ -233,7 +233,7 @@ Body: {
                       statusUpdate.message = fbPost.message != null ? fbPost.message : fbPost.story
                       statusUpdate.dateCreated = new DateTime(fbPost.createdTime)
                       statusUpdate.datePublished = new DateTime(fbPost.createdTime)
-                      statusUpdate.dateModified = fbPost.updatedTime != null ? new DateTime(fbPost.updatedTime) : null
+                      statusUpdate.dateModified = fbPost.updatedTime != null ? new DateTime(fbPost.updatedTime) : null as DateTime
                       statusUpdate.channel = new SocialChannel()
                       statusUpdate.channel.thingId = 'facebook'
                       statusUpdate.channel.name = 'Facebook'
@@ -285,7 +285,7 @@ Body: {
                       statusUpdate.message = fbPost.message != null ? fbPost.message : fbPost.story
                       statusUpdate.dateCreated = new DateTime(fbPost.createdTime)
                       statusUpdate.datePublished = new DateTime(fbPost.createdTime)
-                      statusUpdate.dateModified = fbPost.updatedTime != null ? new DateTime(fbPost.updatedTime) : null
+                      statusUpdate.dateModified = fbPost.updatedTime != null ? new DateTime(fbPost.updatedTime) : null as DateTime
                       statusUpdate.channel = new SocialChannel()
                       statusUpdate.channel.thingId = 'facebook'
                       statusUpdate.channel.name = 'Facebook'

@@ -45,7 +45,16 @@ For person B.J. Habibie (taken from https://gate.d5.mpi-inf.mpg.de/webyago3spotl
 | id_1xidad2_16x_n6kx1s  | <yago:B.J._Habibie> | isMarriedTo   | <yago:Hasri_Ainun_Habibie>             |            |           |                               |
 | id_1xidad2_p3m_zkjp59  | <yago:B.J._Habibie> | hasGender     | male                                   |            |           |                               |
 
-### Sample Data
+### Sample Data (new)
+
+    MERGE (subj:Entity {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/Budhi_Yulianto'})
+    ON CREATE SET subj.qName = 'lumen:Budhi_Yulianto'
+    MERGE (obj:Entity {uri: 'http://yago-knowledge.org/resource/Bandung'})
+    ON CREATE SET obj.qName = 'yago:Bandung'
+    MERGE (subj) -[:wasBornIn {factId: '123'}]-> (obj)
+    RETURN subj
+
+### Sample Data (old)
 
     CREATE (wordnet_person_100007846:Class {uri: 'http://yago-knowledge.org/resource/wordnet_person_100007846', label: 'person'})
     CREATE (wordnet_city_108524735:Class {uri: 'http://yago-knowledge.org/resource/wordnet_city_108524735', label: 'city'})
@@ -219,3 +228,25 @@ Stored in Neo4j. Mimics [OpenCog AtomSpace Nodes and Links](http://wiki.opencog.
 
 It may be useful to reuse [Suggested Upper Merged Ontology (SUMO)](http://www.adampease.org/OP/)'s
 _axiomatic knowledge_, which can be integrated with YAGO, see [YAGO-SUMO](http://people.mpi-inf.mpg.de/~gdemelo/yagosumo/).
+
+## Neo4j Browser
+
+It's nice to be able to use Neo4j Browser for the data, but you can't run both
+Lumen Persistence and Neo4j Server at the same time.
+
+    cp -va /var/lib/neo4j ~/neo4j-lumen
+    rm -rv ~/neo4j-lumen/data
+    mkdir -v ~/neo4j-lumen/data
+    rm -v ~/neo4j-lumen/conf
+    mkdir -v ~/neo4j-lumen/conf
+    sudo cp -v /etc/neo4j/* ~/neo4j-lumen/conf/
+    sudo chown -Rc ceefour:ceefour ~/neo4j-lumen
+
+Edit `~/neo4j-lumen/conf/neo4j-server.properties`:
+
+    org.neo4j.server.database.location=/home/ceefour/lumen_lumen_dev/neo4j/graph.db
+
+Then run:
+
+    sudo service neo4j-service stop
+    ~/neo4j-lumen/bin/neo4j console
