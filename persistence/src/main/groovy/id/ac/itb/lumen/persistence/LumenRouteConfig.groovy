@@ -1,5 +1,6 @@
 package id.ac.itb.lumen.persistence
 
+import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.rabbitmq.client.ConnectionFactory
 import groovy.transform.CompileStatic
@@ -48,7 +49,7 @@ class LumenRouteConfig {
             @Override
             void configure() throws Exception {
                 from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.PERSISTENCE_FACT.key('arkan'))
-                        .to('log:persistence-fact')
+                        .to('log:IN.persistence-fact?showHeaders=true&showAll=true&multiline=true')
                         .process {
                     final findAllQuery = toJson.mapper.readValue(it.in.body as byte[], FindAllQuery)
                     switch (findAllQuery.classUri) {
@@ -58,17 +59,18 @@ class LumenRouteConfig {
                             }
                             log.info('People: {}', people)
                             final resources = new Resources<>(people)
-                            it.in.body = resources
-//                            it.in.headers['rabbitmq.ROUTING_KEY'] = it.in.headers['reply-to']
-                            it.in.headers['rabbitmq.ROUTING_KEY'] = 'lumen.arkan.persistence.replyfact'
+                            it.out.body = resources
+                            it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
+                                    '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
+                            it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
                             break
                         default:
                             throw new IllegalArgumentException("unknown class URI: ${findAllQuery.classUri}")
                     }
                 }.bean(toJson)
-                    .to('log:persistence-fact')
-//                    .to('rabbitmq://localhost/amq.direct?connectionFactory=#amqpConnFactory&autoDelete=false')
-                    .to('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false')
+                    // https://issues.apache.org/jira/browse/CAMEL-8270
+                    .to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
+                    .to('log:OUT.persistence-fact?showAll=true&multiline=true')
             }
         }
     }
