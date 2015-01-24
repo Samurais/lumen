@@ -286,6 +286,8 @@ For more info, see (Neo4j Linux Performance Guide](http://neo4j.com/docs/stable/
 This normally should not be required, and only used when database needs to be refreshed or there's a new Yago
 version.
 
+**Important:** Before importing, make sure to tweak Linux kernel `vm.*` options above!
+
 1. Index Labels -> 426 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON)
 2. Import Labels -> 1.5 GiB Initial Neo4j database (including href constraint, Resource indexes, and Label.v indexes) using BatchInserter
     Run once: `neo4j-shell ~/lumen_lumen_dev/neo4j/graph.db` to "fix incorrect shutdown"
