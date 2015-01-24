@@ -60,7 +60,7 @@ class LumenPersistenceIndexLabelsApp implements CommandLineRunner {
         log.info('Indexing node labels of {} ({} KiB) to {} ...', file, NUMBER.format((file.length() / 1024) as long), outFile)
         long importeds = 0
         long readCount = 0
-        new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))
+        new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8), 1024 * 1024)
                 .withReader { Reader buf ->
             final csv = new CSVReader(buf, '\t' as char, CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)
             csv.withCloseable {

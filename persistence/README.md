@@ -148,7 +148,7 @@ Ask and require a single `Fact` answer: (`replyTo` required)
   "@type": "Question",
   "multipleAnswers": false,
   "subject": {
-    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie"
+    "@id": "http://yago-knowledge.org/resource/B.J._Habibie"
   },
   "property": {
     "@id": "http://yago-knowledge.org/resource/wasBornOnDate"
@@ -164,7 +164,7 @@ Reply:
   "id": "id_1xidad2_1xk_uv85ns", 
   "subject": {
     "@type": "SemanticEntity",
-    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie",
+    "@id": "http://yago-knowledge.org/resource/B.J._Habibie",
     "rdfs:label": "Bacharuddin Jusuf Habibie",
     "skos:prefLabel": "Bacharuddin Jusuf Habibie"
   },
@@ -185,7 +185,7 @@ Reply:
 {
   "@type": "Fact",
   "subject": {
-    "@id": "http://yago-knowledge.org/resource/#B.J._Habibie"
+    "@id": "http://yago-knowledge.org/resource/B.J._Habibie"
   },
   "property": {
     "@id": "http://yago-knowledge.org/resource/wasBornOnDate",
@@ -288,11 +288,15 @@ version.
 
 **Important:** Before importing, make sure to tweak Linux kernel `vm.*` options above!
 
-1. Index Labels -> 426 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON)
+1. Index Labels -> 426 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON). ~2 mins on SSD
+    TODO: this needs to index *all* labels across all files, not just `yagoLabels.tsv`, so next importers
+    don't need to check for label properties
 2. Import Labels -> 1.5 GiB Initial Neo4j database (including href constraint, Resource indexes, and Label.v indexes) using BatchInserter
+    ~5 mins on SSD
     Run once: `neo4j-shell ~/lumen_lumen_dev/neo4j/graph.db` to "fix incorrect shutdown"
 3. Next steps are to import other files, recommended to be in order.
     Import `yagoLabels.tsv` (3 special label properties will be ignored, it will only import regular labels like `hasFamilyName` etc.)
+    ~4 hours on HDD (SSD crashed on me).
 4. Import `yagoLiteralFacts.tsv` # test first, but move after types & taxonomy when done
 5. Import `yagoImportantTypes.tsv`
 6. Import `yagoSimpleTypes.tsv`
