@@ -250,3 +250,42 @@ Then run:
 
     sudo service neo4j-service stop
     ~/neo4j-lumen/bin/neo4j console
+
+## Tuning Performance
+
+During import and also for production server, you need to tweak user limit.
+
+Create `/etc/security/limits.d/neo4j.conf` :
+
+    neo4j   soft    nofile  40000
+    neo4j   hard    nofile  40000
+    ceefour soft    nofile  40000
+    ceefour hard    nofile  40000
+
+Edit `/etc/pam.d/su` and uncomment:
+
+    session    required   pam_limits.so
+
+Then restart your computer.
+
+Now `ulimit -n` should show `40000`.
+
+During import, maximize the RAM before writing disk:
+
+    # Ubuntu's default: vm.dirty_background_ratio = 5 vm.dirty_ratio = 10
+    sysctl vm.dirty_background_ratio vm.dirty_ratio
+    # Set new values
+    sudo sysctl vm.dirty_background_ratio=50 vm.dirty_ratio=80
+
+Your heap (`-Xmx`) should be large, i.e. 75% of RAM.
+
+For more info, see (Neo4j Linux Performance Guide](http://neo4j.com/docs/stable/linux-performance-guide.html).
+
+## Steps to Import from Yago
+
+This normally should not be required, and only used when database needs to be refreshed or there's a new Yago
+version.
+
+1. Index Labels -> 426 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON)
+2. Import Labels -> 1.5 GiB Initial Neo4j database (including href constraint, Resource indexes, and Label.v indexes) using BatchInserter
+    Run once: `neo4j-shell ~/lumen_lumen_dev/neo4j/graph.db` to "fix incorrect shutdown"

@@ -24,6 +24,10 @@ class Entity {
      * Make it more convenient to visualize, and only for visualization purpose (that's why it's not indexed).
      */
     String label
+    /**
+     * Make it more convenient to visualize and ad-hoc output, and only for visualization purpose (that's why it's not indexed).
+     */
+    String prefLabel
     @Labels
     Set<String> nodeLabels
 
