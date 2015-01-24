@@ -291,3 +291,17 @@ version.
 1. Index Labels -> 426 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON)
 2. Import Labels -> 1.5 GiB Initial Neo4j database (including href constraint, Resource indexes, and Label.v indexes) using BatchInserter
     Run once: `neo4j-shell ~/lumen_lumen_dev/neo4j/graph.db` to "fix incorrect shutdown"
+3. Next steps are to import other files, recommended to be in order.
+    Import `yagoLabels.tsv` (3 special label properties will be ignored, it will only import regular labels like `hasFamilyName` etc.)
+4. Import `yagoLiteralFacts.tsv` # test first, but move after types & taxonomy when done
+5. Import `yagoImportantTypes.tsv`
+6. Import `yagoSimpleTypes.tsv`
+7. Import `yagoTypes.tsv`
+8. Import `yagoTaxonomy.tsv`
+9. Import `yagoFacts.tsv`
+
+Excluded Yago files are: (note: even if excluded, these can always be queried online through official Yago website)
+
+1. `yagoWikipediaInfo.tsv` (2.3 GiB): just `linksTo` stuff, not useful
+2. `yagoSources.tsv` (6.9 Gib): relates factIds to Wikipedia URIs
+3. `yagoTransitiveType.tsv` (2.5 GiB): just the same as `yagoTypes.csv` inferred using `yagoTaxonomy.tsv`
