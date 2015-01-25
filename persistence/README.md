@@ -287,9 +287,9 @@ This normally should not be required, and only used when database needs to be re
 version.
 
 **Important:** Before importing, make sure to tweak Linux kernel `vm.*` options above!
-Mount your Neo4j DB in `tmpfs` to get ~1000 inserts/s (but still just 1 full CPU), otherwise it'll stall to ~200/s.
+Mount your Neo4j DB in `tmpfs` (4000M) to get ~1500 inserts/s (using 6 workers in 8 CPU), otherwise in HD you get ~200/s.
 
-1. Index Labels -> 426 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON). ~2 mins on SSD
+1. Index Labels -> 550 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON). ~2 mins on SSD
     TODO: this needs to index *all* labels across all files, not just `yagoLabels.tsv`, so next importers
     don't need to check for label properties
 2. Import Labels -> 1.5 GiB Initial Neo4j database (including href constraint, Resource indexes, and Label.v indexes) using BatchInserter
@@ -297,8 +297,9 @@ Mount your Neo4j DB in `tmpfs` to get ~1000 inserts/s (but still just 1 full CPU
     Run once: `neo4j-shell ~/lumen_lumen_dev/neo4j/graph.db` to "fix incorrect shutdown"
 3. Next steps are to import other files, recommended to be in order.
     Import `yagoLabels.tsv` (3 special label properties will be ignored, it will only import regular labels like `hasFamilyName` etc.)
-    ~4 hours on HDD (SSD crashed on me).
+    ~1 hour on `tmpfs`, probably ~8 hrs on HDD (SSD crashed on me). Result: 3000 MiB DB.
 4. Import `yagoLiteralFacts.tsv` # test first, but move after types & taxonomy when done
+    Source is 321 MiB, 3.353.659 statements.
 5. Import `yagoImportantTypes.tsv`
 6. Import `yagoSimpleTypes.tsv`
 7. Import `yagoTypes.tsv`

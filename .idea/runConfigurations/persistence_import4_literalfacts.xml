@@ -1,14 +1,14 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="persistence-import2-labels" type="Application" factoryName="Application" singleton="true">
+  <configuration default="false" name="persistence-import4-literalfacts" type="Application" factoryName="Application" singleton="true">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
       <pattern>
         <option name="PATTERN" value="id.ac.itb.lumen.persistence.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
-    <option name="MAIN_CLASS_NAME" value="id.ac.itb.lumen.persistence.LumenPersistenceImportLabelsApp" />
+    <option name="MAIN_CLASS_NAME" value="id.ac.itb.lumen.persistence.LumenPersistenceImportApp" />
     <option name="VM_PARAMETERS" value="-Xmx1g" />
-    <option name="PROGRAM_PARAMETERS" value="/together/yago2s" />
+    <option name="PROGRAM_PARAMETERS" value="/together/yago2s/yagoLiteralFacts.tsv" />
     <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
     <option name="ALTERNATIVE_JRE_PATH" value="" />

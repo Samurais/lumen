@@ -21,7 +21,7 @@ import java.text.NumberFormat
 
 /**
  * Import labeled resources (only) from {@code yagoLabels.jsonset}
- * Note: It uses BatchInserter, but at least -Xmx4g is recommended
+ * Note: It uses BatchInserter, perhaps at least -Xmx4g is needed, unless you also use tmpfs
  */
 @CompileStatic
 @SpringBootApplication

@@ -19,7 +19,6 @@ import javax.inject.Inject
  */
 @CompileStatic
 @Configuration
-@EnableNeo4jRepositories(basePackageClasses = Person)
 @Profile('!batchinserter')
 class Neo4jConfig {
 
@@ -34,7 +33,8 @@ class Neo4jConfig {
 
     // TODO: https://github.com/spring-projects/spring-data-neo4j/issues/227
     @Configuration
-    @Profile('!batchinserter')
+    @Profile('spring-data-neo4j')
+    @EnableNeo4jRepositories(basePackageClasses = Person)
     static class Neo4jMoreConfig extends Neo4jConfiguration {
 
         Neo4jMoreConfig() {

@@ -94,7 +94,7 @@ class LumenPersistenceIndexLabelsApp implements CommandLineRunner {
                         if ('skos:prefLabel'.equals(property)) {
                             idxRes.prefLabel = literalValue
                             importeds++
-                        } else if ('yago:isPreferredMeaningOf'.equals(property)) {
+                        } else if ('<isPreferredMeaningOf>'.equals(property)) {
                             idxRes.isPreferredMeaningOf = literalValue
                             importeds++
                         } else if ('rdfs:label'.equals(property)) {
@@ -118,7 +118,7 @@ class LumenPersistenceIndexLabelsApp implements CommandLineRunner {
         log.info('Completed indexing {} resources: {} out of {} statements from {}, writing out to {} ...',
                 NUMBER.format(resources.size()), NUMBER.format(importeds), NUMBER.format(readCount), file, outFile)
 
-        new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8))
+        new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8), 1024 * 1024)
                 .withWriter { Writer writer ->
             resources.each { href, res ->
                 res.href = href

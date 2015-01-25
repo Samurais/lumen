@@ -6,7 +6,6 @@ import com.google.common.base.Preconditions
 import com.google.common.base.Strings
 import com.google.common.collect.BiMap
 import com.google.common.collect.HashBiMap
-import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterators
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype
 import com.hp.hpl.jena.graph.Node_Literal
@@ -14,10 +13,8 @@ import com.hp.hpl.jena.sparql.util.NodeFactoryExtra
 import groovy.transform.CompileStatic
 import org.neo4j.cypher.javacompat.ExecutionEngine
 import org.neo4j.graphdb.DynamicLabel
-import org.neo4j.graphdb.DynamicRelationshipType
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.Node
-import org.neo4j.graphdb.Relationship
 import org.neo4j.graphdb.Transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -25,20 +22,20 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.annotation.Profile
-import org.springframework.transaction.annotation.EnableTransactionManagement
-import org.springframework.transaction.support.TransactionTemplate
 
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 import java.nio.charset.StandardCharsets
 import java.text.NumberFormat
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Only -Xmx1g is needed because it's assumed you'll use tmpfs
  */
 @CompileStatic
 @SpringBootApplication
-@EnableTransactionManagement
 @Profile('import')
 class LumenPersistenceImportApp implements CommandLineRunner {
 
@@ -46,14 +43,9 @@ class LumenPersistenceImportApp implements CommandLineRunner {
     static final LUMEN_NAMESPACE = 'http://lumen.lskk.ee.itb.ac.id/resource/'
     protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.ENGLISH)
     
-//    @Inject
-//    protected PlatformTransactionManager txMgr
-//    @Inject
-//    protected Neo4jTemplate neo4j
     @Inject
     protected GraphDatabaseService db
 
-    protected TransactionTemplate txTemplate
     protected ExecutionEngine exec
 
     /**
@@ -95,9 +87,9 @@ class LumenPersistenceImportApp implements CommandLineRunner {
          * Subjects and objects to MERGE, i.e. <code>MERGE (subj:Resource {href: {subjectHref}})</code>
          * where the binding is the same as href but with ':' replaced with '_'
          */
-        private BiMap<String, Integer> resourceHrefs = HashBiMap.create(1000)
-        List<ImportFact> facts = new ArrayList<>(1000)
-        List<ImportLiteral> literals = new ArrayList<>(1000)
+        private BiMap<String, Integer> resourceHrefs = HashBiMap.create(50)
+        List<ImportFact> facts = new ArrayList<>(50)
+        List<ImportLiteral> literals = new ArrayList<>(50)
         int ops = 0
 
         int addResourceHref(String resourceHref) {
@@ -165,7 +157,7 @@ class LumenPersistenceImportApp implements CommandLineRunner {
         long importeds = 0
         long lastImporteds = 0
         long readCount = 0
-        long commits = 0
+        AtomicLong commits = new AtomicLong(0l)
         def batch = new ImportBatch()
         new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8), 1024 * 1024)
                 .withReader { Reader buf ->
@@ -173,6 +165,8 @@ class LumenPersistenceImportApp implements CommandLineRunner {
             csv.withCloseable {
 //                def tx = txMgr.getTransaction(txTemplate)
                 def tx = db.beginTx()
+                // spare threads for the main thread and Neo4j's transaction-write thread
+                def executor = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors() > 2 ? Runtime.runtime.availableProcessors() - 2 : 1)
 
                 def line = csv.readNext()
                 while (line != null) {
@@ -219,14 +213,36 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                         final literal = (Node_Literal) NodeFactoryExtra.parseNode(resOrLiteral)
                         final datatypeRef = RdfUtils.abbrevDatatype(literal)
                         final literalValue
-                        // Remember, literal.literalDatatype can be null
-                        if ([XSDDatatype.XSDdate, XSDDatatype.XSDdateTime].contains(literal.literalDatatype)) {
-                            literalValue = literal.toString(null, false)
+                        // Remember, literal.literalDatatype can be null (which means it's string)
+                        if (literal.literalDatatype == null) {
+                            literalValue = literal.getLiteral().lexicalForm
+                        } else if ([XSDDatatype.XSDnonNegativeInteger, XSDDatatype.XSDbyte, XSDDatatype.XSDint, XSDDatatype.XSDinteger,
+                                XSDDatatype.XSDlong, XSDDatatype.XSDnegativeInteger, XSDDatatype.XSDnonPositiveInteger,
+                                XSDDatatype.XSDshort,
+                                XSDDatatype.XSDunsignedByte, XSDDatatype.XSDunsignedInt, XSDDatatype.XSDunsignedLong, XSDDatatype.XSDunsignedShort,
+                                XSDDatatype.XSDboolean,
+                                XSDDatatype.XSDdouble, XSDDatatype.XSDfloat, XSDDatatype].contains(literal.literalDatatype)) {
+                            literalValue = literal.literalValue
+                        } else if (XSDDatatype.XSDdecimal.equals(literal.literalDatatype)) {
+                            literalValue = literal.literalValue as Double
+                        } else if ([XSDDatatype.XSDdate, XSDDatatype.XSDdateTime, XSDDatatype.XSDtime].contains(literal.literalDatatype)) {
+                            // Esp. XSDDatatype.XSDdate, XSDDatatype.XSDdateTime, XSDDatatype.XSDtime cannot use literalValue due to
+                            // its sometimes incomplete representation
+                            literalValue = literal.getLiteral().lexicalForm
                         } else {
-                            literalValue = literal.literalValue.toString()
+                            // parse first, so we can get proper literal type for degrees, m^2, etc.
+                            try {
+                                literalValue = Long.parseLong(literal.getLiteral().lexicalForm)
+                            } catch (NumberFormatException e) {
+                                try {
+                                    literalValue = Double.parseDouble(literal.getLiteral().lexicalForm)
+                                } catch (NumberFormatException e2) {
+                                    literalValue = literal.getLiteral().lexicalForm
+                                }
+                            }
                         }
 
-                        if (['rdfs:label', 'skos:prefLabel', 'yago:isPreferredMeaningOf'].contains(property)) {
+                        if (['rdfs:label', 'skos:prefLabel', '<isPreferredMeaningOf>'].contains(property)) {
                             // to save space & speed-up import, skos:prefLabel and yago:isPreferredMeaningOf
                             // are only set as node properties but not as relationships meaning no factIds as well.
                             // Processed ONLY IF node didn't exist or node has no prefLabel.
@@ -239,17 +255,17 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                                 }
                                 if (['rdfs:label', 'skos:prefLabel'].equals(property)) {
                                     subjectNode.properties['prefLabel'] = literalValue
-                                } else if ('yago:isPreferredMeaningOf'.equals(property)) {
+                                } else if ('<isPreferredMeaningOf>'.equals(property)) {
                                     subjectNode.properties['isPreferredMeaningOf'] = literalValue
                                 }
                                 importeds++
                             } // otherwise ignored
                         } else {
                             final literalProps = [v: literalValue]
-                            if (datatypeRef != null) {
+                            if (!Strings.isNullOrEmpty(datatypeRef)) {
                                 literalProps['t'] = datatypeRef
                             }
-                            if (literal.literalLanguage != null) {
+                            if (!Strings.isNullOrEmpty(literal.literalLanguage)) {
                                 literalProps['l'] = literal.literalLanguage
                             }
 
@@ -292,26 +308,44 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                     }
 
                     readCount++
-                    if (batch.ops >= 20) {
-                        batch.exec(tx, exec)
+                    if (batch.ops >= 20) { // only 20-50 can get ~3000/s
+                        final toExec = batch
+                        executor.submit {
+                            tx = db.beginTx()
+                            try {
+                                toExec.exec(tx, exec)
+                                tx.success()
+                                commits.incrementAndGet()
+                            } finally {
+                                tx.close()
+                            }
+                        }
+//                        batch.exec(tx, exec)
+
                         batch = new ImportBatch()
                     }
 
                     if (importeds % 10000 == 0 && lastImporteds != importeds) {
-//                        txMgr.commit(tx)
-//                        tx = txMgr.getTransaction(txTemplate)
-                        tx.success()
-                        tx.close()
+                        // Need to avoid Java heap spinning out of control due to too many queue in executor
+                        log.debug('Flushing batches for {} statements...', NUMBER.format(importeds))
+                        executor.shutdown()
+                        executor.awaitTermination(1, TimeUnit.DAYS)
 
-                        tx = db.beginTx()
+//                        log.debug('Committing for {} statements...', NUMBER.format(importeds))
+//                        tx.success()
+//                        tx.close()
+//                        commits.incrementAndGet()
+
+                        // New beginning
+//                        tx = db.beginTx()
+                        executor = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors())
                         lastImporteds = importeds
-                        commits++
 
                         if (importeds % 10000 == 0) {
-                            final rate = NUMBER.format(10000f * 1000f / (System.currentTimeMillis() - lastMilestone))
+                            final rate = NUMBER.format((10000l * 1000l / (System.currentTimeMillis() - lastMilestone)) as long)
                             lastMilestone = System.currentTimeMillis()
                             log.info('{} commits so far: {} out of {} statements ({}/s) from {}',
-                                    commits, NUMBER.format(importeds), NUMBER.format(readCount), rate, file)
+                                    commits.get(), NUMBER.format(importeds), NUMBER.format(readCount), rate, file)
                         }
                     }
 
@@ -319,6 +353,9 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                 }
 
                 log.info('Finalizing batch then commit...')
+                executor.shutdown()
+                executor.awaitTermination(1, TimeUnit.DAYS)
+                executor = null
 //                txMgr.commit(tx)
                 batch.exec(tx, exec)
                 tx.success()
