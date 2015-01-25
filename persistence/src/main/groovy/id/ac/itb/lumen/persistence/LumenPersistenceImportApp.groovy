@@ -4,6 +4,9 @@ import au.com.bytecode.opencsv.CSVParser
 import au.com.bytecode.opencsv.CSVReader
 import com.google.common.base.Preconditions
 import com.google.common.base.Strings
+import com.google.common.collect.BiMap
+import com.google.common.collect.HashBiMap
+import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterators
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype
 import com.hp.hpl.jena.graph.Node_Literal
@@ -15,6 +18,7 @@ import org.neo4j.graphdb.DynamicRelationshipType
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.Node
 import org.neo4j.graphdb.Relationship
+import org.neo4j.graphdb.Transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
@@ -30,8 +34,7 @@ import java.nio.charset.StandardCharsets
 import java.text.NumberFormat
 
 /**
- * Note: GC limit exceeded may happen even during clearing Neo4j DB.
- * At least -Xmx4g is recommended
+ * Only -Xmx1g is needed because it's assumed you'll use tmpfs
  */
 @CompileStatic
 @SpringBootApplication
@@ -77,17 +80,13 @@ class LumenPersistenceImportApp implements CommandLineRunner {
         String subjectHref
         String relName
         Map<String, ?> relProps
-        String literalType
-        String literalValue
-        String literalLanguage
+        Map<String, ?> literalProps
 
-        ImportLiteral(String subjectHref, String relName, Map<String, ?> relProps, String literalType, String literalValue, String literalLanguage) {
+        ImportLiteral(String subjectHref, String relName, Map<String, ?> relProps, Map<String, ?> literalProps) {
             this.subjectHref = subjectHref
             this.relName = relName
             this.relProps = relProps
-            this.literalType = literalType
-            this.literalValue = literalValue
-            this.literalLanguage = literalLanguage
+            this.literalProps = literalProps
         }
     }
 
@@ -96,9 +95,57 @@ class LumenPersistenceImportApp implements CommandLineRunner {
          * Subjects and objects to MERGE, i.e. <code>MERGE (subj:Resource {href: {subjectHref}})</code>
          * where the binding is the same as href but with ':' replaced with '_'
          */
-        Set<String> resourceHrefs = new HashSet<>()
-        List<ImportFact> facts = new ArrayList<>()
-        List<ImportLiteral> literals = new ArrayList<>()
+        private BiMap<String, Integer> resourceHrefs = HashBiMap.create(1000)
+        List<ImportFact> facts = new ArrayList<>(1000)
+        List<ImportLiteral> literals = new ArrayList<>(1000)
+        int ops = 0
+
+        int addResourceHref(String resourceHref) {
+            final existing = resourceHrefs.get(resourceHref)
+            if (existing != null) {
+                return existing
+            } else {
+                final pos = resourceHrefs.size()
+                resourceHrefs.put(resourceHref, pos)
+                pos
+            }
+        }
+
+        void incOps() {
+            ops++
+        }
+
+        void exec(Transaction tx, ExecutionEngine exec) {
+            if (resourceHrefs.isEmpty()) {
+                log.info('Not committing empty ImportBatch')
+                return
+            }
+
+            log.trace('Merging {} resources, {} facts, and {} literals...', resourceHrefs.size(), facts.size(), literals.size())
+            def cypher = ''
+            final Map<String, Object> params = [:]
+            cypher += "// Resources: ${resourceHrefs.size()}\n"
+            resourceHrefs.each { String k, Integer v ->
+                cypher += 'MERGE (res' + v + ':Resource {href: {res' + v + 'href}})\n'
+                params['res' + v + 'href'] = k
+            }
+            cypher += '\n'
+            cypher += "// Literals: ${literals.size()}\n"
+            literals.eachWithIndex { it, idx ->
+                cypher += 'CREATE (res' + resourceHrefs[it.subjectHref] + ') -[:' + it.relName + ' {literalRel' + (idx as String) + '}]-> (:Literal {literal' + (idx as String) + '})\n'
+                params['literalRel' + (idx as String)] = it.relProps
+                params['literal' + (idx as String)] = it.literalProps
+            }
+            cypher += '\n'
+            cypher += "// Facts: ${facts.size()}\n"
+            facts.eachWithIndex { it, idx ->
+                cypher += 'CREATE (res' + resourceHrefs[it.subjectHref] + ') -[:' + it.relName + ' {factRel' + (idx as String) + '}]-> (res' + resourceHrefs[it.objectHref] + ')\n'
+                params['factRel' + (idx as String)] = it.relProps
+            }
+            log.trace('Cypher: {} » Params: {}', cypher, params)
+            exec.execute(cypher, params)
+            log.trace('Merged {} resources, {} facts, and {} literals', resourceHrefs.size(), facts.size(), literals.size())
+        }
 
     }
 
@@ -119,6 +166,7 @@ class LumenPersistenceImportApp implements CommandLineRunner {
         long lastImporteds = 0
         long readCount = 0
         long commits = 0
+        def batch = new ImportBatch()
         new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8), 1024 * 1024)
                 .withReader { Reader buf ->
             final csv = new CSVReader(buf, '\t' as char, CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)
@@ -146,20 +194,26 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                         final objectHref = 'yago:' + resOrLiteral.replaceAll('[<>]', '')
 //                        log.trace('{} -[:{}]-> {}    # {}', subjectHref, relName, objectHref, factId)
 
-                        final merge = """
-    MERGE (subj:Resource {href: {subjectHref}})
-    MERGE (obj:Resource {href: {objectHref}})
-    CREATE (subj) -[:$relName {relProps}]-> (obj)
-    """
+//                        final merge = """
+//    MERGE (subj:Resource {href: {subjectHref}})
+//    MERGE (obj:Resource {href: {objectHref}})
+//    CREATE (subj) -[:$relName {relProps}]-> (obj)
+//    """
+
 //                        final subj = neo4j.query(merge,
 //                                [subjectHref: subjectHref,
 //                                 objectHref: objectHref,
 //                                 factHref: factHref] as Map<String, Object>)
 //                        log.trace('{} -[:{}]-> {}    # {}   » {}', subjectHref, relName, objectHref, factId, subj.single())
-                        exec.execute(merge,
-                                [subjectHref: subjectHref,
-                                 objectHref: objectHref,
-                                 relProps: relProps] as Map<String, Object>)
+//                        exec.execute(merge,
+//                                [subjectHref: subjectHref,
+//                                 objectHref: objectHref,
+//                                 relProps: relProps] as Map<String, Object>)
+
+                        batch.addResourceHref(subjectHref)
+                        batch.addResourceHref(objectHref)
+                        batch.facts += new ImportFact(subjectHref, relName, relProps, objectHref)
+                        batch.incOps()
                         importeds++
                     } else { // Object is Literal
                         final literal = (Node_Literal) NodeFactoryExtra.parseNode(resOrLiteral)
@@ -206,6 +260,7 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                             final params = [subjectHref: subjectHref,
                                             relProps   : relProps,
                                             literalProps: literalProps] as Map<String, Object>
+
                             try {
                                 //                        final subj = neo4j.query(merge,
                                 //                                [subjectHref: subjectHref,
@@ -213,7 +268,7 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                                 //                                 literalLanguage: literal.literalLanguage,
                                 //                                 factHref: factHref] as Map<String, Object>)
                                 //                        log.trace('{} -[:{}]-> {}    # {}   » {}', subjectHref, relName, literal, factId, subj.single())
-                                exec.execute(merge, params)
+//                                exec.execute(merge, params)
 
 //                                Node subjectNode = Iterators.getNext(db.findNodesByLabelAndProperty(resourceLabel, 'href', subjectHref).iterator(), null)
 //                                if (subjectNode == null) {
@@ -225,6 +280,10 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
 //                                final literalRel = subjectNode.createRelationshipTo(literalNode, DynamicRelationshipType.withName(relName))
 //                                literalRel.properties.putAll(relProps)
 
+                                batch.addResourceHref(subjectHref)
+                                batch.literals += new ImportLiteral(subjectHref, relName, relProps, literalProps)
+                                batch.incOps()
+
                                 importeds++
                             } catch (Exception e) {
                                 throw new RuntimeException('Cannot execute: «' + merge + '» params: ' + params, e)
@@ -233,11 +292,17 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                     }
 
                     readCount++
+                    if (batch.ops >= 20) {
+                        batch.exec(tx, exec)
+                        batch = new ImportBatch()
+                    }
+
                     if (importeds % 10000 == 0 && lastImporteds != importeds) {
 //                        txMgr.commit(tx)
 //                        tx = txMgr.getTransaction(txTemplate)
                         tx.success()
                         tx.close()
+
                         tx = db.beginTx()
                         lastImporteds = importeds
                         commits++
@@ -252,7 +317,10 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
 
                     line = csv.readNext()
                 }
+
+                log.info('Finalizing batch then commit...')
 //                txMgr.commit(tx)
+                batch.exec(tx, exec)
                 tx.success()
                 tx.close()
                 log.info('Completed importing {} out of {} statements from {}',

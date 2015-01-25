@@ -287,6 +287,7 @@ This normally should not be required, and only used when database needs to be re
 version.
 
 **Important:** Before importing, make sure to tweak Linux kernel `vm.*` options above!
+Mount your Neo4j DB in `tmpfs` to get ~1000 inserts/s (but still just 1 full CPU), otherwise it'll stall to ~200/s.
 
 1. Index Labels -> 426 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON). ~2 mins on SSD
     TODO: this needs to index *all* labels across all files, not just `yagoLabels.tsv`, so next importers
