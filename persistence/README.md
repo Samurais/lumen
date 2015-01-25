@@ -299,7 +299,7 @@ Mount your Neo4j DB in `tmpfs` (4000M) to get ~1500 inserts/s (using 6 workers i
     Import `yagoLabels.tsv` (3 special label properties will be ignored, it will only import regular labels like `hasFamilyName` etc.)
     ~1 hour on `tmpfs`, probably ~8 hrs on HDD (SSD crashed on me). Result: 3000 MiB DB.
 4. Import `yagoLiteralFacts.tsv` # test first, but move after types & taxonomy when done
-    Source is 321 MiB, 3.353.659 statements.
+    Source is 321 MiB, 3.353.659 statements. Result is 5.034 MiB DB.
 5. Import `yagoImportantTypes.tsv`
 6. Import `yagoSimpleTypes.tsv`
 7. Import `yagoTypes.tsv`
@@ -311,3 +311,7 @@ Excluded Yago files are: (note: even if excluded, these can always be queried on
 1. `yagoWikipediaInfo.tsv` (2.3 GiB): just `linksTo` stuff, not useful
 2. `yagoSources.tsv` (6.9 Gib): relates factIds to Wikipedia URIs
 3. `yagoTransitiveType.tsv` (2.5 GiB): just the same as `yagoTypes.csv` inferred using `yagoTaxonomy.tsv`
+
+## conf/neo4j-wrapper.conf
+
+You **will** need to configure max memory to 1024, otherwise you'll get `OutOfMemoryError` with at least step 4 DB.
