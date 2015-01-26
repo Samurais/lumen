@@ -42,6 +42,18 @@ class LumenPersistenceImportApp implements CommandLineRunner {
     protected static final Logger log = LoggerFactory.getLogger(LumenPersistenceImportApp)
     static final LUMEN_NAMESPACE = 'http://lumen.lskk.ee.itb.ac.id/resource/'
     protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.ENGLISH)
+    /**
+     * For tmpfs/SSD, set multithreaded to true
+     */
+    protected static final boolean multithreaded = true
+    /**
+     * Number of import ops per batch. Should be 10-50.
+     */
+    protected static final int opRate = 20
+    /**
+     * Number of ops per transaction commit.
+     */
+    protected static final int commitRate = multithreaded ? 10000 : 100
     
     @Inject
     protected GraphDatabaseService db
@@ -319,18 +331,21 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                     if (batch.ops >= 20) { // only 20-50 can get ~3000/s
                         // SSD/tmpfs has better performance with batch+transaction per-thread,
                         // however HDD gives 19/s with that, and is better with several cyphers in a normal transaction
-                        final toExec = batch
-//                        executor.submit {
-//                            tx = db.beginTx()
-//                            try {
-//                                toExec.exec(tx, exec)
-//                                tx.success()
-//                                commits.incrementAndGet()
-//                            } finally {
-//                                tx.close()
-//                            }
-//                        }
-                        batch.exec(tx, exec)
+                        if (multithreaded) {
+                            final toExec = batch
+                            executor.submit {
+                                tx = db.beginTx()
+                                try {
+                                    toExec.exec(tx, exec)
+                                    tx.success()
+                                    commits.incrementAndGet()
+                                } finally {
+                                    tx.close()
+                                }
+                            }
+                        } else {
+                            batch.exec(tx, exec)
+                        }
 
                         batch = new ImportBatch()
                     }
@@ -341,13 +356,15 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                         executor.shutdown()
                         executor.awaitTermination(1, TimeUnit.DAYS)
 
-                        log.debug('Committing for {} statements...', NUMBER.format(importeds))
-                        tx.success()
-                        tx.close()
-                        commits.incrementAndGet()
+                        if (!multithreaded) {
+                            log.debug('Committing for {} statements...', NUMBER.format(importeds))
+                            tx.success()
+                            tx.close()
+                            commits.incrementAndGet()
 
-                        // New beginning
-                        tx = db.beginTx()
+                            // New beginning
+                            tx = db.beginTx()
+                        }
                         executor = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors())
                         lastImporteds = importeds
 

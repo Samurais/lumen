@@ -251,6 +251,10 @@ Then run:
     sudo service neo4j-service stop
     ~/neo4j-lumen/bin/neo4j console
 
+## conf/neo4j-wrapper.conf
+
+You **will** need to configure `wrapper.java.maxmemory` to 1024, otherwise you'll get `OutOfMemoryError` with at least step 4 DB.
+
 ## Tuning Performance
 
 During import and also for production server, you need to tweak user limit.
@@ -304,7 +308,7 @@ tmpfs/SSD works well with multithreading (individual transaction per thread), wh
 4. Import `yagoLiteralFacts.tsv` # test first, but move after types & taxonomy when done
     Source is 321 MiB, 3.353.659 statements. ~45 mins SSD. Result is 5.034 MiB DB.
 5. Import `yagoFacts.tsv`. Source: 321 MiB, 4.484.914 statements. ~45 mins SSD, result 7.042 MiB.
-6. Import `yagoImportantTypes.tsv`. 169 MiB. 2,723,628 statements.
+6. Import `yagoImportantTypes.tsv`. 169 MiB. 2,723,628 statements. ~1 hr SSD, result 8.096 MiB.
 7. Import `yagoSimpleTypes.tsv`
 8. Import `yagoTypes.tsv`. 821 MiB, 9,019,769 statements.
 9. Import `yagoSimpleTaxonomy.tsv`
@@ -319,7 +323,3 @@ Excluded Yago files are: (note: even if excluded, these can always be queried on
 3. `yagoTransitiveType.tsv` (2.5 GiB): just the same as `yago(|Important|Simple)Types.csv` inferred using `yagoTaxonomy.tsv`
 4. `yagoStatistics.tsv`: just meta about Yago dataset.
 5. `yagoSchema.tsv`: just meta about Yago properties.
-
-## conf/neo4j-wrapper.conf
-
-You **will** need to configure max memory to 1024, otherwise you'll get `OutOfMemoryError` with at least step 4 DB.
