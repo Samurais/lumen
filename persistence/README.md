@@ -287,7 +287,8 @@ This normally should not be required, and only used when database needs to be re
 version.
 
 **Important:** Before importing, make sure to tweak Linux kernel `vm.*` options above!
-Mount your Neo4j DB in `tmpfs` (4000M) to get ~1500 inserts/s (using 6 workers in 8 CPU), otherwise in HD you get ~200/s.
+Mount your Neo4j DB in `tmpfs` (4000M) to get ~1500 inserts/s (using 6 workers in 8 CPU), otherwise in HDD you get ~200/s,
+but my testing in HDD can get to ~20/s on step 6.
 
 1. Index Labels -> 550 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON). ~2 mins on SSD
     TODO: this needs to index *all* labels across all files, not just `yagoLabels.tsv`, so next importers
@@ -299,18 +300,23 @@ Mount your Neo4j DB in `tmpfs` (4000M) to get ~1500 inserts/s (using 6 workers i
     Import `yagoLabels.tsv` (3 special label properties will be ignored, it will only import regular labels like `hasFamilyName` etc.)
     ~1 hour on `tmpfs`, probably ~8 hrs on HDD (SSD crashed on me). Result: 3000 MiB DB.
 4. Import `yagoLiteralFacts.tsv` # test first, but move after types & taxonomy when done
-    Source is 321 MiB, 3.353.659 statements. Result is 5.034 MiB DB.
-5. Import `yagoImportantTypes.tsv`
-6. Import `yagoSimpleTypes.tsv`
-7. Import `yagoTypes.tsv`
-8. Import `yagoTaxonomy.tsv`
-9. Import `yagoFacts.tsv`
+    Source is 321 MiB, 3.353.659 statements. ~45 mins SSD. Result is 5.034 MiB DB.
+5. Import `yagoFacts.tsv`. Source: 321 MiB, 4.484.914 statements. ~45 mins SSD, result 7.042 MiB.
+6. Import `yagoImportantTypes.tsv`. 169 MiB. 2,723,628 statements.
+7. Import `yagoSimpleTypes.tsv`
+8. Import `yagoTypes.tsv`. 821 MiB, 9,019,769 statements.
+9. Import `yagoSimpleTaxonomy.tsv`
+10. Import `yagoTaxonomy.tsv`
+11. Import `yagoGeonamesClassIds.tsv`, `yagoGeonamesClasses.tsv`, `yagoGeonamesGlosses.tsv`
+12. Import `yagoWordnetIds.tsv`, `yagoWordnetDomains.tsv`
 
 Excluded Yago files are: (note: even if excluded, these can always be queried online through official Yago website)
 
 1. `yagoWikipediaInfo.tsv` (2.3 GiB): just `linksTo` stuff, not useful
 2. `yagoSources.tsv` (6.9 Gib): relates factIds to Wikipedia URIs
-3. `yagoTransitiveType.tsv` (2.5 GiB): just the same as `yagoTypes.csv` inferred using `yagoTaxonomy.tsv`
+3. `yagoTransitiveType.tsv` (2.5 GiB): just the same as `yago(|Important|Simple)Types.csv` inferred using `yagoTaxonomy.tsv`
+4. `yagoStatistics.tsv`: just meta about Yago dataset.
+5. `yagoSchema.tsv`: just meta about Yago properties.
 
 ## conf/neo4j-wrapper.conf
 

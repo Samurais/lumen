@@ -1,6 +1,7 @@
 package id.ac.itb.lumen.persistence
 
 import com.hp.hpl.jena.graph.Node_Literal
+import com.hp.hpl.jena.vocabulary.OWL
 import com.hp.hpl.jena.vocabulary.XSD
 import org.apache.jena.riot.system.FastAbbreviatingPrefixMap
 import org.apache.jena.riot.system.PrefixMap
@@ -16,6 +17,7 @@ class RdfUtils {
     static {
         PREFIX_MAP = new FastAbbreviatingPrefixMap()
         PREFIX_MAP.add('xsd', XSD.getURI())
+        PREFIX_MAP.add('owl', OWL.getURI())
         PREFIX_MAP.add('yago', 'http://yago-knowledge.org/resource/')
         PREFIX_MAP.add('lumen', 'http://lumen.lskk.ee.itb.ac.id/resource/')
     }

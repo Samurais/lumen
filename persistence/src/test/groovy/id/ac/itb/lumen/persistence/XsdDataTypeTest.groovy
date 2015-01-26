@@ -1,5 +1,6 @@
 package id.ac.itb.lumen.persistence
 
+import com.hp.hpl.jena.graph.Node
 import com.hp.hpl.jena.graph.Node_Literal
 import com.hp.hpl.jena.sparql.util.NodeFactoryExtra
 import com.hp.hpl.jena.vocabulary.XSD
@@ -32,6 +33,17 @@ class XsdDataTypeTest {
         final abbr2 = RdfUtils.abbrevDatatype(lit2)
         log.info('Type 2: {} {} » {}', lit2, lit2.literalDatatypeURI, abbr2)
         Assert.assertEquals('yago:degrees', abbr2)
+    }
+
+    @Test
+    void uri() {
+        // https://issues.apache.org/jira/browse/JENA-862
+        Node uri
+        uri = NodeFactoryExtra.parseNode('<hasPopulationDensity>', RdfUtils.PREFIX_MAP)
+        log.info('Parsed: {}. localName={} nameSpace={}', uri, uri.localName, uri.nameSpace)
+
+        uri = NodeFactoryExtra.parseNode('owl:Thing', RdfUtils.PREFIX_MAP)
+        log.info('Parsed: {}. localName={} nameSpace={}', uri, uri.localName, uri.nameSpace)
     }
 
 }

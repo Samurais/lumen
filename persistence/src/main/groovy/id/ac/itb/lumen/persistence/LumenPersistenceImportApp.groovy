@@ -174,7 +174,8 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                     final factHref = factId != null ? 'yago:' + factId.replaceAll('[<>]', '') : null
                     final relProps = factHref != null ? [f: factHref] : [:]
                     final subject = line[1]
-                    final subjectHref = 'yago:' + subject.replaceAll('[<>]', '')
+                    final subjectNode = NodeFactoryExtra.parseNode(subject, RdfUtils.PREFIX_MAP)
+                    final subjectHref = 'yago:' + subjectNode
                     final String property = line[2]
                     final relName
                     if (property.startsWith('<')) {
@@ -184,8 +185,15 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                     }
 
                     final resOrLiteral = line[3]
-                    if (resOrLiteral.startsWith('<')) { // Object is Resource
-                        final objectHref = 'yago:' + resOrLiteral.replaceAll('[<>]', '')
+                    if (!resOrLiteral.startsWith('"')) { // Object is Resource
+                        // https://issues.apache.org/jira/browse/JENA-862
+                        final objectHref
+                        if (resOrLiteral.startsWith('<')) {
+                            objectHref = 'yago:' + resOrLiteral.replaceAll('[<>]', '')
+                        } else {
+                            objectHref = resOrLiteral
+                        }
+
 //                        log.trace('{} -[:{}]-> {}    # {}', subjectHref, relName, objectHref, factId)
 
 //                        final merge = """
@@ -210,7 +218,7 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                         batch.incOps()
                         importeds++
                     } else { // Object is Literal
-                        final literal = (Node_Literal) NodeFactoryExtra.parseNode(resOrLiteral)
+                        final literal = (Node_Literal) NodeFactoryExtra.parseNode(resOrLiteral, RdfUtils.PREFIX_MAP)
                         final datatypeRef = RdfUtils.abbrevDatatype(literal)
                         final literalValue
                         // Remember, literal.literalDatatype can be null (which means it's string)
@@ -247,16 +255,16 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                             // are only set as node properties but not as relationships meaning no factIds as well.
                             // Processed ONLY IF node didn't exist or node has no prefLabel.
                             // It will *not* create `rdfs_label` relationship.
-                            Node subjectNode = Iterators.getNext(db.findNodesByLabelAndProperty(resourceLabel, 'href', subjectHref).iterator(), null)
-                            if (subjectNode == null || !subjectNode.hasProperty('prefLabel')) {
-                                if (subjectNode == null) {
-                                    subjectNode = db.createNode(resourceLabel)
-                                    subjectNode.properties['href'] = subjectHref
+                            Node subjectGraphNode = Iterators.getNext(db.findNodesByLabelAndProperty(resourceLabel, 'href', subjectHref).iterator(), null)
+                            if (subjectGraphNode == null || !subjectGraphNode.hasProperty('prefLabel')) {
+                                if (subjectGraphNode == null) {
+                                    subjectGraphNode = db.createNode(resourceLabel)
+                                    subjectGraphNode.properties['href'] = subjectHref
                                 }
                                 if (['rdfs:label', 'skos:prefLabel'].equals(property)) {
-                                    subjectNode.properties['prefLabel'] = literalValue
+                                    subjectGraphNode.properties['prefLabel'] = literalValue
                                 } else if ('<isPreferredMeaningOf>'.equals(property)) {
-                                    subjectNode.properties['isPreferredMeaningOf'] = literalValue
+                                    subjectGraphNode.properties['isPreferredMeaningOf'] = literalValue
                                 }
                                 importeds++
                             } // otherwise ignored
@@ -309,35 +317,37 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
 
                     readCount++
                     if (batch.ops >= 20) { // only 20-50 can get ~3000/s
+                        // SSD/tmpfs has better performance with batch+transaction per-thread,
+                        // however HDD gives 19/s with that, and is better with several cyphers in a normal transaction
                         final toExec = batch
-                        executor.submit {
-                            tx = db.beginTx()
-                            try {
-                                toExec.exec(tx, exec)
-                                tx.success()
-                                commits.incrementAndGet()
-                            } finally {
-                                tx.close()
-                            }
-                        }
-//                        batch.exec(tx, exec)
+//                        executor.submit {
+//                            tx = db.beginTx()
+//                            try {
+//                                toExec.exec(tx, exec)
+//                                tx.success()
+//                                commits.incrementAndGet()
+//                            } finally {
+//                                tx.close()
+//                            }
+//                        }
+                        batch.exec(tx, exec)
 
                         batch = new ImportBatch()
                     }
 
-                    if (importeds % 10000 == 0 && lastImporteds != importeds) {
+                    if (importeds % 100 == 0 && lastImporteds != importeds) {
                         // Need to avoid Java heap spinning out of control due to too many queue in executor
                         log.debug('Flushing batches for {} statements...', NUMBER.format(importeds))
                         executor.shutdown()
                         executor.awaitTermination(1, TimeUnit.DAYS)
 
-//                        log.debug('Committing for {} statements...', NUMBER.format(importeds))
-//                        tx.success()
-//                        tx.close()
-//                        commits.incrementAndGet()
+                        log.debug('Committing for {} statements...', NUMBER.format(importeds))
+                        tx.success()
+                        tx.close()
+                        commits.incrementAndGet()
 
                         // New beginning
-//                        tx = db.beginTx()
+                        tx = db.beginTx()
                         executor = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors())
                         lastImporteds = importeds
 
