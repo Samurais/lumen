@@ -290,6 +290,8 @@ version.
 Mount your Neo4j DB in `tmpfs` (4000M) to get ~1500 inserts/s (using 6 workers in 8 CPU), otherwise in HDD you get ~200/s,
 but my testing in HDD can get to ~20/s on step 6.
 
+tmpfs/SSD works well with multithreading (individual transaction per thread), while HDD probably want serialized better.
+
 1. Index Labels -> 550 MiB `yago2s/yagoLabels.jsonset` (Hadoop-style Ctrl+A-separated JSON). ~2 mins on SSD
     TODO: this needs to index *all* labels across all files, not just `yagoLabels.tsv`, so next importers
     don't need to check for label properties
