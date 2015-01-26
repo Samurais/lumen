@@ -309,7 +309,7 @@ tmpfs/SSD works well with multithreading (individual transaction per thread), wh
     Source is 321 MiB, 3.353.659 statements. ~45 mins SSD. Result is 5.034 MiB DB.
 5. Import `yagoFacts.tsv`. Source: 321 MiB, 4.484.914 statements. ~45 mins SSD, result 7.042 MiB.
 6. Import `yagoImportantTypes.tsv`. 169 MiB. 2,723,628 statements. ~1 hr SSD, result 8.096 MiB.
-7. Import `yagoSimpleTypes.tsv`
+7. Import `yagoSimpleTypes.tsv`. 316 MiB, 5,437,179 statements. ~1 hr SSD, result 10.081 MiB.
 8. Import `yagoTypes.tsv`. 821 MiB, 9,019,769 statements.
 9. Import `yagoSimpleTaxonomy.tsv`
 10. Import `yagoTaxonomy.tsv`

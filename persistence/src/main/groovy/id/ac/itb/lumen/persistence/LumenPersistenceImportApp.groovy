@@ -186,8 +186,12 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                     final factHref = factId != null ? 'yago:' + factId.replaceAll('[<>]', '') : null
                     final relProps = factHref != null ? [f: factHref] : [:]
                     final subject = line[1]
-                    final subjectNode = NodeFactoryExtra.parseNode(subject, RdfUtils.PREFIX_MAP)
-                    final subjectHref = 'yago:' + subjectNode
+                    final String subjectHref
+                    if (subject.startsWith('<')) {
+                        subjectHref = 'yago:' + subject.replaceAll('[<>]', '')
+                    } else {
+                        subjectHref = subject
+                    }
                     final String property = line[2]
                     final relName
                     if (property.startsWith('<')) {
@@ -199,7 +203,7 @@ class LumenPersistenceImportApp implements CommandLineRunner {
                     final resOrLiteral = line[3]
                     if (!resOrLiteral.startsWith('"')) { // Object is Resource
                         // https://issues.apache.org/jira/browse/JENA-862
-                        final objectHref
+                        final String objectHref
                         if (resOrLiteral.startsWith('<')) {
                             objectHref = 'yago:' + resOrLiteral.replaceAll('[<>]', '')
                         } else {
@@ -328,7 +332,7 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                     }
 
                     readCount++
-                    if (batch.ops >= 20) { // only 20-50 can get ~3000/s
+                    if (batch.ops >= opRate) { // only 20-50 can get ~3000/s
                         // SSD/tmpfs has better performance with batch+transaction per-thread,
                         // however HDD gives 19/s with that, and is better with several cyphers in a normal transaction
                         if (multithreaded) {
@@ -350,7 +354,7 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                         batch = new ImportBatch()
                     }
 
-                    if (importeds % 100 == 0 && lastImporteds != importeds) {
+                    if (importeds % commitRate == 0 && lastImporteds != importeds) {
                         // Need to avoid Java heap spinning out of control due to too many queue in executor
                         log.debug('Flushing batches for {} statements...', NUMBER.format(importeds))
                         executor.shutdown()
