@@ -376,7 +376,7 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
                             final rate = NUMBER.format((10000l * 1000l / (System.currentTimeMillis() - lastMilestone)) as long)
                             lastMilestone = System.currentTimeMillis()
                             log.info('{} commits so far: {} out of {} statements ({}/s) from {}',
-                                    commits.get(), NUMBER.format(importeds), NUMBER.format(readCount), rate, file)
+                                    NUMBER.format(commits.get()), NUMBER.format(importeds), NUMBER.format(readCount), rate, file)
                         }
                     }
 
@@ -435,7 +435,7 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
         }
         log.info('Ensured constraints and indexes')
 
-        Preconditions.checkArgument(args.length >= 1, 'yago2s file argument is required' as Object)
+        Preconditions.checkArgument(args.length >= 1, 'yago2s file argument(s) is required' as Object)
 
 //        final file = new File(args[0], 'yagoSimpleTaxonomy.tsv')
         // step 1: Labels (1.1 GB: 15.372.313 lines)
@@ -444,7 +444,7 @@ CREATE (subj) -[:$relName {relProps}]-> (lit:Literal {literalProps})
 //        importFile(new File(args[0], 'yagoLiteralFacts.tsv'))
 
         // step 3 and beyond
-        importFile(new File(args[0]))
+        args.each { String it -> importFile(new File(it)) }
 
 //        final resolver = new PathMatchingResourcePatternResolver(new FileSystemResourceLoader())
 //        final resources = resolver.getResources('file:' + args[0] + '/*.tsv')
