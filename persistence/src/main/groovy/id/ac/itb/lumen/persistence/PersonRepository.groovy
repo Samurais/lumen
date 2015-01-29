@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional
  */
 @CompileStatic
 @Transactional
+@Deprecated
 interface PersonRepository extends GraphRepository<Person> {
 
 }

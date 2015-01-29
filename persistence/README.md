@@ -99,11 +99,35 @@ metadata (temporal and spatial) as Neo4j properties.
 
 Get a `Resource` by label:
 
-    MATCH (l:Label {v:'B. J. Habibie'}) <-[:rdfs_label]- (e) RETURN e;
+    OPTIONAL MATCH (e1:Resource {prefLabel: 'B. J. Habibie'})
+    OPTIONAL MATCH (e2:Resource {isPreferredMeaningOf: 'B. J. Habibie'})
+    OPTIONAL MATCH (e3:Resource) -[:rdfs_label]-> (l:Label {v:'B. J. Habibie'})
+    RETURN coalesce(e1, e2, e3);
 
-Get a `Class` by label and all its supertypes:
+    OPTIONAL MATCH (e1:Resource {prefLabel: 'Hasri Ainun Habibie'})
+    OPTIONAL MATCH (e2:Resource {isPreferredMeaningOf: 'Hasri Ainun Habibie'})
+    OPTIONAL MATCH (e3:Resource) -[:rdfs_label]-> (l:Label {v:'Hasri Ainun Habibie'})
+    RETURN coalesce(e1, e2, e3);
 
-    MATCH (l:Label {v:'person'}) <-[:rdfs_label]- (c), (c)-[:rdfs_subClassOf*]->(t) RETURN c, t
+Get a `Class` by `isPreferredMeaningOf` and all its supertypes:
+
+    MATCH (c: Resource {isPreferredMeaningOf: 'person'}), (c) -[:rdfs_subClassOf*]-> (t)
+    RETURN c, t;
+
+Get a `Class` by `prefLabel` and all its supertypes:
+
+    MATCH (c: Resource {prefLabel: 'person'}), (c) -[:rdfs_subClassOf*]-> (t)
+    RETURN c, t;
+
+Get a `Class` by all labels, return it and all its supertypes:
+
+    OPTIONAL MATCH (e1:Resource {prefLabel: 'person'})
+    OPTIONAL MATCH (e2:Resource {isPreferredMeaningOf: 'person'})
+    OPTIONAL MATCH (e3:Resource) -[:rdfs_label]-> (l:Label {v:'person'})
+    WITH coalesce(e1, e2, e3) AS c
+    MATCH (c) -[:rdfs_subClassOf*]-> (t)
+    RETURN c, t;
+
 
 Get a `Resource` by label and all its types and supertypes:
 

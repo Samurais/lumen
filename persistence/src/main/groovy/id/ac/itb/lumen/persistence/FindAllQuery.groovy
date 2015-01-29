@@ -8,6 +8,7 @@ import groovy.transform.CompileStatic
 /**
  * Find all entities of particular class.
  * Created by Budhi on 22/01/2015.
+ * @todo should be {@link org.springframework.data.domain.Pageable}
  */
 @CompileStatic
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -15,8 +16,13 @@ import groovy.transform.CompileStatic
 @JsonSubTypes(@JsonSubTypes.Type(name="FindAllQuery", value=FindAllQuery.class))
 class FindAllQuery {
     /**
-     * Class URI of the entities to be queried, for example
+     * Class URI or QName of the entities to be queried, for example
      * {@code http://yago-knowledge.org/resource/wordnet_person_100007846}
+     * or simply {@code yago:wordnet_person_100007846}
      */
-    String classUri
+    String classRef
+    /**
+     * From hydra:itemsPerPage
+     */
+    Integer itemsPerPage
 }
