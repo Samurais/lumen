@@ -95,6 +95,23 @@ A simple `Fact` is direct relationship from a subject node to object node.
 A `Fact` relationship has a stable referenceable `id` (the Fact ID, usually a UUID), and may contain any number of additional
 metadata (temporal and spatial) as Neo4j properties.
 
+### Useful Queries
+
+Get a `Resource` by label:
+
+    MATCH (l:Label {v:'B. J. Habibie'}) <-[:rdfs_label]- (e) RETURN e;
+
+Get a `Class` by label and all its supertypes:
+
+    MATCH (l:Label {v:'person'}) <-[:rdfs_label]- (c), (c)-[:rdfs_subClassOf*]->(t) RETURN c, t
+
+Get a `Resource` by label and all its types and supertypes:
+
+    MATCH (l:Label {v:'B. J. Habibie'}) <-[:rdfs_label]- (e),
+        (e) -[:rdf_type]-> (c),
+        (c)-[:rdfs_subClassOf*]->(t)
+    RETURN e, c, t;
+
 ### Future Consideration: Reified Facts
 
 Since a `Fact` is a relationship and not a node, it cannot be connected to any
@@ -317,7 +334,9 @@ tmpfs/SSD works well with multithreading (individual transaction per thread), wh
 11. Import `yagoWordnetIds.tsv` (4 MiB, 68,862 statements), `yagoWordnetDomains.tsv` (9 MiB, 87,573 statements).
 12. Index the labels (these can be dropped first if later imports are needed):
 
-        CREATE INDEX ON :Literal(v)
+        CREATE INDEX ON :Resource(prefLabel);
+        CREATE INDEX ON :Resource(isPreferredMeaningOf);
+        CREATE INDEX ON :Label(v);
 
 Excluded Yago files are: (note: even if excluded, these can always be queried online through official Yago website)
 
