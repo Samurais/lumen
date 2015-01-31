@@ -47,11 +47,35 @@ For person B.J. Habibie (taken from https://gate.d5.mpi-inf.mpg.de/webyago3spotl
 
 ### Sample Data (new)
 
-    MERGE (subj:Entity {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/Budhi_Yulianto'})
+    MERGE (subj:Entity {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/Budhi_Yulianto', label:'Budhi Yulianto'})
     ON CREATE SET subj.qName = 'lumen:Budhi_Yulianto'
-    MERGE (obj:Entity {uri: 'http://yago-knowledge.org/resource/Bandung'})
-    ON CREATE SET obj.qName = 'yago:Bandung'
-    MERGE (subj) -[:wasBornIn {factId: '123'}]-> (obj)
+    MERGE (city:Entity {uri: 'http://yago-knowledge.org/resource/Bandung', label:'Bandung'})
+    MERGE (grad:Entity {uri: 'http://yago-knowledge.org/resource/Bandung_Institute_of_Technology', label: 'ITB'})
+    MERGE (stud:Entity {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/study', label: 'S2 TMDG 06'})
+    MERGE (stun:Entity {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/stun', label: '23211380'})
+    MERGE (wasp:Entity {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/wasp', label: 'WA 085771888921'})
+    MERGE (fabo:Entity {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/fabo', label: 'FB budhiym'})
+    MERGE (adrs:Entity {uri: 'http://lumen.lskk.ee.itb.ac.id/resource/address', label: 'Jalan Kubang Selatan 8 RT03 RW14 Bandung 40132'})
+    MERGE (email:Entity {uri: 'http://www.w3.org/2006/vcard/ns#email', label: 'budhiym@yahoo.com'})
+    MERGE (mtel:Entity {uri: 'http://www.w3.org/2006/vcard/ns#mobileTel', label: 'Mobile 0852949492122'})
+    ON CREATE SET city.qName = 'yago:Bandung'
+    ON CREATE SET grad.qName = 'yago:Bandung_Institute_of_Technology'
+    ON CREATE SET stud.qName = 'lumen:s2tmdg06'
+    ON CREATE SET stun.qName = 'lumen:23211380'
+    ON CREATE SET wasp.qName = 'lumen:wa_085771888921'
+    ON CREATE SET fabo.qName = 'lumen:fb_budhiym'
+    ON CREATE SET adrs.qName = 'lumen:kubangselatan'
+    ON CREATE SET email.qName = 'vcard:budhiym@yahoo.com'
+    ON CREATE SET mtel.qName = 'vcard:085294942122'
+    MERGE (subj) -[:wasBornIn {factId: '0101'}]-> (city)
+    MERGE (subj) -[:graduatedFrom {factId: '0102'}]-> (grad)
+    MERGE (subj) -[:hasStudy {factId: '0103'}]-> (stud)
+    MERGE (subj) -[:hasStudentNumber {factId: '0104'}]-> (stun)
+    MERGE (subj) -[:email {factId: '0105'}]-> (email)
+    MERGE (subj) -[:hasWhatsApp {factId: '0106'}]-> (wasp)
+    MERGE (subj) -[:hasFacebook {factId: '0107'}]-> (fabo)
+    MERGE (subj) -[:Address {factId: '0108'}]-> (adrs)
+    MERGE (subj) -[:mobileTel {factId: '0109'}]-> (mtel)
     RETURN subj
 
 ### Sample Data (old)
