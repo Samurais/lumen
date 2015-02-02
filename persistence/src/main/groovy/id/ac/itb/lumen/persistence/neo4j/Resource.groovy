@@ -1,4 +1,4 @@
-package id.ac.itb.lumen.persistence
+package id.ac.itb.lumen.persistence.neo4j
 
 import groovy.transform.CompileStatic
 import org.springframework.data.neo4j.annotation.GraphId
@@ -10,11 +10,13 @@ import org.springframework.data.neo4j.annotation.NodeEntity
  */
 @CompileStatic
 @NodeEntity
-@Deprecated
-class Person {
+class Resource {
     @GraphId
     Long nodeId
     @Indexed(unique = true)
     String href
+    @Indexed
     String prefLabel
+    @Indexed
+    String isPreferredMeaningOf
 }

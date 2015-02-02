@@ -119,6 +119,47 @@ A simple `Fact` is direct relationship from a subject node to object node.
 A `Fact` relationship has a stable referenceable `id` (the Fact ID, usually a UUID), and may contain any number of additional
 metadata (temporal and spatial) as Neo4j properties.
 
+### Useful Queries
+
+Get a `Resource` by label:
+
+    OPTIONAL MATCH (e1:Resource {prefLabel: 'B. J. Habibie'})
+    OPTIONAL MATCH (e2:Resource {isPreferredMeaningOf: 'B. J. Habibie'})
+    OPTIONAL MATCH (e3:Resource) -[:rdfs_label]-> (l:Label {v:'B. J. Habibie'})
+    RETURN coalesce(e1, e2, e3);
+
+    OPTIONAL MATCH (e1:Resource {prefLabel: 'Hasri Ainun Habibie'})
+    OPTIONAL MATCH (e2:Resource {isPreferredMeaningOf: 'Hasri Ainun Habibie'})
+    OPTIONAL MATCH (e3:Resource) -[:rdfs_label]-> (l:Label {v:'Hasri Ainun Habibie'})
+    RETURN coalesce(e1, e2, e3);
+
+Get a `Class` by `isPreferredMeaningOf` and all its supertypes:
+
+    MATCH (c: Resource {isPreferredMeaningOf: 'person'}), (c) -[:rdfs_subClassOf*]-> (t)
+    RETURN c, t;
+
+Get a `Class` by `prefLabel` and all its supertypes:
+
+    MATCH (c: Resource {prefLabel: 'person'}), (c) -[:rdfs_subClassOf*]-> (t)
+    RETURN c, t;
+
+Get a `Class` by all labels, return it and all its supertypes:
+
+    OPTIONAL MATCH (e1:Resource {prefLabel: 'person'})
+    OPTIONAL MATCH (e2:Resource {isPreferredMeaningOf: 'person'})
+    OPTIONAL MATCH (e3:Resource) -[:rdfs_label]-> (l:Label {v:'person'})
+    WITH coalesce(e1, e2, e3) AS c
+    MATCH (c) -[:rdfs_subClassOf*]-> (t)
+    RETURN c, t;
+
+
+Get a `Resource` by label and all its types and supertypes:
+
+    MATCH (l:Label {v:'B. J. Habibie'}) <-[:rdfs_label]- (e),
+        (e) -[:rdf_type]-> (c),
+        (c)-[:rdfs_subClassOf*]->(t)
+    RETURN e, c, t;
+
 ### Future Consideration: Reified Facts
 
 Since a `Fact` is a relationship and not a node, it cannot be connected to any
@@ -335,10 +376,15 @@ tmpfs/SSD works well with multithreading (individual transaction per thread), wh
 6. Import `yagoImportantTypes.tsv`. 169 MiB. 2,723,628 statements. ~1 hr SSD, result 8.096 MiB.
 7. Import `yagoSimpleTypes.tsv`. 316 MiB, 5,437,179 statements. ~1 hr SSD, result 10.081 MiB.
 8. Import `yagoTypes.tsv`. 821 MiB, 9,019,769 statements.
-9. Import `yagoSimpleTaxonomy.tsv`
-10. Import `yagoTaxonomy.tsv`
-11. Import `yagoGeonamesClassIds.tsv`, `yagoGeonamesClasses.tsv`, `yagoGeonamesGlosses.tsv`
-12. Import `yagoWordnetIds.tsv`, `yagoWordnetDomains.tsv`
+9. Import `yagoSimpleTaxonomy.tsv` (499 KiB, 6,576 statements, ~1 sec), `yagoTaxonomy.tsv` (49 Mib, 451,708 statements)
+10. Import `yagoGeonamesClassIds.tsv` (36 KiB), `yagoGeonamesClasses.tsv` (52 KiB), `yagoGeonamesGlosses.tsv` (65 KiB), `yagoGeonamesEntityIds.tsv` (7 MiB)
+    ~2 mins SSD.
+11. Import `yagoWordnetIds.tsv` (4 MiB, 68,862 statements), `yagoWordnetDomains.tsv` (9 MiB, 87,573 statements).
+12. Index the labels (these can be dropped first if later imports are needed):
+
+        CREATE INDEX ON :Resource(prefLabel);
+        CREATE INDEX ON :Resource(isPreferredMeaningOf);
+        CREATE INDEX ON :Label(v);
 
 Excluded Yago files are: (note: even if excluded, these can always be queried online through official Yago website)
 
@@ -347,3 +393,7 @@ Excluded Yago files are: (note: even if excluded, these can always be queried on
 3. `yagoTransitiveType.tsv` (2.5 GiB): just the same as `yago(|Important|Simple)Types.csv` inferred using `yagoTaxonomy.tsv`
 4. `yagoStatistics.tsv`: just meta about Yago dataset.
 5. `yagoSchema.tsv`: just meta about Yago properties.
+6. `yagoMultilingualInstanceLabels.tsv`: 443 MiB, 8,164,317 statements. English ones are OK (at least for now).
+7. `yagoMultilingualClassLabels.tsv`: 46 MiB, 787,650 statements. English ones are OK (at least for now, but we do need to say that "car" is "mobil" soon).
+8. `yagoGeonamesData.tsv`: 1.7 GiB, 32,216,600 statements. If you want exact lat-long for `yagoGeoEntity`s,
+    you can already get the `geonamesEntityId` and look them up on Geonames DB.

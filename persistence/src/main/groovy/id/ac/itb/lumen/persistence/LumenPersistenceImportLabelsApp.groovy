@@ -51,9 +51,12 @@ class LumenPersistenceImportLabelsApp implements CommandLineRunner {
             final resourceLabel = DynamicLabel.label('Resource')
             final labelLabel = DynamicLabel.label('Label')
             inserter.createDeferredConstraint(resourceLabel).assertPropertyIsUnique('href').create()
-            inserter.createDeferredSchemaIndex(resourceLabel).on('prefLabel').create()
-            inserter.createDeferredSchemaIndex(resourceLabel).on('isPreferredMeaningOf').create()
-            inserter.createDeferredSchemaIndex(labelLabel).on('v').create()
+
+            // PLEASE create the label indexes on last step, not now! to speed up imports on later stages
+//            inserter.createDeferredSchemaIndex(resourceLabel).on('prefLabel').create()
+//            inserter.createDeferredSchemaIndex(resourceLabel).on('isPreferredMeaningOf').create()
+//            inserter.createDeferredSchemaIndex(labelLabel).on('v').create()
+
             final rdfsLabel = DynamicRelationshipType.withName('rdfs_label')
 
             final scanner = new Scanner(file, StandardCharsets.UTF_8 as String)

@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.data.neo4j.conversion.Result
+import org.springframework.data.neo4j.support.Neo4jTemplate
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
@@ -27,12 +29,14 @@ class LumenRouteConfig {
 
     private static final Logger log = LoggerFactory.getLogger(LumenRouteConfig.class)
 
-    @Inject
-    protected PersonRepository personRepo
+//    @Inject
+//    protected PersonRepository personRepo
     @Inject
     protected ToJson toJson
     @Inject
     protected PlatformTransactionManager txMgr
+    @Inject
+    protected Neo4jTemplate neo4j
 
     @Bean
     ConnectionFactory amqpConnFactory() {
@@ -54,21 +58,25 @@ class LumenRouteConfig {
                         .to('log:IN.persistence-fact?showHeaders=true&showAll=true&multiline=true')
                         .process {
                     final findAllQuery = toJson.mapper.readValue(it.in.body as byte[], FindAllQuery)
-                    switch (findAllQuery.classUri) {
-                        case 'http://yago-knowledge.org/resource/wordnet_person_100007846':
-                            final people = new TransactionTemplate(txMgr).execute {
-                                ImmutableList.copyOf(personRepo.findAll())
-                            }
-                            log.info('People: {}', people)
-                            final resources = new Resources<>(people)
-                            it.out.body = resources
-                            it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
-                                    '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
-                            it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
-                            break
-                        default:
-                            throw new IllegalArgumentException("unknown class URI: ${findAllQuery.classUri}")
+                    final classAbbrevRef = RdfUtils.PREFIX_MAP.abbreviate(findAllQuery.classRef)
+                    final rs = new TransactionTemplate(txMgr).execute {
+                        final rs = neo4j.query(
+                                'MATCH (e:Resource) -[:rdf_type]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT 25',
+                                [classAbbrevRef: classAbbrevRef] as Map<String, Object>)
+                        log.info('Result set for {}: {}', classAbbrevRef, rs)
+                        rs
                     }
+                    final resources = new Resources<>(rs.collect {
+                        final indexedRes = new IndexedResource()
+                        indexedRes.href = it['href']
+                        indexedRes.prefLabel = it['prefLabel']
+                        indexedRes.isPreferredMeaningOf = it['isPreferredMeaningOf']
+                        indexedRes
+                    })
+                    it.out.body = resources
+                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
+                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
+                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
                 }.bean(toJson)
                     // https://issues.apache.org/jira/browse/CAMEL-8270
                     .to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')

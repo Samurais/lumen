@@ -1,14 +1,14 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="LumenPersistenceApplication" type="Application" factoryName="Application" singleton="true" nameIsGenerated="true">
+  <configuration default="false" name="persistence-import10-4geonames" type="Application" factoryName="Application" singleton="true">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
       <pattern>
-        <option name="PATTERN" value="id.ac.itb.ee.lskk.lumen.persistence.*" />
+        <option name="PATTERN" value="id.ac.itb.lumen.persistence.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
-    <option name="MAIN_CLASS_NAME" value="id.ac.itb.lumen.persistence.LumenPersistenceApplication" />
-    <option name="VM_PARAMETERS" value="" />
-    <option name="PROGRAM_PARAMETERS" value="-Xmx1500m" />
+    <option name="MAIN_CLASS_NAME" value="id.ac.itb.lumen.persistence.LumenPersistenceImportApp" />
+    <option name="VM_PARAMETERS" value="-Xmx1g" />
+    <option name="PROGRAM_PARAMETERS" value="/media/ceefour/passport/databank/yago2s/tsv_extracted/yagoGeonamesClassIds.tsv /media/ceefour/passport/databank/yago2s/tsv_extracted/yagoGeonamesClasses.tsv /media/ceefour/passport/databank/yago2s/tsv_extracted/yagoGeonamesGlosses.tsv /media/ceefour/passport/databank/yago2s/tsv_extracted/yagoGeonamesEntityIds.tsv" />
     <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
     <option name="ALTERNATIVE_JRE_PATH" value="" />
@@ -22,9 +22,7 @@
       <option name="TRANSPORT" value="0" />
       <option name="LOCAL" value="true" />
     </RunnerSettings>
-    <RunnerSettings RunnerId="JRebel Executor" />
     <RunnerSettings RunnerId="Run" />
-    <ConfigurationWrapper RunnerId="JRebel Executor" />
     <ConfigurationWrapper RunnerId="Run" />
     <method />
   </configuration>

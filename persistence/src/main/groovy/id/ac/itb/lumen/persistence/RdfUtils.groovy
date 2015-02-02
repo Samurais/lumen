@@ -14,6 +14,8 @@ import org.apache.jena.riot.system.PrefixMapStd
  */
 class RdfUtils {
 
+    static final String YAGO_NAMESPACE = 'http://yago-knowledge.org/resource/'
+    static final String LUMEN_NAMESPACE = 'http://lumen.lskk.ee.itb.ac.id/resource/'
     static final FastAbbreviatingPrefixMap PREFIX_MAP
 
     static {
@@ -22,8 +24,8 @@ class RdfUtils {
         PREFIX_MAP.add('rdfs', RDFS.getURI())
         PREFIX_MAP.add('xsd', XSD.getURI())
         PREFIX_MAP.add('owl', OWL.getURI())
-        PREFIX_MAP.add('yago', 'http://yago-knowledge.org/resource/')
-        PREFIX_MAP.add('lumen', 'http://lumen.lskk.ee.itb.ac.id/resource/')
+        PREFIX_MAP.add('yago', YAGO_NAMESPACE)
+        PREFIX_MAP.add('lumen', LUMEN_NAMESPACE)
     }
 
     static String abbrevDatatype(Node_Literal lit) {
