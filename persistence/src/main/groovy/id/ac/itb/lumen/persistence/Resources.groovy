@@ -23,4 +23,11 @@ class Resources<T> {
     Resources(List<T> newContent) {
         this.content = newContent
     }
+
+    @Override
+    public String toString() {
+        return "Resources{" +
+                "content=" + content +
+                '}';
+    }
 }
