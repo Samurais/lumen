@@ -1,11 +1,13 @@
 package id.ac.itb.lumen.persistence
 
 import com.google.common.base.Preconditions
+import com.google.common.collect.FluentIterable
 import com.google.common.collect.ImmutableList
 import com.rabbitmq.client.ConnectionFactory
 import groovy.transform.CompileStatic
 import id.ac.itb.lumen.core.Channel
 import org.apache.camel.builder.RouteBuilder
+import org.neo4j.graphdb.Node
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
@@ -48,7 +50,6 @@ class LumenRouteConfig {
     }
 
     @Bean
-    @Transactional
     def RouteBuilder personFindAllRouteBuilder() {
         log.info('Initializing personFindAll RouteBuilder')
         new RouteBuilder() {
@@ -58,21 +59,22 @@ class LumenRouteConfig {
                         .to('log:IN.persistence-fact?showHeaders=true&showAll=true&multiline=true')
                         .process {
                     final findAllQuery = toJson.mapper.readValue(it.in.body as byte[], FindAllQuery)
-                    final classAbbrevRef = RdfUtils.PREFIX_MAP.abbreviate(findAllQuery.classRef)
-                    final rs = new TransactionTemplate(txMgr).execute {
-                        final rs = neo4j.query(
-                                'MATCH (e:Resource) -[:rdf_type]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT 25',
-                                [classAbbrevRef: classAbbrevRef] as Map<String, Object>)
-                        log.info('Result set for {}: {}', classAbbrevRef, rs)
-                        rs
+                    def classAbbrevRef = Optional.ofNullable(RdfUtils.PREFIX_MAP.abbreviate(findAllQuery.classRef))
+                        .orElse(findAllQuery.classRef)
+                    final resources = new TransactionTemplate(txMgr).execute {
+                        final cypher = 'MATCH (e:Resource) -[:rdf_type*]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT 25'
+                        log.debug('Querying using {}: {}', [classAbbrevRef: classAbbrevRef], cypher)
+                        final rs = neo4j.query(cypher, [classAbbrevRef: classAbbrevRef] as Map<String, Object>)
+                                .collect { it['e'] as Node }.toList()
+                        log.info('{} rows in result set for {}: {}', rs.size(), classAbbrevRef, rs)
+                        new Resources<>(rs.collect {
+                            final indexedRes = new IndexedResource()
+                            indexedRes.href = it.getProperty('href')
+                            indexedRes.prefLabel = it.getProperty('prefLabel')
+                            indexedRes.isPreferredMeaningOf = it.getProperty('isPreferredMeaningOf')
+                            indexedRes
+                        })
                     }
-                    final resources = new Resources<>(rs.collect {
-                        final indexedRes = new IndexedResource()
-                        indexedRes.href = it['href']
-                        indexedRes.prefLabel = it['prefLabel']
-                        indexedRes.isPreferredMeaningOf = it['isPreferredMeaningOf']
-                        indexedRes
-                    })
                     it.out.body = resources
                     it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
                             '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
