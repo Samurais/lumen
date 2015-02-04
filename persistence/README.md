@@ -89,6 +89,15 @@ Yago2s DB import12 must be imported first, otherwise resources won't `MATCH`.
     MERGE (subj) -[:vcard_hasAddress]-> (:Literal {v: 'Jalan Kubang Selatan 8 RT03 RW14 Bandung 40132', t: 'xsd:string'})
     MERGE (subj) -[:vcard_hasEmail]-> (:Literal {v: 'budhiym@yahoo.com', t: 'xsd:string'})
     MERGE (subj) -[:vcard_hasTelephone]-> (:Literal {v: '0852949492122', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasPaper]-> (:Literal {v: 'Design and Implementation of Knowledge Database for Lumen Social Robot', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasBBM]-> (:Literal {v: '76b71ed1', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasTwitter]-> (:Literal {v: 'budhiym', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasGitHub]-> (:Literal {v: 'budhiym', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasLinkedIn]-> (:Literal {v: 'budhiym', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasAcademia]-> (:Literal {v: 'budhiym', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasRelativeAddress]-> (:Literal {v: 'Terusan Cikampek Raya 9, Antapani, Bandung', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasRelativePhone]-> (:Literal {v: '08122355987', t: 'xsd:string'})
+    MERGE (subj) -[:lumen_hasRelativeName]-> (:Literal {v: 'Haryadi', t: 'xsd:string'})
     RETURN subj;
 
     # TODO: Marzuki
