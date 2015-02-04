@@ -59,55 +59,64 @@ class LumenRouteConfig {
                 from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.PERSISTENCE_FACT.key('arkan'))
                         .to('log:IN.persistence-fact?showHeaders=true&showAll=true&multiline=true')
                         .process {
-                    final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
-                    switch (inBodyJson.get('@type')) {
-                        case 'FindAllQuery':
-                            final findAllQuery = toJson.mapper.convertValue(inBodyJson, FindAllQuery)
-                            def classAbbrevRef = Optional.ofNullable(RdfUtils.PREFIX_MAP.abbreviate(findAllQuery.classRef))
-                                    .orElse(findAllQuery.classRef)
-                            final resources = new TransactionTemplate(txMgr).execute {
-                                final cypher = 'MATCH (e:Resource) -[:rdf_type*]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT 25'
-                                log.debug('Querying using {}: {}', [classAbbrevRef: classAbbrevRef], cypher)
-                                final rs = neo4j.query(cypher, [classAbbrevRef: classAbbrevRef] as Map<String, Object>)
-                                try {
-                                    final rsList = rs.collect { it['e'] as Node }.toList()
-                                    log.debug('{} rows in result set for {}: {}', rsList.size(), classAbbrevRef, rsList)
-                                    new Resources<>(rsList.collect {
-                                        final indexedRes = new IndexedResource()
-                                        indexedRes.href = it.getProperty('href')
-                                        indexedRes.prefLabel = it.getProperty('prefLabel')
-                                        indexedRes.isPreferredMeaningOf = it.getProperty('isPreferredMeaningOf')
-                                        indexedRes
-                                    })
-                                } finally {
-                                    rs.finish()
+                    try {
+                        final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
+                        switch (inBodyJson.path('@type').asText()) {
+                            case 'FindAllQuery':
+                                final findAllQuery = toJson.mapper.convertValue(inBodyJson, FindAllQuery)
+                                def classAbbrevRef = Optional.ofNullable(RdfUtils.PREFIX_MAP.abbreviate(findAllQuery.classRef))
+                                        .orElse(findAllQuery.classRef)
+                                final resources = new TransactionTemplate(txMgr).execute {
+                                    final cypher = 'MATCH (e:Resource) -[:rdf_type*]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT 25'
+                                    log.debug('Querying using {}: {}', [classAbbrevRef: classAbbrevRef], cypher)
+                                    final rs = neo4j.query(cypher, [classAbbrevRef: classAbbrevRef] as Map<String, Object>)
+                                    try {
+                                        final rsList = rs.collect { it['e'] as Node }.toList()
+                                        log.debug('{} rows in result set for {}: {}', rsList.size(), classAbbrevRef, rsList)
+                                        new Resources<>(rsList.collect {
+                                            final indexedRes = new IndexedResource()
+                                            indexedRes.href = it.getProperty('href')
+                                            indexedRes.prefLabel = it.getProperty('prefLabel')
+                                            indexedRes.isPreferredMeaningOf = it.getProperty('isPreferredMeaningOf')
+                                            indexedRes
+                                        })
+                                    } finally {
+                                        rs.finish()
+                                    }
                                 }
-                            }
-                            it.out.body = resources
-                            break;
-                        case 'CypherQuery':
-                            final cypherQuery = toJson.mapper.convertValue(inBodyJson, CypherQuery)
-                            final resources = new TransactionTemplate(txMgr).execute {
-                                log.debug('Querying using {}: {}', cypherQuery.parameters, cypherQuery.query)
-                                final rs = neo4j.query(cypherQuery.query, cypherQuery.parameters)
-                                try {
-                                    final rsList = ImmutableList.copyOf(rs)
-                                    log.debug('{} rows in result set: {}', rsList.size(), rsList)
-                                    new Resources<>(rsList.collect { k, v ->
-                                        if (v instanceof Node) {
-                                            [k, new Neo4jNode(v)]
-                                        } else if (v instanceof Relationship) {
-                                            [k, new Neo4jRelationship(v)]
-                                        } else {
-                                            [k, v]
-                                        }
-                                    })
-                                } finally {
-                                    rs.finish()
+                                it.out.body = resources
+                                break;
+                            case 'CypherQuery':
+                                final cypherQuery = toJson.mapper.convertValue(inBodyJson, CypherQuery)
+                                final resources = new TransactionTemplate(txMgr).execute {
+                                    log.debug('Querying using {}: {}', cypherQuery.parameters, cypherQuery.query)
+                                    final rs = neo4j.query(cypherQuery.query, cypherQuery.parameters)
+                                    try {
+                                        final rsList = ImmutableList.copyOf(rs)
+                                        log.debug('{} rows in result set: {}', rsList.size(), rsList)
+                                        new Resources<>(rsList.collect {
+                                            new ResultRow(it.collect { k, v ->
+                                                if (v instanceof Node) {
+                                                    new ResultCell(k, new Neo4jNode(v as Node))
+                                                } else if (v instanceof Relationship) {
+                                                    new ResultCell(k, new Neo4jRelationship(v as Relationship))
+                                                } else {
+                                                    new ResultCell(k, v)
+                                                }
+                                            })
+                                        })
+                                    } finally {
+                                        rs.finish()
+                                    }
                                 }
-                            }
-                            it.out.body = resources
-                            break;
+                                it.out.body = resources
+                                break;
+                            default:
+                                throw new Exception('Unknown JSON message: ' + inBodyJson);
+                        }
+                    } catch (Exception e) {
+                        log.error("Cannot process: " + it.in.body, e)
+                        it.out.body = new Error(e)
                     }
 
                     it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],

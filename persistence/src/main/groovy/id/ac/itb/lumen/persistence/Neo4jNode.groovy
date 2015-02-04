@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
 import groovy.transform.CompileStatic
 import org.neo4j.graphdb.Node
 import org.neo4j.graphdb.Relationship
@@ -20,16 +21,30 @@ import org.neo4j.graphdb.Relationship
 class Neo4jNode {
     @JsonProperty('id')
     Long nodeId
-    Map<String, Object> properties
+    Set<String> labels = []
+    Map<String, Object> properties = [:]
 
-    Neo4jNode(Long nodeId, Map<String, Object> properties) {
+    Neo4jNode(Long nodeId, Set<String> labels, Map<String, Object> properties) {
         this.nodeId = nodeId
+        this.labels = ImmutableSet.copyOf(labels)
         this.properties = properties
+        // Avoid "No serializer found for class org.neo4j.graphdb.DynamicLabel"
+//                ImmutableMap.copyOf(properties
+//                .findAll { k, v -> !['relationships', 'graphDatabase', 'relationshipTypes'].contains(k) }
+//                .collectEntries { k, v ->
+//            if ('labels'.equals(k)) {
+//                [k, v.collect { it as String }]
+//            } else {
+//                [k, v]
+//            }
+//        } as Map<String, Object>)
     }
 
     Neo4jNode(Node node) {
-        this.nodeId = node.id
-        this.properties = ImmutableMap.copyOf(node.properties)
+        this(node.id, node.labels.collect { it as String }.toSet(),
+                node.getPropertyKeys().collectEntries {
+            [it, node.getProperty(it)]
+        })
     }
 
 }

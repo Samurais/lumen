@@ -27,8 +27,10 @@ class Neo4jRelationship {
     }
 
     Neo4jRelationship(Relationship rel) {
-        this.relationshipId = rel.id
-        this.properties = ImmutableMap.copyOf(rel.properties)
+        this(rel.id,
+                rel.getPropertyKeys().collectEntries {
+                    [it, rel.getProperty(it)]
+                })
     }
 
 }
