@@ -14,7 +14,7 @@ import groovy.transform.CompileStatic
 @JsonSubTypes(@JsonSubTypes.Type(name="ResultCell", value=FindAllQuery.class))
 class ResultCell {
     String name
-    @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
+    @JsonTypeInfo(use=JsonTypeInfo.Id.NAME)
     Object value
 
     ResultCell(String name, Object value) {

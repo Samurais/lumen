@@ -18,16 +18,18 @@ import org.neo4j.graphdb.Relationship
 @JsonSubTypes(@JsonSubTypes.Type(name="Neo4jRelationship", value=Neo4jRelationship.class))
 class Neo4jRelationship {
     @JsonProperty('id')
-    Long relationshipId
+    Long relId
+    String relTypeName
     ImmutableMap<String, Object> properties
 
-    Neo4jRelationship(Long relationshipId, Map<String, Object> properties) {
-        this.relationshipId = relationshipId
+    Neo4jRelationship(Long relId, String relType, Map<String, Object> properties) {
+        this.relId = relId
+        this.relTypeName = relType
         this.properties = ImmutableMap.copyOf(properties)
     }
 
     Neo4jRelationship(Relationship rel) {
-        this(rel.id,
+        this(rel.id, rel.type.name(),
                 rel.getPropertyKeys().collectEntries {
                     [it, rel.getProperty(it)]
                 })
