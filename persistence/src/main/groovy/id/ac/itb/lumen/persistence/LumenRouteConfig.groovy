@@ -3,10 +3,17 @@ package id.ac.itb.lumen.persistence
 import com.google.common.base.Preconditions
 import com.google.common.collect.FluentIterable
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 import com.rabbitmq.client.ConnectionFactory
 import groovy.transform.CompileStatic
+import id.ac.itb.lumen.core.BatteryState
 import id.ac.itb.lumen.core.Channel
+import id.ac.itb.lumen.core.ImageObjectLegacy
+import id.ac.itb.lumen.core.JointSetLegacy
+import id.ac.itb.lumen.core.SonarState
+import id.ac.itb.lumen.core.TactileSetLegacy
 import org.apache.camel.builder.RouteBuilder
+import org.joda.time.DateTime
 import org.neo4j.graphdb.Node
 import org.neo4j.graphdb.Relationship
 import org.slf4j.Logger
@@ -21,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 
 import javax.inject.Inject
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by ceefour on 1/19/15.
@@ -126,6 +134,249 @@ class LumenRouteConfig {
                     // https://issues.apache.org/jira/browse/CAMEL-8270
                     .to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
                     .to('log:OUT.persistence-fact?showAll=true&multiline=true')
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder imageRouteBuilder() {
+        log.info('Initializing image RouteBuilder')
+
+        new TransactionTemplate(txMgr).execute { tx ->
+            neo4j.query('CREATE INDEX ON :JournalImageObject(dateCreated)', [:]).finish()
+        }
+
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.image')
+                        .sample(1, TimeUnit.SECONDS)
+                        .to('log:IN.avatar.NAO.data.image?showHeaders=true&showAll=true&multiline=true')
+                        .process {
+                    try {
+                        final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
+                        final imageObject = toJson.mapper.convertValue(inBodyJson, ImageObjectLegacy)
+                        new TransactionTemplate(txMgr).execute { tx ->
+                            final now = new DateTime() // FIXME: NaoServer should sent ISO formatted timestamp
+                            final props = [
+                                name: imageObject.name,
+                                contentType: imageObject.contentType,
+                                contentSize: imageObject.contentSize,
+                                contentUrl: imageObject.contentUrl,
+                                url: imageObject.url,
+                                uploadDate: now.toString(),
+                                dateCreated: now.toString(),
+                                datePublished: now.toString(),
+                                dateModified: now.toString()
+                            ]
+                            final node = neo4j.createNode(props, ['JournalImageObject'])
+                            log.debug('Created JournalImageObject {} from {} {}', node, imageObject.name, now)
+                            it.out.body = node.getId()
+                        }
+                    } catch (Exception e) {
+                        log.error("Cannot process: " + it.in.body, e)
+                        it.out.body = new Error(e)
+                    }
+
+//                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
+//                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
+//                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
+                }.bean(toJson)
+                    // https://issues.apache.org/jira/browse/CAMEL-8270
+                    //.to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
+                    .to('log:OUT.avatar.NAO.data.image?showAll=true&multiline=true')
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder sonarRouteBuilder() {
+        log.info('Initializing sonar RouteBuilder')
+
+        new TransactionTemplate(txMgr).execute { tx ->
+            neo4j.query('CREATE INDEX ON :JournalSonarState(dateCreated)', [:]).finish()
+        }
+
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.sonar')
+                        .sample(1, TimeUnit.SECONDS)
+                        .to('log:IN.avatar.NAO.data.sonar?showHeaders=true&showAll=true&multiline=true')
+                        .process {
+                    try {
+                        final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
+                        final sonarState = toJson.mapper.convertValue(inBodyJson, SonarState)
+                        new TransactionTemplate(txMgr).execute { tx ->
+                            final now = new DateTime()
+                            final props = [
+                                leftSensor: sonarState.leftSensor,
+                                rightSensor: sonarState.rightSensor,
+                                dateCreated: now.toString()
+                            ]
+                            final node = neo4j.createNode(props, ['JournalSonarState'])
+                            log.debug('Created JournalSonarState {} from {}', node, props)
+                            it.out.body = node.getId()
+                        }
+                    } catch (Exception e) {
+                        log.error("Cannot process: " + it.in.body, e)
+                        it.out.body = new Error(e)
+                    }
+
+//                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
+//                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
+//                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
+                }.bean(toJson)
+                    // https://issues.apache.org/jira/browse/CAMEL-8270
+                    //.to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
+                    .to('log:OUT.avatar.NAO.data.sonar?showAll=true&multiline=true')
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder batteryRouteBuilder() {
+        log.info('Initializing battery RouteBuilder')
+
+        new TransactionTemplate(txMgr).execute { tx ->
+            neo4j.query('CREATE INDEX ON :JournalBatteryState(dateCreated)', [:]).finish()
+        }
+
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.battery')
+                        .sample(1, TimeUnit.SECONDS)
+                        .to('log:IN.avatar.NAO.data.battery?showHeaders=true&showAll=true&multiline=true')
+                        .process {
+                    try {
+                        final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
+                        final batteryState = toJson.mapper.convertValue(inBodyJson, BatteryState)
+                        new TransactionTemplate(txMgr).execute { tx ->
+                            final now = new DateTime()
+                            final props = [
+                                percentage: batteryState.percentage,
+                                isPlugged: batteryState.isPlugged,
+                                isCharging: batteryState.isCharging,
+                                dateCreated: now.toString()
+                            ]
+                            final node = neo4j.createNode(props, ['JournalBatteryState'])
+                            log.debug('Created JournalBatteryState {} from {}', node, props)
+                            it.out.body = node.getId()
+                        }
+                    } catch (Exception e) {
+                        log.error("Cannot process: " + it.in.body, e)
+                        it.out.body = new Error(e)
+                    }
+
+//                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
+//                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
+//                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
+                }.bean(toJson)
+                    // https://issues.apache.org/jira/browse/CAMEL-8270
+                    //.to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
+                    .to('log:OUT.avatar.NAO.data.battery?showAll=true&multiline=true')
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder jointRouteBuilder() {
+        log.info('Initializing joint RouteBuilder')
+
+        new TransactionTemplate(txMgr).execute { tx ->
+            neo4j.query('CREATE INDEX ON :JournalJoint(name)', [:]).finish()
+            neo4j.query('CREATE INDEX ON :JournalJoint(dateCreated)', [:]).finish()
+        }
+
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.joint')
+                        .sample(1, TimeUnit.SECONDS)
+                        .to('log:IN.avatar.NAO.data.joint?showHeaders=true&showAll=true&multiline=true')
+                        .process {
+                    try {
+                        final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
+                        final jointSet = toJson.mapper.convertValue(inBodyJson, JointSetLegacy)
+                        new TransactionTemplate(txMgr).execute { tx ->
+                            final now = new DateTime()
+                            final List<Node> nodes = []
+                            jointSet.names.eachWithIndex { jointName, i ->
+                                final props = [
+                                    name: jointName,
+                                    angle: jointSet.angles[i],
+                                    stiffness: jointSet.angles[i],
+                                    dateCreated: now.toString()
+                                ]
+                                final node = neo4j.createNode(props, ['JournalJoint'])
+                                nodes.add(node)
+                            }
+                            log.debug('Created {} JournalJoint(s) {} from {}', nodes, jointSet)
+                            it.out.body = nodes.collect { it.getId() }
+                        }
+                    } catch (Exception e) {
+                        log.error("Cannot process: " + it.in.body, e)
+                        it.out.body = new Error(e)
+                    }
+
+//                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
+//                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
+//                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
+                }.bean(toJson)
+                    // https://issues.apache.org/jira/browse/CAMEL-8270
+                    //.to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
+                    .to('log:OUT.avatar.NAO.data.joint?showAll=true&multiline=true')
+            }
+        }
+    }
+
+    @Bean
+    def RouteBuilder tactileRouteBuilder() {
+        log.info('Initializing tactile RouteBuilder')
+
+        new TransactionTemplate(txMgr).execute { tx ->
+            neo4j.query('CREATE INDEX ON :JournalTactile(name)', [:]).finish()
+            neo4j.query('CREATE INDEX ON :JournalTactile(dateCreated)', [:]).finish()
+        }
+
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.tactile')
+                        .sample(1, TimeUnit.SECONDS)
+                        .to('log:IN.avatar.NAO.data.tactile?showHeaders=true&showAll=true&multiline=true')
+                        .process {
+                    try {
+                        final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
+                        final tactileSet = toJson.mapper.convertValue(inBodyJson, TactileSetLegacy)
+                        new TransactionTemplate(txMgr).execute { tx ->
+                            final now = new DateTime()
+                            final List<Node> nodes = []
+                            tactileSet.names.eachWithIndex { tactileName, i ->
+                                final props = [
+                                    name: tactileName,
+                                    value: tactileSet.values[i],
+                                    dateCreated: now.toString()
+                                ]
+                                final node = neo4j.createNode(props, ['JournalTactile'])
+                                nodes.add(node)
+                            }
+                            log.debug('Created {} JournalTactile(s) {} from {}', nodes, tactileSet)
+                            it.out.body = nodes.collect { it.getId() }
+                        }
+                    } catch (Exception e) {
+                        log.error("Cannot process: " + it.in.body, e)
+                        it.out.body = new Error(e)
+                    }
+
+//                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
+//                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
+//                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
+                }.bean(toJson)
+                    // https://issues.apache.org/jira/browse/CAMEL-8270
+                    //.to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
+                    .to('log:OUT.avatar.NAO.data.tactile?showAll=true&multiline=true')
             }
         }
     }
