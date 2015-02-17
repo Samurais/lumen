@@ -8,10 +8,12 @@ import com.rabbitmq.client.ConnectionFactory
 import groovy.transform.CompileStatic
 import id.ac.itb.lumen.core.BatteryState
 import id.ac.itb.lumen.core.Channel
+import id.ac.itb.lumen.core.ImageObject
 import id.ac.itb.lumen.core.ImageObjectLegacy
 import id.ac.itb.lumen.core.JointSetLegacy
 import id.ac.itb.lumen.core.SonarState
 import id.ac.itb.lumen.core.TactileSetLegacy
+import org.apache.camel.Exchange
 import org.apache.camel.builder.RouteBuilder
 import org.joda.time.DateTime
 import org.neo4j.graphdb.Node
@@ -21,6 +23,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.core.env.Environment
 import org.springframework.data.neo4j.conversion.Result
 import org.springframework.data.neo4j.support.Neo4jTemplate
 import org.springframework.transaction.PlatformTransactionManager
@@ -40,6 +43,8 @@ class LumenRouteConfig {
 
     private static final Logger log = LoggerFactory.getLogger(LumenRouteConfig.class)
 
+    @Inject
+    protected Environment env
 //    @Inject
 //    protected PersonRepository personRepo
     @Inject
@@ -52,15 +57,15 @@ class LumenRouteConfig {
     @Bean
     ConnectionFactory amqpConnFactory() {
       final connFactory = new ConnectionFactory()
-      connFactory.host = 'localhost'
-      connFactory.username = 'guest'
-      connFactory.password = 'guest'
+      connFactory.host = env.getRequiredProperty('amqp.host')
+      connFactory.username = env.getRequiredProperty('amqp.username')
+      connFactory.password = env.getRequiredProperty('amqp.password')
       return connFactory
     }
 
     @Bean
-    def RouteBuilder personFindAllRouteBuilder() {
-        log.info('Initializing personFindAll RouteBuilder')
+    def RouteBuilder factRouteBuilder() {
+        log.info('Initializing fact RouteBuilder')
         new RouteBuilder() {
             @Override
             void configure() throws Exception {
@@ -75,9 +80,10 @@ class LumenRouteConfig {
                                 def classAbbrevRef = Optional.ofNullable(RdfUtils.PREFIX_MAP.abbreviate(findAllQuery.classRef))
                                         .orElse(findAllQuery.classRef)
                                 final resources = new TransactionTemplate(txMgr).execute {
-                                    final cypher = 'MATCH (e:Resource) -[:rdf_type*]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT 25'
-                                    log.debug('Querying using {}: {}', [classAbbrevRef: classAbbrevRef], cypher)
-                                    final rs = neo4j.query(cypher, [classAbbrevRef: classAbbrevRef] as Map<String, Object>)
+                                    final cypher = 'MATCH (e:Resource) -[:rdf_type*]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT {itemsPerPage}'
+                                    final params = [classAbbrevRef: classAbbrevRef, itemsPerPage: findAllQuery.itemsPerPage] as Map<String, Object>
+                                    log.debug('Querying using {}: {}', params, cypher)
+                                    final rs = neo4j.query(cypher, params)
                                     try {
                                         final rsList = rs.collect { it['e'] as Node }.toList()
                                         log.debug('{} rows in result set for {}: {}', rsList.size(), classAbbrevRef, rsList)
@@ -139,6 +145,68 @@ class LumenRouteConfig {
     }
 
     @Bean
+    def RouteBuilder journalRouteBuilder() {
+        log.info('Initializing journal RouteBuilder')
+        new RouteBuilder() {
+            @Override
+            void configure() throws Exception {
+                from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.PERSISTENCE_JOURNAL.key('arkan'))
+                        .to('log:IN.persistence-journal?showHeaders=true&showAll=true&multiline=true')
+                        .process {
+                    try {
+                        final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
+                        switch (inBodyJson.path('@type').asText()) {
+                            case 'JournalImageQuery':
+                                final journalImageQuery = toJson.mapper.convertValue(inBodyJson, JournalImageQuery)
+                                final resources = new TransactionTemplate(txMgr).execute {
+                                    final params = [
+                                        maxDateCreated: journalImageQuery.maxDateCreated,
+                                        itemsPerPage: journalImageQuery.itemsPerPage
+                                    ] as Map<String, Object>
+                                    final cypher = 'MATCH (n:JournalImageObject) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}'
+                                    log.debug('Querying: {} {}', cypher, params)
+                                    final rs = neo4j.query(cypher, params)
+                                    try {
+                                        final rsList = rs.collect { it['n'] as Node }.toList()
+                                        log.debug('{} rows in result set: {}', rsList.size(), rsList)
+                                        new Resources<>(rsList.collect {
+                                            final imageObject = new ImageObject()
+                                            imageObject.dateCreated = Optional.ofNullable(it.getProperty('dateCreated')).map { new DateTime(it) }.orElse(null)
+                                            imageObject.datePublished = Optional.ofNullable(it.getProperty('datePublished')).map { new DateTime(it) }.orElse(null)
+                                            imageObject.dateModified = Optional.ofNullable(it.getProperty('dateModified')).map { new DateTime(it) }.orElse(null)
+                                            imageObject.uploadDate = Optional.ofNullable(it.getProperty('uploadDate')).map { new DateTime(it) }.orElse(null)
+                                            imageObject.contentUrl = it.getProperty('contentUrl')
+                                            imageObject.contentSize = (Long) it.getProperty('contentSize')
+                                            imageObject.contentType = it.getProperty('contentType')
+                                            imageObject.name = it.getProperty('name')
+                                            imageObject
+                                        })
+                                    } finally {
+                                        rs.finish()
+                                    }
+                                }
+                                it.out.body = resources
+                                break;
+                            default:
+                                throw new Exception('Unknown JSON message: ' + inBodyJson);
+                        }
+                    } catch (Exception e) {
+                        log.error("Cannot process: " + it.in.body, e)
+                        it.out.body = new Error(e)
+                    }
+
+                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
+                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
+                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
+                }.bean(toJson)
+                    // https://issues.apache.org/jira/browse/CAMEL-8270
+                    .to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
+                    .to('log:OUT.persistence-journal?showAll=true&multiline=true')
+            }
+        }
+    }
+
+    @Bean
     def RouteBuilder imageRouteBuilder() {
         log.info('Initializing image RouteBuilder')
 
@@ -152,7 +220,7 @@ class LumenRouteConfig {
                 from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.image')
                         .sample(1, TimeUnit.SECONDS)
                         .to('log:IN.avatar.NAO.data.image?showHeaders=true&showAll=true&multiline=true')
-                        .process {
+                        .process { Exchange it ->
                     try {
                         final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
                         final imageObject = toJson.mapper.convertValue(inBodyJson, ImageObjectLegacy)
@@ -168,7 +236,7 @@ class LumenRouteConfig {
                                 dateCreated: now.toString(),
                                 datePublished: now.toString(),
                                 dateModified: now.toString()
-                            ]
+                            ] as Map<String, Object>
                             final node = neo4j.createNode(props, ['JournalImageObject'])
                             log.debug('Created JournalImageObject {} from {} {}', node, imageObject.name, now)
                             it.out.body = node.getId()
@@ -203,7 +271,7 @@ class LumenRouteConfig {
                 from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.sonar')
                         .sample(1, TimeUnit.SECONDS)
                         .to('log:IN.avatar.NAO.data.sonar?showHeaders=true&showAll=true&multiline=true')
-                        .process {
+                        .process { Exchange it ->
                     try {
                         final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
                         final sonarState = toJson.mapper.convertValue(inBodyJson, SonarState)
@@ -213,7 +281,7 @@ class LumenRouteConfig {
                                 leftSensor: sonarState.leftSensor,
                                 rightSensor: sonarState.rightSensor,
                                 dateCreated: now.toString()
-                            ]
+                            ] as Map<String, Object>
                             final node = neo4j.createNode(props, ['JournalSonarState'])
                             log.debug('Created JournalSonarState {} from {}', node, props)
                             it.out.body = node.getId()
@@ -248,7 +316,7 @@ class LumenRouteConfig {
                 from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.battery')
                         .sample(1, TimeUnit.SECONDS)
                         .to('log:IN.avatar.NAO.data.battery?showHeaders=true&showAll=true&multiline=true')
-                        .process {
+                        .process { Exchange it ->
                     try {
                         final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
                         final batteryState = toJson.mapper.convertValue(inBodyJson, BatteryState)
@@ -259,7 +327,7 @@ class LumenRouteConfig {
                                 isPlugged: batteryState.isPlugged,
                                 isCharging: batteryState.isCharging,
                                 dateCreated: now.toString()
-                            ]
+                            ] as Map<String, Object>
                             final node = neo4j.createNode(props, ['JournalBatteryState'])
                             log.debug('Created JournalBatteryState {} from {}', node, props)
                             it.out.body = node.getId()
@@ -295,7 +363,7 @@ class LumenRouteConfig {
                 from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.joint')
                         .sample(1, TimeUnit.SECONDS)
                         .to('log:IN.avatar.NAO.data.joint?showHeaders=true&showAll=true&multiline=true')
-                        .process {
+                        .process { Exchange it ->
                     try {
                         final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
                         final jointSet = toJson.mapper.convertValue(inBodyJson, JointSetLegacy)
@@ -308,7 +376,7 @@ class LumenRouteConfig {
                                     angle: jointSet.angles[i],
                                     stiffness: jointSet.angles[i],
                                     dateCreated: now.toString()
-                                ]
+                                ] as Map<String, Object>
                                 final node = neo4j.createNode(props, ['JournalJoint'])
                                 nodes.add(node)
                             }
@@ -346,7 +414,7 @@ class LumenRouteConfig {
                 from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.tactile')
                         .sample(1, TimeUnit.SECONDS)
                         .to('log:IN.avatar.NAO.data.tactile?showHeaders=true&showAll=true&multiline=true')
-                        .process {
+                        .process { Exchange it ->
                     try {
                         final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
                         final tactileSet = toJson.mapper.convertValue(inBodyJson, TactileSetLegacy)
@@ -358,7 +426,7 @@ class LumenRouteConfig {
                                     name: tactileName,
                                     value: tactileSet.values[i],
                                     dateCreated: now.toString()
-                                ]
+                                ] as Map<String, Object>
                                 final node = neo4j.createNode(props, ['JournalTactile'])
                                 nodes.add(node)
                             }
