@@ -11,8 +11,10 @@ import id.ac.itb.lumen.core.Channel
 import id.ac.itb.lumen.core.ImageObject
 import id.ac.itb.lumen.core.ImageObjectLegacy
 import id.ac.itb.lumen.core.JointSetLegacy
+import id.ac.itb.lumen.core.JointState
 import id.ac.itb.lumen.core.SonarState
 import id.ac.itb.lumen.core.TactileSetLegacy
+import id.ac.itb.lumen.core.TactileState
 import org.apache.camel.Exchange
 import org.apache.camel.builder.RouteBuilder
 import org.joda.time.DateTime
@@ -176,10 +178,116 @@ class LumenRouteConfig {
                                             imageObject.dateModified = Optional.ofNullable(it.getProperty('dateModified')).map { new DateTime(it) }.orElse(null)
                                             imageObject.uploadDate = Optional.ofNullable(it.getProperty('uploadDate')).map { new DateTime(it) }.orElse(null)
                                             imageObject.contentUrl = it.getProperty('contentUrl')
-                                            imageObject.contentSize = (Long) it.getProperty('contentSize')
+                                            imageObject.contentSize = it.getProperty('contentSize') as Long
                                             imageObject.contentType = it.getProperty('contentType')
                                             imageObject.name = it.getProperty('name')
                                             imageObject
+                                        })
+                                    } finally {
+                                        rs.finish()
+                                    }
+                                }
+                                it.out.body = resources
+                                break;
+                            case 'JournalJointQuery':
+                                final journalJointQuery = toJson.mapper.convertValue(inBodyJson, JournalJointQuery)
+                                final resources = new TransactionTemplate(txMgr).execute {
+                                    final params = [
+                                        maxDateCreated: journalJointQuery.maxDateCreated,
+                                        itemsPerPage: journalJointQuery.itemsPerPage
+                                    ] as Map<String, Object>
+                                    final cypher = 'MATCH (n:JournalJoint) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}'
+                                    log.debug('Querying: {} {}', cypher, params)
+                                    final rs = neo4j.query(cypher, params)
+                                    try {
+                                        final rsList = rs.collect { it['n'] as Node }.toList()
+                                        log.debug('{} rows in result set: {}', rsList.size(), rsList)
+                                        new Resources<>(rsList.collect {
+                                            final jointState = new JointState()
+                                            jointState.dateCreated = Optional.ofNullable(it.getProperty('dateCreated')).map { new DateTime(it) }.orElse(null)
+                                            jointState.name = it.getProperty('name')
+                                            jointState.angle = it.getProperty('angle') as Double
+                                            jointState.stiffness = it.getProperty('stiffness') as Double
+                                            jointState
+                                        })
+                                    } finally {
+                                        rs.finish()
+                                    }
+                                }
+                                it.out.body = resources
+                                break;
+                            case 'JournalTactileQuery':
+                                final journalTactileQuery = toJson.mapper.convertValue(inBodyJson, JournalTactileQuery)
+                                final resources = new TransactionTemplate(txMgr).execute {
+                                    final params = [
+                                        maxDateCreated: journalTactileQuery.maxDateCreated,
+                                        itemsPerPage: journalTactileQuery.itemsPerPage
+                                    ] as Map<String, Object>
+                                    final cypher = 'MATCH (n:JournalTactile) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}'
+                                    log.debug('Querying: {} {}', cypher, params)
+                                    final rs = neo4j.query(cypher, params)
+                                    try {
+                                        final rsList = rs.collect { it['n'] as Node }.toList()
+                                        log.debug('{} rows in result set: {}', rsList.size(), rsList)
+                                        new Resources<>(rsList.collect {
+                                            final tactileState = new TactileState()
+                                            tactileState.dateCreated = Optional.ofNullable(it.getProperty('dateCreated')).map { new DateTime(it) }.orElse(null)
+                                            tactileState.name = it.getProperty('name')
+                                            tactileState.value = it.getProperty('value') as Double
+                                            tactileState
+                                        })
+                                    } finally {
+                                        rs.finish()
+                                    }
+                                }
+                                it.out.body = resources
+                                break;
+                            case 'JournalSonarQuery':
+                                final journalSonarQuery = toJson.mapper.convertValue(inBodyJson, JournalSonarQuery)
+                                final resources = new TransactionTemplate(txMgr).execute {
+                                    final params = [
+                                        maxDateCreated: journalSonarQuery.maxDateCreated,
+                                        itemsPerPage: journalSonarQuery.itemsPerPage
+                                    ] as Map<String, Object>
+                                    final cypher = 'MATCH (n:JournalSonarState) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}'
+                                    log.debug('Querying: {} {}', cypher, params)
+                                    final rs = neo4j.query(cypher, params)
+                                    try {
+                                        final rsList = rs.collect { it['n'] as Node }.toList()
+                                        log.debug('{} rows in result set: {}', rsList.size(), rsList)
+                                        new Resources<>(rsList.collect {
+                                            final sonarState = new SonarState()
+                                            sonarState.dateCreated = Optional.ofNullable(it.getProperty('dateCreated')).map { new DateTime(it) }.orElse(null)
+                                            sonarState.leftSensor = it.getProperty('leftSensor') as Double
+                                            sonarState.rightSensor = it.getProperty('rightSensor') as Double
+                                            sonarState
+                                        })
+                                    } finally {
+                                        rs.finish()
+                                    }
+                                }
+                                it.out.body = resources
+                                break;
+                            case 'JournalBatteryQuery':
+                                final journalBatteryQuery = toJson.mapper.convertValue(inBodyJson, JournalBatteryQuery)
+                                final resources = new TransactionTemplate(txMgr).execute {
+                                    final params = [
+                                        maxDateCreated: journalBatteryQuery.maxDateCreated,
+                                        itemsPerPage: journalBatteryQuery.itemsPerPage
+                                    ] as Map<String, Object>
+                                    final cypher = 'MATCH (n:JournalBatteryState) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}'
+                                    log.debug('Querying: {} {}', cypher, params)
+                                    final rs = neo4j.query(cypher, params)
+                                    try {
+                                        final rsList = rs.collect { it['n'] as Node }.toList()
+                                        log.debug('{} rows in result set: {}', rsList.size(), rsList)
+                                        new Resources<>(rsList.collect {
+                                            final batteryState = new BatteryState()
+                                            batteryState.dateCreated = Optional.ofNullable(it.getProperty('dateCreated')).map { new DateTime(it) }.orElse(null)
+                                            batteryState.percentage = it.getProperty('percentage') as Double
+                                            batteryState.isCharging = it.getProperty('isCharging') as Boolean
+                                            batteryState.isPlugged = it.getProperty('isPlugged') as Boolean
+                                            batteryState
                                         })
                                     } finally {
                                         rs.finish()
