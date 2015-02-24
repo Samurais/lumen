@@ -17,6 +17,9 @@ import id.ac.itb.lumen.core.TactileSetLegacy
 import id.ac.itb.lumen.core.TactileState
 import org.apache.camel.Exchange
 import org.apache.camel.builder.RouteBuilder
+import org.apache.commons.codec.binary.Base64
+import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.StringUtils
 import org.joda.time.DateTime
 import org.neo4j.graphdb.Node
 import org.neo4j.graphdb.Relationship
@@ -149,6 +152,8 @@ class LumenRouteConfig {
     @Bean
     def RouteBuilder journalRouteBuilder() {
         log.info('Initializing journal RouteBuilder')
+        final mediaUploadPrefix = env.getRequiredProperty('media.upload.prefix')
+        final mediaDownloadPrefix = env.getRequiredProperty('media.download.prefix')
         new RouteBuilder() {
             @Override
             void configure() throws Exception {
@@ -173,11 +178,20 @@ class LumenRouteConfig {
                                         log.debug('{} rows in result set: {}', rsList.size(), rsList)
                                         new Resources<>(rsList.collect {
                                             final imageObject = new ImageObject()
-                                            imageObject.dateCreated = Optional.ofNullable(it.getProperty('dateCreated')).map { new DateTime(it) }.orElse(null)
-                                            imageObject.datePublished = Optional.ofNullable(it.getProperty('datePublished')).map { new DateTime(it) }.orElse(null)
-                                            imageObject.dateModified = Optional.ofNullable(it.getProperty('dateModified')).map { new DateTime(it) }.orElse(null)
-                                            imageObject.uploadDate = Optional.ofNullable(it.getProperty('uploadDate')).map { new DateTime(it) }.orElse(null)
-                                            imageObject.contentUrl = it.getProperty('contentUrl')
+                                            imageObject.dateCreated = Optional.ofNullable(it.getProperty('dateCreated')).map {
+                                                new DateTime(it)
+                                            }.orElse(null)
+                                            imageObject.datePublished = Optional.ofNullable(it.getProperty('datePublished')).map {
+                                                new DateTime(it)
+                                            }.orElse(null)
+                                            imageObject.dateModified = Optional.ofNullable(it.getProperty('dateModified')).map {
+                                                new DateTime(it)
+                                            }.orElse(null)
+                                            imageObject.uploadDate = Optional.ofNullable(it.getProperty('uploadDate')).map {
+                                                new DateTime(it)
+                                            }.orElse(null)
+                                            final upContentUrl = it.getProperty('contentUrl') as String
+                                            imageObject.contentUrl = upContentUrl.replace(mediaUploadPrefix, mediaDownloadPrefix)
                                             imageObject.contentSize = it.getProperty('contentSize') as Long
                                             imageObject.contentType = it.getProperty('contentType')
                                             imageObject.name = it.getProperty('name')
@@ -318,6 +332,16 @@ class LumenRouteConfig {
     def RouteBuilder imageRouteBuilder() {
         log.info('Initializing image RouteBuilder')
 
+        final mediaUploadPath = new File(env.getRequiredProperty('media.upload.path'))
+        mediaUploadPath.mkdirs()
+        final mediaUploadPrefix = env.getRequiredProperty('media.upload.prefix')
+        final extensionMap = [
+                'image/jpeg': 'jpg',
+                'image/png': 'png',
+                'image/gif': 'gif',
+                'image/bmp': 'bmp'
+        ]
+
         new TransactionTemplate(txMgr).execute { tx ->
             neo4j.query('CREATE INDEX ON :JournalImageObject(dateCreated)', [:]).finish()
         }
@@ -333,18 +357,31 @@ class LumenRouteConfig {
                         final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
                         final imageObject = toJson.mapper.convertValue(inBodyJson, ImageObjectLegacy)
                         new TransactionTemplate(txMgr).execute { tx ->
-                            final now = new DateTime() // FIXME: NaoServer should sent ISO formatted timestamp
+                            final now = new DateTime() // FIXME: NaoServer should send ISO formatted timestamp
                             final props = [
-                                name: imageObject.name,
-                                contentType: imageObject.contentType,
-                                contentSize: imageObject.contentSize,
-                                contentUrl: imageObject.contentUrl,
-                                url: imageObject.url,
-                                uploadDate: now.toString(),
-                                dateCreated: now.toString(),
-                                datePublished: now.toString(),
-                                dateModified: now.toString()
+                                    name: imageObject.name,
+                                    contentType: imageObject.contentType,
+                                    contentSize: imageObject.contentSize,
+                                    url: imageObject.url,
+                                    uploadDate: now.toString(),
+                                    dateCreated: now.toString(),
+                                    datePublished: now.toString(),
+                                    dateModified: now.toString()
                             ] as Map<String, Object>
+                            final contentType = Preconditions.checkNotNull(imageObject.contentType,
+                                    'ImageObject.contentType must be specified')
+                            final upContentUrl = imageObject.contentUrl
+                            if (upContentUrl != null && upContentUrl.startsWith('data:')) {
+                                final base64 = StringUtils.substringAfter(upContentUrl, ",")
+                                final content = Base64.decodeBase64(base64)
+                                final fileName = UUID.randomUUID().toString() + '.' + extensionMap[contentType]
+                                final file = new File(mediaUploadPath, fileName)
+                                log.debug('Writing {} ImageObject to {} ...', contentType, file)
+                                FileUtils.writeByteArrayToFile(file, content)
+                                props['contentUrl'] = mediaUploadPrefix + fileName
+                            } else {
+                                props['contentUrl'] = upContentUrl
+                            }
                             final node = neo4j.createNode(props, ['JournalImageObject'])
                             log.debug('Created JournalImageObject {} from {} {}', node, imageObject.name, now)
                             it.out.body = node.getId()
