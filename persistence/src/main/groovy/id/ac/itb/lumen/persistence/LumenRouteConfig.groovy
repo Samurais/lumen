@@ -21,6 +21,7 @@ import org.apache.commons.codec.binary.Base64
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import org.neo4j.graphdb.Node
 import org.neo4j.graphdb.Relationship
 import org.slf4j.Logger
@@ -374,7 +375,10 @@ class LumenRouteConfig {
                             if (upContentUrl != null && upContentUrl.startsWith('data:')) {
                                 final base64 = StringUtils.substringAfter(upContentUrl, ",")
                                 final content = Base64.decodeBase64(base64)
-                                final fileName = 'journalimage_' + UUID.randomUUID().toString() + '.' + extensionMap[contentType]
+                                final ext = Preconditions.checkNotNull(extensionMap[contentType],
+                                        'Cannot get extension for MIME type "%s". Known MIME types: %s',
+                                        contentType, extensionMap.keySet())
+                                final fileName = 'journalimage_' + new DateTime().toString("yyyy-MM-dd_HH-mm-ss_Z") + '.' + ext
                                 final file = new File(mediaUploadPath, fileName)
                                 log.debug('Writing {} ImageObject to {} ...', contentType, file)
                                 FileUtils.writeByteArrayToFile(file, content)
