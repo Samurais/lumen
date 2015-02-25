@@ -379,6 +379,7 @@ class LumenRouteConfig {
                                 final ext = Preconditions.checkNotNull(extensionMap[contentType],
                                         'Cannot get extension for MIME type "%s". Known MIME types: %s',
                                         contentType, extensionMap.keySet())
+                                // IIS disables double escaping, so avoid '+0700' in filename
                                 final fileName = avatarId + '_journalimage_' +
                                         new DateTime(DateTimeZone.UTC).toString("yyyy-MM-ddTHH-mm-ssZ") + '.' + ext
                                 final file = new File(mediaUploadPath, fileName)
