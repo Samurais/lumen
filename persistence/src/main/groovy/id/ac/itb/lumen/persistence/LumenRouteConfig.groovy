@@ -374,7 +374,7 @@ class LumenRouteConfig {
                             if (upContentUrl != null && upContentUrl.startsWith('data:')) {
                                 final base64 = StringUtils.substringAfter(upContentUrl, ",")
                                 final content = Base64.decodeBase64(base64)
-                                final fileName = UUID.randomUUID().toString() + '.' + extensionMap[contentType]
+                                final fileName = 'journalimage_' + UUID.randomUUID().toString() + '.' + extensionMap[contentType]
                                 final file = new File(mediaUploadPath, fileName)
                                 log.debug('Writing {} ImageObject to {} ...', contentType, file)
                                 FileUtils.writeByteArrayToFile(file, content)
