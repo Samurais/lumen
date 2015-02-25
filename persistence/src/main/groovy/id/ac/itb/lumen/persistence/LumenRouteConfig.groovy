@@ -381,7 +381,7 @@ class LumenRouteConfig {
                                         contentType, extensionMap.keySet())
                                 // IIS disables double escaping, so avoid '+0700' in filename
                                 final fileName = avatarId + '_journalimage_' +
-                                        new DateTime(DateTimeZone.UTC).toString("yyyy-MM-ddTHH-mm-ssZ") + '.' + ext
+                                        new DateTime(DateTimeZone.UTC).toString("yyyy-MM-dd'T'HH-mm-ssZ") + '.' + ext
                                 final file = new File(mediaUploadPath, fileName)
                                 log.debug('Writing {} ImageObject to {} ...', contentType, file)
                                 FileUtils.writeByteArrayToFile(file, content)
