@@ -2,6 +2,17 @@
 
 Persistence module for Lumen Social Robot.
 
+## Running from Command Line
+
+To run from command line, first you have to prepare its dependencies, then build it.
+
+1. Build/deploy `lumen-sdk/java`
+2. Build `lumen-persistence` plus `dependency:copy-dependencies`:
+
+        mvn -DskipTests install dependency:copy-dependencies
+
+
+
 ## Overview
 
 Persistence handles the following general categories, each one is handled differently:

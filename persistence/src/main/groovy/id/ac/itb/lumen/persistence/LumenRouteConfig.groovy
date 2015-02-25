@@ -379,7 +379,8 @@ class LumenRouteConfig {
                                 final ext = Preconditions.checkNotNull(extensionMap[contentType],
                                         'Cannot get extension for MIME type "%s". Known MIME types: %s',
                                         contentType, extensionMap.keySet())
-                                final fileName = avatarId + '_journalimage_' + new DateTime().toString("yyyy-MM-ddTHH-mm-ssZ") + '.' + ext
+                                final fileName = avatarId + '_journalimage_' +
+                                        new DateTime(DateTimeZone.UTC).toString("yyyy-MM-ddTHH-mm-ssZ") + '.' + ext
                                 final file = new File(mediaUploadPath, fileName)
                                 log.debug('Writing {} ImageObject to {} ...', contentType, file)
                                 FileUtils.writeByteArrayToFile(file, content)
