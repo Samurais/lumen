@@ -350,9 +350,10 @@ class LumenRouteConfig {
         new RouteBuilder() {
             @Override
             void configure() throws Exception {
-                from('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.image')
+                final avatarId = 'NAO'
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.${avatarId}.data.image")
                         .sample(1, TimeUnit.SECONDS)
-                        .to('log:IN.avatar.NAO.data.image?showHeaders=true&showAll=true&multiline=true')
+                        .to("log:IN.avatar.${avatarId}.data.image?showHeaders=true&showAll=true&multiline=true")
                         .process { Exchange it ->
                     try {
                         final inBodyJson = toJson.mapper.readTree(it.in.body as byte[])
@@ -378,7 +379,7 @@ class LumenRouteConfig {
                                 final ext = Preconditions.checkNotNull(extensionMap[contentType],
                                         'Cannot get extension for MIME type "%s". Known MIME types: %s',
                                         contentType, extensionMap.keySet())
-                                final fileName = 'journalimage_' + new DateTime().toString("yyyy-MM-dd_HH-mm-ss_Z") + '.' + ext
+                                final fileName = avatarId + '_journalimage_' + new DateTime().toString("yyyy-MM-dd_HH-mm-ssZ") + '.' + ext
                                 final file = new File(mediaUploadPath, fileName)
                                 log.debug('Writing {} ImageObject to {} ...', contentType, file)
                                 FileUtils.writeByteArrayToFile(file, content)
@@ -401,7 +402,7 @@ class LumenRouteConfig {
                 }.bean(toJson)
                     // https://issues.apache.org/jira/browse/CAMEL-8270
                     //.to('rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false')
-                    .to('log:OUT.avatar.NAO.data.image?showAll=true&multiline=true')
+                    .to("log:OUT.avatar.${avatarId}.data.image?showAll=true&multiline=true")
             }
         }
     }
