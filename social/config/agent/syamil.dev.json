@@ -11,11 +11,14 @@
     "facebookAppSecret": "",
     "facebookAccessToken": ""
   },
-  "twitter": null,
+  "twitter": {
+    "twitterUserId": null,
+    "twitterScreenName": null
+  },
   "twitterSys": {
-    "twitterApiKey": "",
-    "twitterApiSecret": "",
-    "twitterToken": "",
-    "twitterTokenSecret": ""
+    "twitterApiKey": null,
+    "twitterApiSecret": null,
+    "twitterToken": null,
+    "twitterTokenSecret": null
   }
 }

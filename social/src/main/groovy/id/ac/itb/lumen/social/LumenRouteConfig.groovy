@@ -57,6 +57,7 @@ class LumenRouteConfig {
     //@Bean
     def RouteBuilder facebookHomeRouteBuilder() {
         log.info('Initializing facebookHome RouteBuilder')
+
         final mapper = new ObjectMapper()
         mapper.enable(SerializationFeature.INDENT_OUTPUT)
         new RouteBuilder() {
@@ -68,7 +69,8 @@ class LumenRouteConfig {
                 final sometimeAgo = (new DateTime().minusDays(1).getMillis() / 1000) as long
                 FluentIterable.from(agentRepo.findAll())
                         .filter { it.facebookSys?.facebookAppSecret != null }
-                        .each {
+                        .each { AgentSocialConfig it ->
+
                     final facebookHome = getContext().getEndpoint("facebook://home?consumer.delay=15000&oAuthAppId=${it.facebookSys.facebookAppId}&oAuthAppSecret=${it.facebookSys.facebookAppSecret}&oAuthAccessToken=${it.facebookSys.facebookAccessToken}&reading.since=${sometimeAgo}&reading.limit=20",
                         FacebookEndpoint.class)
 /*
@@ -257,9 +259,14 @@ Body: {
                 final sometimeAgo = (new DateTime().minusDays(1).getMillis() / 1000) as long
                 FluentIterable.from(agentRepo.findAll())
                         .filter { it.facebookSys?.facebookAppSecret != null }
-                        .each {
+                        .each { AgentSocialConfig it ->
                     final facebookHome = getContext().getEndpoint("facebook://feed?consumer.delay=15000&oAuthAppId=${it.facebookSys.facebookAppId}&oAuthAppSecret=${it.facebookSys.facebookAppSecret}&oAuthAccessToken=${it.facebookSys.facebookAccessToken}&reading.since=${sometimeAgo}&reading.limit=20",
                         FacebookEndpoint.class)
+
+                    final commentPostEndpoint = "facebook://commentPost?oAuthAppId=${it.facebookSys.facebookAppId}&oAuthAppSecret=${it.facebookSys.facebookAppSecret}&oAuthAccessToken=${it.facebookSys.facebookAccessToken}"
+                    final producerTemplate = getContext().createProducerTemplate()
+                    final replier = new StatusReplier(producerTemplate, commentPostEndpoint)
+                    final echoProcessor = new EchoProcessor()
 
                     // TODO: depends on https://issues.apache.org/jira/browse/CAMEL-8257
 //                    final facebookHome = getContext().getEndpoint("facebook://home", FacebookEndpoint.class)
@@ -290,6 +297,9 @@ Body: {
                       statusUpdate.channel.thingId = 'facebook'
                       statusUpdate.channel.name = 'Facebook'
                       it.in.body = statusUpdate
+
+                        // Echo
+                        echoProcessor.processStatus(statusUpdate, replier)
                     }.bean(toJson)
                             .to('rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=' + Channel.SOCIAL_PERCEPTION.key(it.id))
                             .to("log:" + Channel.SOCIAL_PERCEPTION.key(it.id))
