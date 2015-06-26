@@ -37,3 +37,5 @@ atlassian-ide-plugin.xml
 social/config/application.properties
 persistence/config/application.properties
 social/config/agent/arkan.json
+
+.Rhistory
