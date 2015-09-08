@@ -2,28 +2,20 @@ package id.ac.itb.lumen.persistence
 
 import au.com.bytecode.opencsv.CSVParser
 import au.com.bytecode.opencsv.CSVReader
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Preconditions
 import com.google.common.base.Strings
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype
-import com.hp.hpl.jena.graph.Node_Literal
-import com.hp.hpl.jena.sparql.util.NodeFactoryExtra
 import groovy.transform.CompileStatic
-import org.neo4j.cypher.javacompat.ExecutionEngine
-import org.neo4j.graphdb.GraphDatabaseService
+import org.apache.jena.graph.Node_Literal
+import org.apache.jena.sparql.util.NodeFactoryExtra
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.annotation.Profile
-import org.springframework.transaction.annotation.EnableTransactionManagement
-import org.springframework.transaction.support.TransactionTemplate
 
 import javax.annotation.PostConstruct
-import javax.inject.Inject
 import java.nio.charset.StandardCharsets
 import java.text.NumberFormat
 

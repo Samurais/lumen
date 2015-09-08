@@ -7,9 +7,9 @@ import com.google.common.base.Strings
 import com.google.common.collect.BiMap
 import com.google.common.collect.HashBiMap
 import com.google.common.collect.Iterators
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype
-import com.hp.hpl.jena.graph.Node_Literal
-import com.hp.hpl.jena.sparql.util.NodeFactoryExtra
+import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.graph.Node_Literal
+import org.apache.jena.sparql.util.NodeFactoryExtra
 import groovy.transform.CompileStatic
 import org.neo4j.cypher.javacompat.ExecutionEngine
 import org.neo4j.graphdb.DynamicLabel

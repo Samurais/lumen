@@ -1,13 +1,11 @@
 package id.ac.itb.lumen.persistence
 
-import com.hp.hpl.jena.graph.Node_Literal
-import com.hp.hpl.jena.vocabulary.OWL
-import com.hp.hpl.jena.vocabulary.RDF
-import com.hp.hpl.jena.vocabulary.RDFS
-import com.hp.hpl.jena.vocabulary.XSD
+import org.apache.jena.graph.Node_Literal
 import org.apache.jena.riot.system.FastAbbreviatingPrefixMap
-import org.apache.jena.riot.system.PrefixMap
-import org.apache.jena.riot.system.PrefixMapStd
+import org.apache.jena.vocabulary.OWL
+import org.apache.jena.vocabulary.RDF
+import org.apache.jena.vocabulary.RDFS
+import org.apache.jena.vocabulary.XSD
 
 /**
  * Created by ceefour on 24/01/15.

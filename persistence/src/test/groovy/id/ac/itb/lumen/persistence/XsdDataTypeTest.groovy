@@ -1,9 +1,9 @@
 package id.ac.itb.lumen.persistence
 
-import com.hp.hpl.jena.graph.Node
-import com.hp.hpl.jena.graph.Node_Literal
-import com.hp.hpl.jena.sparql.util.NodeFactoryExtra
-import com.hp.hpl.jena.vocabulary.XSD
+import org.apache.jena.graph.Node
+import org.apache.jena.graph.Node_Literal
+import org.apache.jena.sparql.util.NodeFactoryExtra
+import org.apache.jena.vocabulary.XSD
 import groovy.transform.CompileStatic
 import org.apache.jena.riot.system.PrefixMap
 import org.apache.jena.riot.system.PrefixMapStd
