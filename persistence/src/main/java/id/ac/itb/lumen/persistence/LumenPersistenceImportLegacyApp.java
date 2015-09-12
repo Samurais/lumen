@@ -1,7 +1,7 @@
 package id.ac.itb.lumen.persistence;
 
-import au.com.bytecode.opencsv.CSVParser;
-import au.com.bytecode.opencsv.CSVReader;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVReader;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
@@ -11,7 +11,6 @@ import com.google.common.collect.Iterators;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.sparql.util.NodeFactoryExtra;
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,6 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
     @PostConstruct
     public void init() {
 //        txTemplate = new TransactionTemplate(txMgr)
-        exec = new ExecutionEngine(db);
     }
 
     public void importFile(final File file) throws IOException, InterruptedException {
@@ -229,13 +227,13 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
                             final ImportBatch toExec = batch;
                             executor.submit(() -> {
                                 try (Transaction tx1 = db.beginTx()) {
-                                    toExec.exec(tx1, exec);
+                                    toExec.exec(tx1, db);
                                     tx1.success();
                                     return commits.incrementAndGet();
                                 }
                             });
                         } else {
-                            batch.exec(tx, exec);
+                            batch.exec(tx, db);
                         }
 
 
@@ -278,7 +276,7 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
                 executor.awaitTermination(1, TimeUnit.DAYS);
                 executor = null;
 //                txMgr.commit(tx)
-                batch.exec(tx, exec);
+                batch.exec(tx, db);
                 tx.success();
                 tx.close();
                 log.info("Completed importing {} out of {} statements from {}", NUMBER.format(importeds), NUMBER.format(readCount), file);
@@ -309,7 +307,7 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
         Transaction tx = db.beginTx();
         try {
             // href must be indexed due to MERGE
-            exec.execute("CREATE CONSTRAINT ON (e:Resource) ASSERT e.href IS UNIQUE", new LinkedHashMap());
+            db.execute("CREATE CONSTRAINT ON (e:Resource) ASSERT e.href IS UNIQUE", new LinkedHashMap());
             // since Literal indexes don't scale, we put labels as node properties then index them AFTER import finished
 //            exec.execute('CREATE INDEX ON :Resource(label)', [:])
 //            exec.execute('CREATE INDEX ON :Resource(label_eng)', [:])
@@ -369,7 +367,6 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
     protected static final int commitRate = multithreaded ? 10000 : 100;
     @Inject
     protected GraphDatabaseService db;
-    protected ExecutionEngine exec;
 
     /**
      * Relates a subject resource with an object resource.
@@ -486,7 +483,7 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
             ops = ops++;
         }
 
-        public void exec(Transaction tx, ExecutionEngine exec) {
+        public void exec(Transaction tx, GraphDatabaseService db) {
             if (resourceHrefs.isEmpty()) {
                 log.info("Not committing empty ImportBatch");
                 return;
@@ -516,7 +513,7 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
                 params.put("factRel" + i, it.getRelProps());
             }
             log.trace("Cypher: {} » Params: {}", cypher, params);
-            exec.execute(cypher, params);
+            db.execute(cypher, params);
             log.trace("Merged {} resources, {} facts, and {} literals", resourceHrefs.size(), facts.size(), literals.size());
         }
 
@@ -554,8 +551,4 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
         private int ops = 0;
     }
 
-    private static <K, V, Value extends V> Value putAt0(Map<K, V> propOwner, K key, Value value) {
-        propOwner.put(key, value);
-        return value;
-    }
 }

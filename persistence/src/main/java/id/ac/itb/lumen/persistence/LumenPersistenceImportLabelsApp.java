@@ -20,6 +20,7 @@ import org.springframework.core.env.Environment;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
@@ -36,11 +37,11 @@ public class LumenPersistenceImportLabelsApp implements CommandLineRunner {
         mapper = new ObjectMapper();
     }
 
-    public void importLabels(File dbPath, final File file) {
+    public void importLabels(File dbPath, final File file) throws IOException {
         log.info("Importing {} ({} KiB) to {} ...", file, NUMBER.format(DefaultGroovyMethods.asType(file.length() / 1024, Long.class)), dbPath);
         long importeds = 0l;
 
-        final BatchInserter inserter = BatchInserters.inserter(ResourceGroovyMethods.asType(dbPath, String.class));
+        final BatchInserter inserter = BatchInserters.inserter(dbPath.getPath());
         try {
             final Label resourceLabel = DynamicLabel.label("Resource");
             final Label labelLabel = DynamicLabel.label("Label");

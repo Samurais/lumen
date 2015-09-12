@@ -404,7 +404,7 @@ For more info, see (Neo4j Linux Performance Guide](http://neo4j.com/docs/stable/
 Now we have a different structure, where each Yago logical knowledge is contained in its own graph database,
 and using OpenCog-friendly schema as much as possible.
 
-1. `~/lumen_lumen_{tenantEnv}/lumen/yago_taxonomy.neo4j`. Contains the entire `yagoTaxonomy.tsv`, plus the
+1. `~/lumen_lumen_{tenantEnv}/lumen/taxonomy.neo4j`. Contains the entire `yagoTaxonomy.tsv`, plus the
     `rdfs:label`, `skos:prefLabel`, `isPreferredMeaningOf` from `yagoLabels.tsv` of those mentioned types.
 
 ## Steps to Import from Yago2s (Lumen Persistence v0.0.1)
