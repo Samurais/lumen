@@ -3,7 +3,6 @@ package id.ac.itb.lumen.persistence;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import groovy.transform.CompileStatic;
 import org.springframework.data.domain.Pageable;
 
 import java.util.LinkedHashMap;
@@ -15,9 +14,8 @@ import java.util.Map;
  *
  * @todo should be {@link Pageable}
  */
-@CompileStatic
-@JsonInclude(JsonInclude.com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-@JsonTypeInfo(use = JsonTypeInfo.com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = CypherQuery.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = CypherQuery.class)
 @JsonSubTypes(@JsonSubTypes.Type(name = "CypherQuery", value = CypherQuery.class))
 public class CypherQuery {
     public String getQuery() {
@@ -28,7 +26,7 @@ public class CypherQuery {
         this.query = query;
     }
 
-    public LinkedHashMap<String, Object> getParameters() {
+    public Map<String, Object> getParameters() {
         return parameters;
     }
 

@@ -1,5 +1,6 @@
 package id.ac.itb.lumen.persistence;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
@@ -24,7 +25,11 @@ public class ToJson implements Function<Object, String> {
 
     @Override
     public String apply(@Body Object o) {
-        return o != null ? mapper.writeValueAsString(o) : null;
+        try {
+            return o != null ? mapper.writeValueAsString(o) : null;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public ObjectMapper getMapper() {

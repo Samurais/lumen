@@ -3,7 +3,6 @@ package id.ac.itb.lumen.persistence;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import groovy.transform.CompileStatic;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -12,9 +11,8 @@ import org.springframework.data.domain.Pageable;
  *
  * @todo should be {@link Pageable}
  */
-@CompileStatic
-@JsonInclude(JsonInclude.com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-@JsonTypeInfo(use = JsonTypeInfo.com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = JournalImageQuery.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = JournalImageQuery.class)
 @JsonSubTypes(@JsonSubTypes.Type(name = "JournalImageQuery", value = JournalImageQuery.class))
 public class JournalImageQuery {
     public String getMaxDateCreated() {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import groovy.transform.CompileStatic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,9 +11,8 @@ import java.util.List;
 /**
  * Created by ceefour on 23/01/15.
  */
-@CompileStatic
-@JsonInclude(JsonInclude.com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-@JsonTypeInfo(use = JsonTypeInfo.com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = IndexedResource.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = IndexedResource.class)
 @JsonSubTypes(@JsonSubTypes.Type(name = "Resource", value = IndexedResource.class))
 public class IndexedResource {
     public void addLabel(String label, String language) {
@@ -65,7 +63,7 @@ public class IndexedResource {
     private List<LocalizedLabel> labels;
     private String isPreferredMeaningOf;
 
-    @JsonInclude(JsonInclude.com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class LocalizedLabel {
         public LocalizedLabel() {
         }

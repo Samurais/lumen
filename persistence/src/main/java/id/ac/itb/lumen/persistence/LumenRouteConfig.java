@@ -2,10 +2,10 @@ package id.ac.itb.lumen.persistence;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.ConnectionFactory;
-import groovy.lang.Closure;
-import groovy.transform.CompileStatic;
 import id.ac.itb.lumen.core.*;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -33,23 +33,36 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 1/19/15.
  */
-@CompileStatic
 @Configuration
 @Profile("daemon")
 public class LumenRouteConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(LumenRouteConfig.class);
+
+    @Inject
+    protected Environment env;
+    @Inject
+    protected ToJson toJson;
+    @Inject
+    protected PlatformTransactionManager txMgr;
+    @Inject
+    protected Neo4jTemplate neo4j;
+
     @Bean
     public ConnectionFactory amqpConnFactory() {
         final ConnectionFactory connFactory = new ConnectionFactory();
         connFactory.setHost(env.getRequiredProperty("amqp.host"));
         connFactory.setUsername(env.getRequiredProperty("amqp.username"));
         connFactory.setPassword(env.getRequiredProperty("amqp.password"));
-        return ((ConnectionFactory) (connFactory));
+        return connFactory;
     }
 
     @Bean
@@ -58,100 +71,59 @@ public class LumenRouteConfig {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.PERSISTENCE_FACT.key("arkan")).to("log:IN.persistence-fact?showHeaders=true&showAll=true&multiline=true").process(new Closure<String>(this, this) {
-                    public String doCall(Exchange it) {
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.PERSISTENCE_FACT.key("arkan"))
+                        .to("log:IN.persistence-fact?showHeaders=true&showAll=true&multiline=true")
+                        .process(it -> {
                         try {
-                            final JsonNode inBodyJson = toJson.getMapper().readTree(DefaultGroovyMethods.asType(it.getIn().getBody(), Byte[].class));
+                            final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
                             final String switchArg = inBodyJson.path("@type").asText();
-                            if (StringGroovyMethods.isCase("FindAllQuery", getProperty("switchArg"))) {
+                            if ("FindAllQuery".equals("FindAllQuery")) {
                                 final FindAllQuery findAllQuery = toJson.getMapper().convertValue(inBodyJson, FindAllQuery.class);
                                 final String classAbbrevRef = Optional.ofNullable(RdfUtils.getPREFIX_MAP().abbreviate(findAllQuery.getClassRef())).orElse(findAllQuery.getClassRef());
-                                final Resources resources = new TransactionTemplate(txMgr).execute(new Closure<Resources>(this, this) {
-                                    public Resources doCall(TransactionStatus it) {
-                                        final String cypher = "MATCH (e:Resource) -[:rdf_type*]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT {itemsPerPage}";
-                                        final Map<String, Object> params = new Map<String, Object>() {
-                                        };
-                                        log.debug("Querying using {}: {}", params, cypher);
-                                        final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
-                                        try {
-                                            final List<Node> rsList = DefaultGroovyMethods.toList(DefaultGroovyMethods.collect(rs, new Closure<Node>(this, this) {
-                                                public Node doCall(Map<String, Object> it) {
-                                                    return DefaultGroovyMethods.asType(it.get("e"), Node.class);
-                                                }
-
-                                                public groovy.util.Node doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                            log.debug("{} rows in result set for {}: {}", rsList.size(), classAbbrevRef, rsList);
-                                            return new Resources(DefaultGroovyMethods.collect(rsList, new Closure<IndexedResource>(this, this) {
-                                                public IndexedResource doCall(Node it) {
-                                                    final IndexedResource indexedRes = new IndexedResource();
-                                                    indexedRes.setHref(it.getProperty("href"));
-                                                    indexedRes.setPrefLabel(it.getProperty("prefLabel"));
-                                                    indexedRes.setIsPreferredMeaningOf(it.getProperty("isPreferredMeaningOf"));
-                                                    return indexedRes;
-                                                }
-
-                                                public IndexedResource doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                        } finally {
-                                            rs.finish();
-                                        }
-
+                                final Resources<IndexedResource> resources = new TransactionTemplate(txMgr).execute(tx -> {
+                                    final String cypher = "MATCH (e:Resource) -[:rdf_type*]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT {itemsPerPage}";
+                                    final Map<String, Object> params = new HashMap<String, Object>();
+                                    log.debug("Querying using {}: {}", params, cypher);
+                                    final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
+                                    try {
+                                        final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node) x.get("e")).toList();
+                                        log.debug("{} rows in result set for {}: {}", rsList.size(), classAbbrevRef, rsList);
+                                        final List<IndexedResource> indexedResources = rsList.stream().map(it2 -> {
+                                            final IndexedResource indexedRes = new IndexedResource();
+                                            indexedRes.setHref((String) it2.getProperty("href"));
+                                            indexedRes.setPrefLabel((String) it2.getProperty("prefLabel"));
+                                            indexedRes.setIsPreferredMeaningOf((String) it2.getProperty("isPreferredMeaningOf"));
+                                            return indexedRes;
+                                        }).collect(Collectors.toList());
+                                        return new Resources<>(indexedResources);
+                                    } finally {
+                                        rs.finish();
                                     }
-
-                                    public Resources doCall() {
-                                        return doCall(null);
-                                    }
-
                                 });
                                 it.getOut().setBody(resources);
-                            } else if (StringGroovyMethods.isCase("CypherQuery", getProperty("switchArg"))) {
+                            } else if ("CypherQuery".equals(switchArg)) {
                                 final CypherQuery cypherQuery = toJson.getMapper().convertValue(inBodyJson, CypherQuery.class);
-                                final Resources resources = new TransactionTemplate(txMgr).execute(new Closure<Resources>(this, this) {
-                                    public Resources doCall(TransactionStatus it) {
-                                        log.debug("Querying using {}: {}", cypherQuery.getParameters(), cypherQuery.getQuery());
-                                        final Result<Map<String, Object>> rs = neo4j.query(cypherQuery.getQuery(), cypherQuery.getParameters());
-                                        try {
-                                            final ImmutableList<Map<String, Object>> rsList = ImmutableList.copyOf(rs);
-                                            log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                            return new Resources(DefaultGroovyMethods.collect(rsList, new Closure<ResultRow>(this, this) {
-                                                public ResultRow doCall(Map<String, Object> it) {
-                                                    return new ResultRow(DefaultGroovyMethods.collect(it, new Closure<ResultCell>(this, this) {
-                                                        public ResultCell doCall(Object k, Object v) {
-                                                            if (v instanceof Node) {
-                                                                return new ResultCell((String) k, new Neo4jNode(DefaultGroovyMethods.asType(v, Node.class)));
-                                                            } else if (v instanceof Relationship) {
-                                                                return new ResultCell((String) k, new Neo4jRelationship(DefaultGroovyMethods.asType(v, Relationship.class)));
+                                final Resources<ResultRow> resources = new TransactionTemplate(txMgr).execute(tx -> {
+                                    log.debug("Querying using {}: {}", cypherQuery.getParameters(), cypherQuery.getQuery());
+                                    final Result<Map<String, Object>> rs = neo4j.query(cypherQuery.getQuery(), cypherQuery.getParameters());
+                                    try {
+                                        final ImmutableList<Map<String, Object>> rsList = ImmutableList.copyOf(rs);
+                                        log.debug("{} rows in result set: {}", rsList.size(), rsList);
+                                        final List<ResultRow> resultRowList = rsList.stream().map(row ->
+                                                new ResultRow(row.entrySet().stream().map(entry -> {
+                                                            if (entry.getValue() instanceof Node) {
+                                                                return new ResultCell((String) entry.getKey(), new Neo4jNode((Node) entry.getValue()));
+                                                            } else if (entry.getValue() instanceof Relationship) {
+                                                                return new ResultCell((String) entry.getKey(), new Neo4jRelationship((Relationship) entry.getValue()));
                                                             } else {
-                                                                return new ResultCell((String) k, v);
+                                                                return new ResultCell((String) entry.getKey(), entry.getValue());
                                                             }
-
                                                         }
-
-                                                    }));
-                                                }
-
-                                                public ResultRow doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                        } finally {
-                                            rs.finish();
-                                        }
-
+                                                ).collect(Collectors.toList()))).collect(Collectors.toList());
+                                        return new Resources(resultRowList);
+                                    } finally {
+                                        rs.finish();
                                     }
-
-                                    public Resources doCall() {
-                                        return doCall(null);
-                                    }
-
                                 });
                                 it.getOut().setBody(resources);
                             } else {
@@ -162,16 +134,14 @@ public class LumenRouteConfig {
                             it.getOut().setBody(new Error(e));
                         }
 
-
-                        it.getOut().getHeaders().put("rabbitmq.ROUTING_KEY", Preconditions.checkNotNull(it.getIn().getHeaders().get("rabbitmq.REPLY_TO"), "\"rabbitmq.REPLY_TO\" header must be specified, found headers: %s", it.getIn().getHeaders()));
-                        return putAt0(it.getOut().getHeaders(), "rabbitmq.EXCHANGE_NAME", "");
-                    }
-
-                    public String doCall() {
-                        return doCall(null);
-                    }
-
-                }).bean(toJson).to("rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false").to("log:OUT.persistence-fact?showAll=true&multiline=true");
+                        it.getOut().getHeaders().put("rabbitmq.ROUTING_KEY",
+                                Preconditions.checkNotNull(it.getIn().getHeaders().get("rabbitmq.REPLY_TO"),
+                                        "\"rabbitmq.REPLY_TO\" header must be specified, found headers: %s", it.getIn().getHeaders()));
+                        it.getOut().getHeaders().put("rabbitmq.EXCHANGE_NAME", "");
+                    })
+                        .bean(toJson)
+                        .to("rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false")
+                        .to("log:OUT.persistence-fact?showAll=true&multiline=true");
             }
 
         };
@@ -185,324 +155,130 @@ public class LumenRouteConfig {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.PERSISTENCE_JOURNAL.key("arkan")).to("log:IN.persistence-journal?showHeaders=true&showAll=true&multiline=true").process(new Closure<String>(this, this) {
-                    public String doCall(Exchange it) {
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.PERSISTENCE_JOURNAL.key("arkan"))
+                        .to("log:IN.persistence-journal?showHeaders=true&showAll=true&multiline=true")
+                        .process(it -> {
                         try {
-                            final JsonNode inBodyJson = toJson.getMapper().readTree(DefaultGroovyMethods.asType(it.getIn().getBody(), Byte[].class));
+                            final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
                             final String switchArg = inBodyJson.path("@type").asText();
-                            if (StringGroovyMethods.isCase("JournalImageQuery", getProperty("switchArg"))) {
+                            if ("JournalImageQuery".equals(switchArg)) {
                                 final JournalImageQuery journalImageQuery = toJson.getMapper().convertValue(inBodyJson, JournalImageQuery.class);
-                                final Resources resources = new TransactionTemplate(txMgr).execute(new Closure<Resources>(this, this) {
-                                    public Resources doCall(TransactionStatus it) {
-                                        final Map<String, Object> params = new Map<String, Object>() {
-                                        };
+                                final Resources<ImageObject> resources = new TransactionTemplate(txMgr).execute(tx -> {
+                                        final Map<String, Object> params = new HashMap<String, Object>();
                                         final String cypher = "MATCH (n:JournalImageObject) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}";
                                         log.debug("Querying: {} {}", cypher, params);
                                         final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
                                         try {
-                                            final List<Node> rsList = DefaultGroovyMethods.toList(DefaultGroovyMethods.collect(rs, new Closure<Node>(this, this) {
-                                                public Node doCall(Map<String, Object> it) {
-                                                    return DefaultGroovyMethods.asType(it.get("n"), Node.class);
-                                                }
-
-                                                public groovy.util.Node doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
+                                            final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node) x.get("n")).toList();
                                             log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                            return new Resources(DefaultGroovyMethods.collect(rsList, new Closure<ImageObject>(this, this) {
-                                                public ImageObject doCall(Node it) {
+                                            return new Resources(rsList.stream().map(ix -> {
                                                     final ImageObject imageObject = new ImageObject();
-                                                    imageObject.setDateCreated(Optional.ofNullable(it.getProperty("dateCreated")).map(new Closure<DateTime>(this, this) {
-                                                        public DateTime doCall(Object it) {
-                                                            return new DateTime(it);
-                                                        }
-
-                                                        public DateTime doCall() {
-                                                            return doCall(null);
-                                                        }
-
-                                                    }).orElse(null));
-                                                    imageObject.setDatePublished(Optional.ofNullable(it.getProperty("datePublished")).map(new Closure<DateTime>(this, this) {
-                                                        public DateTime doCall(Object it) {
-                                                            return new DateTime(it);
-                                                        }
-
-                                                        public DateTime doCall() {
-                                                            return doCall(null);
-                                                        }
-
-                                                    }).orElse(null));
-                                                    imageObject.setDateModified(Optional.ofNullable(it.getProperty("dateModified")).map(new Closure<DateTime>(this, this) {
-                                                        public DateTime doCall(Object it) {
-                                                            return new DateTime(it);
-                                                        }
-
-                                                        public DateTime doCall() {
-                                                            return doCall(null);
-                                                        }
-
-                                                    }).orElse(null));
-                                                    imageObject.setUploadDate(Optional.ofNullable(it.getProperty("uploadDate")).map(new Closure<DateTime>(this, this) {
-                                                        public DateTime doCall(Object it) {
-                                                            return new DateTime(it);
-                                                        }
-
-                                                        public DateTime doCall() {
-                                                            return doCall(null);
-                                                        }
-
-                                                    }).orElse(null));
-                                                    final String upContentUrl = DefaultGroovyMethods.asType(it.getProperty("contentUrl"), String.class);
+                                                    imageObject.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
+                                                    imageObject.setDatePublished(Optional.ofNullable(it.getProperty("datePublished")).map(DateTime::new).orElse(null));
+                                                    imageObject.setDateModified(Optional.ofNullable(it.getProperty("dateModified")).map(DateTime::new).orElse(null));
+                                                    imageObject.setUploadDate(Optional.ofNullable(it.getProperty("uploadDate")).map(DateTime::new).orElse(null));
+                                                    final String upContentUrl = (String) it.getProperty("contentUrl");
                                                     imageObject.setContentUrl(upContentUrl.replace(mediaUploadPrefix, mediaDownloadPrefix));
-                                                    imageObject.setContentSize(DefaultGroovyMethods.asType(it.getProperty("contentSize"), Long.class));
-                                                    imageObject.setContentType(it.getProperty("contentType"));
-                                                    imageObject.setName(it.getProperty("name"));
+                                                    imageObject.setContentSize((Long) it.getProperty("contentSize"));
+                                                    imageObject.setContentType((String) it.getProperty("contentType"));
+                                                    imageObject.setName((String) it.getProperty("name"));
                                                     return imageObject;
                                                 }
-
-                                                public ImageObject doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
+                                            ).collect(Collectors.toList()));
                                         } finally {
                                             rs.finish();
                                         }
-
-                                    }
-
-                                    public Resources doCall() {
-                                        return doCall(null);
-                                    }
-
-                                });
+                                    });
                                 it.getOut().setBody(resources);
-                            } else if (StringGroovyMethods.isCase("JournalJointQuery", getProperty("switchArg"))) {
+                            } else if ("JournalJointQuery".equals(switchArg)) {
                                 final JournalJointQuery journalJointQuery = toJson.getMapper().convertValue(inBodyJson, JournalJointQuery.class);
-                                final Resources resources = new TransactionTemplate(txMgr).execute(new Closure<Resources>(this, this) {
-                                    public Resources doCall(TransactionStatus it) {
-                                        final Map<String, Object> params = new Map<String, Object>() {
-                                        };
+                                final Resources<JointState> resources = new TransactionTemplate(txMgr).execute(tx -> {
+                                        final Map<String, Object> params = new HashMap<>();
                                         final String cypher = "MATCH (n:JournalJoint) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}";
                                         log.debug("Querying: {} {}", cypher, params);
                                         final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
                                         try {
-                                            final List<Node> rsList = DefaultGroovyMethods.toList(DefaultGroovyMethods.collect(rs, new Closure<Node>(this, this) {
-                                                public Node doCall(Map<String, Object> it) {
-                                                    return DefaultGroovyMethods.asType(it.get("n"), Node.class);
-                                                }
-
-                                                public groovy.util.Node doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
+                                            final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node) x.get("n")).toList();
                                             log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                            return new Resources(DefaultGroovyMethods.collect(rsList, new Closure<JointState>(this, this) {
-                                                public JointState doCall(Node it) {
+                                            return new Resources(rsList.stream().map(ix -> {
                                                     final JointState jointState = new JointState();
-                                                    jointState.setDateCreated(Optional.ofNullable(it.getProperty("dateCreated")).map(new Closure<DateTime>(this, this) {
-                                                        public DateTime doCall(Object it) {
-                                                            return new DateTime(it);
-                                                        }
-
-                                                        public DateTime doCall() {
-                                                            return doCall(null);
-                                                        }
-
-                                                    }).orElse(null));
-                                                    jointState.setName(it.getProperty("name"));
-                                                    jointState.setAngle(DefaultGroovyMethods.asType(it.getProperty("angle"), Double.class));
-                                                    jointState.setStiffness(DefaultGroovyMethods.asType(it.getProperty("stiffness"), Double.class));
+                                                    jointState.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
+                                                    jointState.setName((String) ix.getProperty("name"));
+                                                    jointState.setAngle((Double) ix.getProperty("angle"));
+                                                    jointState.setStiffness((Double) ix.getProperty("stiffness"));
                                                     return jointState;
-                                                }
-
-                                                public JointState doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
+                                                }).collect(Collectors.toList()));
                                         } finally {
                                             rs.finish();
                                         }
-
-                                    }
-
-                                    public Resources doCall() {
-                                        return doCall(null);
-                                    }
-
-                                });
+                                    });
                                 it.getOut().setBody(resources);
-                            } else if (StringGroovyMethods.isCase("JournalTactileQuery", getProperty("switchArg"))) {
+                            } else if ("JournalTactileQuery".equals(switchArg)) {
                                 final JournalTactileQuery journalTactileQuery = toJson.getMapper().convertValue(inBodyJson, JournalTactileQuery.class);
-                                final Resources resources = new TransactionTemplate(txMgr).execute(new Closure<Resources>(this, this) {
-                                    public Resources doCall(TransactionStatus it) {
-                                        final Map<String, Object> params = new Map<String, Object>() {
-                                        };
-                                        final String cypher = "MATCH (n:JournalTactile) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}";
-                                        log.debug("Querying: {} {}", cypher, params);
-                                        final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
-                                        try {
-                                            final List<Node> rsList = DefaultGroovyMethods.toList(DefaultGroovyMethods.collect(rs, new Closure<Node>(this, this) {
-                                                public Node doCall(Map<String, Object> it) {
-                                                    return DefaultGroovyMethods.asType(it.get("n"), Node.class);
-                                                }
-
-                                                public groovy.util.Node doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                            log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                            return new Resources(DefaultGroovyMethods.collect(rsList, new Closure<TactileState>(this, this) {
-                                                public TactileState doCall(Node it) {
-                                                    final TactileState tactileState = new TactileState();
-                                                    tactileState.setDateCreated(Optional.ofNullable(it.getProperty("dateCreated")).map(new Closure<DateTime>(this, this) {
-                                                        public DateTime doCall(Object it) {
-                                                            return new DateTime(it);
-                                                        }
-
-                                                        public DateTime doCall() {
-                                                            return doCall(null);
-                                                        }
-
-                                                    }).orElse(null));
-                                                    tactileState.setName(it.getProperty("name"));
-                                                    tactileState.setValue(DefaultGroovyMethods.asType(it.getProperty("value"), Double.class));
-                                                    return tactileState;
-                                                }
-
-                                                public TactileState doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                        } finally {
-                                            rs.finish();
-                                        }
-
+                                final Resources<TactileState> resources = new TransactionTemplate(txMgr).execute(tx -> {
+                                    final Map<String, Object> params = new HashMap<String, Object>();
+                                    final String cypher = "MATCH (n:JournalTactile) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}";
+                                    log.debug("Querying: {} {}", cypher, params);
+                                    final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
+                                    try {
+                                        final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node) x.get("n")).toList();
+                                        log.debug("{} rows in result set: {}", rsList.size(), rsList);
+                                        return new Resources(rsList.stream().map(ix -> {
+                                                final TactileState tactileState = new TactileState();
+                                                tactileState.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
+                                                tactileState.setName((String) ix.getProperty("name"));
+                                                tactileState.setValue((Double) ix.getProperty("value"));
+                                                return tactileState;
+                                            }).collect(Collectors.toList()));
+                                    } finally {
+                                        rs.finish();
                                     }
-
-                                    public Resources doCall() {
-                                        return doCall(null);
-                                    }
-
                                 });
                                 it.getOut().setBody(resources);
-                            } else if (StringGroovyMethods.isCase("JournalSonarQuery", getProperty("switchArg"))) {
+                            } else if ("JournalSonarQuery".equals(switchArg)) {
                                 final JournalSonarQuery journalSonarQuery = toJson.getMapper().convertValue(inBodyJson, JournalSonarQuery.class);
-                                final Resources resources = new TransactionTemplate(txMgr).execute(new Closure<Resources>(this, this) {
-                                    public Resources doCall(TransactionStatus it) {
-                                        final Map<String, Object> params = new Map<String, Object>() {
-                                        };
-                                        final String cypher = "MATCH (n:JournalSonarState) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}";
-                                        log.debug("Querying: {} {}", cypher, params);
-                                        final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
-                                        try {
-                                            final List<Node> rsList = DefaultGroovyMethods.toList(DefaultGroovyMethods.collect(rs, new Closure<Node>(this, this) {
-                                                public Node doCall(Map<String, Object> it) {
-                                                    return DefaultGroovyMethods.asType(it.get("n"), Node.class);
-                                                }
-
-                                                public groovy.util.Node doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                            log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                            return new Resources(DefaultGroovyMethods.collect(rsList, new Closure<SonarState>(this, this) {
-                                                public SonarState doCall(Node it) {
-                                                    final SonarState sonarState = new SonarState();
-                                                    sonarState.setDateCreated(Optional.ofNullable(it.getProperty("dateCreated")).map(new Closure<DateTime>(this, this) {
-                                                        public DateTime doCall(Object it) {
-                                                            return new DateTime(it);
-                                                        }
-
-                                                        public DateTime doCall() {
-                                                            return doCall(null);
-                                                        }
-
-                                                    }).orElse(null));
-                                                    sonarState.setLeftSensor(DefaultGroovyMethods.asType(it.getProperty("leftSensor"), Double.class));
-                                                    sonarState.setRightSensor(DefaultGroovyMethods.asType(it.getProperty("rightSensor"), Double.class));
-                                                    return sonarState;
-                                                }
-
-                                                public SonarState doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                        } finally {
-                                            rs.finish();
-                                        }
-
+                                final Resources<SonarState> resources = new TransactionTemplate(txMgr).execute(tx -> {
+                                    final Map<String, Object> params = new HashMap<>();
+                                    final String cypher = "MATCH (n:JournalSonarState) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}";
+                                    log.debug("Querying: {} {}", cypher, params);
+                                    final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
+                                    try {
+                                        final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node)x.get("n")).toList();
+                                        log.debug("{} rows in result set: {}", rsList.size(), rsList);
+                                        return new Resources(rsList.stream().map(ix -> {
+                                                final SonarState sonarState = new SonarState();
+                                                sonarState.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
+                                                sonarState.setLeftSensor((Double) ix.getProperty("leftSensor"));
+                                                sonarState.setRightSensor((Double) ix.getProperty("rightSensor"));
+                                                return sonarState;
+                                            }).collect(Collectors.toList()));
+                                    } finally {
+                                        rs.finish();
                                     }
-
-                                    public Resources doCall() {
-                                        return doCall(null);
-                                    }
-
                                 });
                                 it.getOut().setBody(resources);
-                            } else if (StringGroovyMethods.isCase("JournalBatteryQuery", getProperty("switchArg"))) {
+                            } else if ("JournalBatteryQuery".equals(switchArg)) {
                                 final JournalBatteryQuery journalBatteryQuery = toJson.getMapper().convertValue(inBodyJson, JournalBatteryQuery.class);
-                                final Resources resources = new TransactionTemplate(txMgr).execute(new Closure<Resources>(this, this) {
-                                    public Resources doCall(TransactionStatus it) {
-                                        final Map<String, Object> params = new Map<String, Object>() {
-                                        };
-                                        final String cypher = "MATCH (n:JournalBatteryState) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}";
-                                        log.debug("Querying: {} {}", cypher, params);
-                                        final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
-                                        try {
-                                            final List<Node> rsList = DefaultGroovyMethods.toList(DefaultGroovyMethods.collect(rs, new Closure<Node>(this, this) {
-                                                public Node doCall(Map<String, Object> it) {
-                                                    return DefaultGroovyMethods.asType(it.get("n"), Node.class);
-                                                }
-
-                                                public groovy.util.Node doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                            log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                            return new Resources(DefaultGroovyMethods.collect(rsList, new Closure<BatteryState>(this, this) {
-                                                public BatteryState doCall(Node it) {
-                                                    final BatteryState batteryState = new BatteryState();
-                                                    batteryState.setDateCreated(Optional.ofNullable(it.getProperty("dateCreated")).map(new Closure<DateTime>(this, this) {
-                                                        public DateTime doCall(Object it) {
-                                                            return new DateTime(it);
-                                                        }
-
-                                                        public DateTime doCall() {
-                                                            return doCall(null);
-                                                        }
-
-                                                    }).orElse(null));
-                                                    batteryState.setPercentage(DefaultGroovyMethods.asType(it.getProperty("percentage"), Double.class));
-                                                    batteryState.setIsCharging(DefaultGroovyMethods.asType(it.getProperty("isCharging"), Boolean.class));
-                                                    batteryState.setIsPlugged(DefaultGroovyMethods.asType(it.getProperty("isPlugged"), Boolean.class));
-                                                    return batteryState;
-                                                }
-
-                                                public BatteryState doCall() {
-                                                    return doCall(null);
-                                                }
-
-                                            }));
-                                        } finally {
-                                            rs.finish();
-                                        }
-
+                                final Resources<BatteryState> resources = new TransactionTemplate(txMgr).execute(tx -> {
+                                    final Map<String, Object> params = new HashMap<>();
+                                    final String cypher = "MATCH (n:JournalBatteryState) WHERE n.dateCreated <= {maxDateCreated} RETURN n ORDER BY n.dateCreated DESC LIMIT {itemsPerPage}";
+                                    log.debug("Querying: {} {}", cypher, params);
+                                    final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
+                                    try {
+                                        final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node)x.get("n")).toList();
+                                        log.debug("{} rows in result set: {}", rsList.size(), rsList);
+                                        return new Resources<>(rsList.stream().map(ix -> {
+                                                final BatteryState batteryState = new BatteryState();
+                                                batteryState.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
+                                                batteryState.setPercentage((Double) ix.getProperty("percentage"));
+                                                batteryState.setIsCharging((Boolean) ix.getProperty("isCharging"));
+                                                batteryState.setIsPlugged((Boolean) ix.getProperty("isPlugged"));
+                                                return batteryState;
+                                            }
+                                        ).collect(Collectors.toList()));
+                                    } finally {
+                                        rs.finish();
                                     }
-
-                                    public Resources doCall() {
-                                        return doCall(null);
-                                    }
-
                                 });
                                 it.getOut().setBody(resources);
                             } else {
@@ -513,16 +289,15 @@ public class LumenRouteConfig {
                             it.getOut().setBody(new Error(e));
                         }
 
-
-                        it.getOut().getHeaders().put("rabbitmq.ROUTING_KEY", Preconditions.checkNotNull(it.getIn().getHeaders().get("rabbitmq.REPLY_TO"), "\"rabbitmq.REPLY_TO\" header must be specified, found headers: %s", it.getIn().getHeaders()));
-                        return putAt0(it.getOut().getHeaders(), "rabbitmq.EXCHANGE_NAME", "");
-                    }
-
-                    public String doCall() {
-                        return doCall(null);
-                    }
-
-                }).bean(toJson).to("rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false").to("log:OUT.persistence-journal?showAll=true&multiline=true");
+                        it.getOut().getHeaders().put("rabbitmq.ROUTING_KEY",
+                                Preconditions.checkNotNull(
+                                        it.getIn().getHeaders().get("rabbitmq.REPLY_TO"),
+                                        "\"rabbitmq.REPLY_TO\" header must be specified, found headers: %s", it.getIn().getHeaders()));
+                        it.getOut().getHeaders().put("rabbitmq.EXCHANGE_NAME", "");
+                    })
+                        .bean(toJson)
+                        .to("rabbitmq://localhost/dummy?connectionFactory=#amqpConnFactory&autoDelete=false")
+                        .to("log:OUT.persistence-journal?showAll=true&multiline=true");
             }
 
         };
@@ -542,61 +317,60 @@ public class LumenRouteConfig {
         map.put("image/bmp", "bmp");
         final LinkedHashMap<String, String> extensionMap = map;
 
-        new TransactionTemplate(txMgr).execute(new Closure<Void>(this, this) {
-            public void doCall(Object tx) {
-                neo4j.query("CREATE INDEX ON :JournalImageObject(dateCreated)", new LinkedHashMap()).finish();
-            }
-
+        new TransactionTemplate(txMgr).execute(tx -> {
+            neo4j.query("CREATE INDEX ON :JournalImageObject(dateCreated)", new LinkedHashMap()).finish();
+            return null;
         });
 
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
                 final String avatarId = "NAO";
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar." + avatarId + ".data.image").sample(1, TimeUnit.SECONDS).to("log:IN.avatar." + avatarId + ".data.image?showHeaders=true&showAll=true&multiline=true").process(new Closure<Object>(this, this) {
-                    public Object doCall(final Exchange it) {
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar." + avatarId + ".data.image").sample(1, TimeUnit.SECONDS).to("log:IN.avatar." + avatarId + ".data.image?showHeaders=true&showAll=true&multiline=true")
+                        .process(it -> {
                         try {
-                            final JsonNode inBodyJson = toJson.getMapper().readTree(DefaultGroovyMethods.asType(it.getIn().getBody(), Byte[].class));
+                            final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
                             final ImageObjectLegacy imageObject = toJson.getMapper().convertValue(inBodyJson, ImageObjectLegacy.class);
-                            return new TransactionTemplate(txMgr).execute(new Closure<Long>(this, this) {
-                                public Long doCall(Object tx) {
-                                    final DateTime now = new DateTime();// FIXME: NaoServer should send ISO formatted timestamp
-                                    final Map<String, Object> props = new Map<String, Object>() {
-                                    };
-                                    final String contentType = DefaultGroovyMethods.invokeMethod(com.google.common.base.Preconditions, "checkNotNull", new Object[]{imageObject.getContentType(), "ImageObject.contentType must be specified"});
-                                    final String upContentUrl = imageObject.getContentUrl();
-                                    if (upContentUrl != null && upContentUrl.startsWith("data:")) {
-                                        final String base64 = StringUtils.substringAfter(upContentUrl, ",");
-                                        final Byte[] content = Base64.decodeBase64(base64);
-                                        final String ext = Preconditions.checkNotNull(extensionMap.get(contentType), "Cannot get extension for MIME type \"%s\". Known MIME types: %s", contentType, extensionMap.keySet());
-                                        // IIS disables double escaping, so avoid '+0700' in filename
-                                        final String fileName = avatarId + "_journalimage_" + new DateTime(DateTimeZone.UTC).toString("yyyy-MM-dd'T'HH-mm-ssZ") + "." + ext;
-                                        final File file = new File(mediaUploadPath, fileName);
-                                        log.debug("Writing {} ImageObject to {} ...", contentType, file);
+                            new TransactionTemplate(txMgr).execute(tx -> {
+                                final DateTime now = new DateTime();// FIXME: NaoServer should send ISO formatted timestamp
+                                final Map<String, Object> props = new HashMap<>();
+                                final String contentType = Preconditions.checkNotNull(imageObject.getContentType(), "ImageObject.contentType must be specified");
+                                final String upContentUrl = imageObject.getContentUrl();
+                                if (upContentUrl != null && upContentUrl.startsWith("data:")) {
+                                    final String base64 = StringUtils.substringAfter(upContentUrl, ",");
+                                    final byte[] content = Base64.decodeBase64(base64);
+                                    final String ext = Preconditions.checkNotNull(extensionMap.get(contentType),
+                                            "Cannot get extension for MIME type \"%s\". Known MIME types: %s", contentType, extensionMap.keySet());
+                                    // IIS disables double escaping, so avoid '+0700' in filename
+                                    final String fileName = avatarId + "_journalimage_" + new DateTime(DateTimeZone.UTC).toString("yyyy-MM-dd'T'HH-mm-ssZ") + "." + ext;
+                                    final File file = new File(mediaUploadPath, fileName);
+                                    log.debug("Writing {} ImageObject to {} ...", contentType, file);
+                                    try {
                                         FileUtils.writeByteArrayToFile(file, content);
-                                        props.put("contentUrl", mediaUploadPrefix + fileName);
-                                    } else {
-                                        props.put("contentUrl", upContentUrl);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException("Cannot write to " + file, e);
                                     }
-
-                                    final Node node = neo4j.createNode(props, new ArrayList<String>(Arrays.asList("JournalImageObject")));
-                                    log.debug("Created JournalImageObject {} from {} {}", node, imageObject.getName(), now);
-                                    return setBody(it.getOut(), node.getId());
+                                    props.put("contentUrl", mediaUploadPrefix + fileName);
+                                } else {
+                                    props.put("contentUrl", upContentUrl);
                                 }
 
+                                final Node node = neo4j.createNode(props, new ArrayList<String>(Arrays.asList("JournalImageObject")));
+                                log.debug("Created JournalImageObject {} from {} {}", node, imageObject.getName(), now);
+                                it.getOut().setBody(node.getId());
+                                return null;
                             });
                         } catch (Exception e) {
                             log.error("Cannot process: " + it.getIn().getBody(), e);
-                            return setBody(it.getOut(), new Error(e));
+                            it.getOut().setBody(new Error(e));
                         }
-
 
 //                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
 //                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
-                    }
-
-                }).bean(toJson).to("log:OUT.avatar." + avatarId + ".data.image?showAll=true&multiline=true");
+                })
+                        .bean(toJson)
+                        .to("log:OUT.avatar." + avatarId + ".data.image?showAll=true&multiline=true");
             }
 
         };
@@ -606,44 +380,39 @@ public class LumenRouteConfig {
     public RouteBuilder sonarRouteBuilder() {
         log.info("Initializing sonar RouteBuilder");
 
-        new TransactionTemplate(txMgr).execute(new Closure<Void>(this, this) {
-            public void doCall(Object tx) {
-                neo4j.query("CREATE INDEX ON :JournalSonarState(dateCreated)", new LinkedHashMap()).finish();
-            }
-
+        new TransactionTemplate(txMgr).execute(tx -> {
+            neo4j.query("CREATE INDEX ON :JournalSonarState(dateCreated)", new LinkedHashMap()).finish();
+            return null;
         });
 
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.sonar").sample(1, TimeUnit.SECONDS).to("log:IN.avatar.NAO.data.sonar?showHeaders=true&showAll=true&multiline=true").process(new Closure<Object>(this, this) {
-                    public Object doCall(final Exchange it) {
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.sonar")
+                        .sample(1, TimeUnit.SECONDS).to("log:IN.avatar.NAO.data.sonar?showHeaders=true&showAll=true&multiline=true")
+                        .process(it -> {
                         try {
-                            final JsonNode inBodyJson = toJson.getMapper().readTree(DefaultGroovyMethods.asType(it.getIn().getBody(), Byte[].class));
+                            final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
                             final SonarState sonarState = toJson.getMapper().convertValue(inBodyJson, SonarState.class);
-                            return new TransactionTemplate(txMgr).execute(new Closure<Long>(this, this) {
-                                public Long doCall(Object tx) {
-                                    final DateTime now = new DateTime();
-                                    final Map<String, Object> props = new Map<String, Object>() {
-                                    };
-                                    final Node node = neo4j.createNode(props, new ArrayList<String>(Arrays.asList("JournalSonarState")));
-                                    log.debug("Created JournalSonarState {} from {}", node, props);
-                                    return setBody(it.getOut(), node.getId());
-                                }
-
+                            new TransactionTemplate(txMgr).execute(tx -> {
+                                final DateTime now = new DateTime();
+                                final Map<String, Object> props = new HashMap<String, Object>();
+                                final Node node = neo4j.createNode(props, ImmutableSet.of("JournalSonarState"));
+                                log.debug("Created JournalSonarState {} from {}", node, props);
+                                it.getOut().setBody(node.getId());
+                                return null;
                             });
                         } catch (Exception e) {
                             log.error("Cannot process: " + it.getIn().getBody(), e);
-                            return setBody(it.getOut(), new Error(e));
+                            it.getOut().setBody(new Error(e));
                         }
-
 
 //                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
 //                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
-                    }
-
-                }).bean(toJson).to("log:OUT.avatar.NAO.data.sonar?showAll=true&multiline=true");
+                    })
+                        .bean(toJson)
+                        .to("log:OUT.avatar.NAO.data.sonar?showAll=true&multiline=true");
             }
 
         };
@@ -653,44 +422,39 @@ public class LumenRouteConfig {
     public RouteBuilder batteryRouteBuilder() {
         log.info("Initializing battery RouteBuilder");
 
-        new TransactionTemplate(txMgr).execute(new Closure<Void>(this, this) {
-            public void doCall(Object tx) {
-                neo4j.query("CREATE INDEX ON :JournalBatteryState(dateCreated)", new LinkedHashMap()).finish();
-            }
-
+        new TransactionTemplate(txMgr).execute(tx -> {
+            neo4j.query("CREATE INDEX ON :JournalBatteryState(dateCreated)", new LinkedHashMap()).finish();
+            return null;
         });
 
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.battery").sample(1, TimeUnit.SECONDS).to("log:IN.avatar.NAO.data.battery?showHeaders=true&showAll=true&multiline=true").process(new Closure<Object>(this, this) {
-                    public Object doCall(final Exchange it) {
-                        try {
-                            final JsonNode inBodyJson = toJson.getMapper().readTree(DefaultGroovyMethods.asType(it.getIn().getBody(), Byte[].class));
-                            final BatteryState batteryState = toJson.getMapper().convertValue(inBodyJson, BatteryState.class);
-                            return new TransactionTemplate(txMgr).execute(new Closure<Long>(this, this) {
-                                public Long doCall(Object tx) {
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.battery")
+                        .sample(1, TimeUnit.SECONDS)
+                        .to("log:IN.avatar.NAO.data.battery?showHeaders=true&showAll=true&multiline=true")
+                        .process(it -> {
+                            try {
+                                final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
+                                final BatteryState batteryState = toJson.getMapper().convertValue(inBodyJson, BatteryState.class);
+                                new TransactionTemplate(txMgr).execute(tx -> {
                                     final DateTime now = new DateTime();
-                                    final Map<String, Object> props = new Map<String, Object>() {
-                                    };
-                                    final Node node = neo4j.createNode(props, new ArrayList<String>(Arrays.asList("JournalBatteryState")));
+                                    final Map<String, Object> props = new HashMap<String, Object>();
+                                    final Node node = neo4j.createNode(props, ImmutableSet.of("JournalBatteryState"));
                                     log.debug("Created JournalBatteryState {} from {}", node, props);
-                                    return setBody(it.getOut(), node.getId());
-                                }
-
-                            });
-                        } catch (Exception e) {
-                            log.error("Cannot process: " + it.getIn().getBody(), e);
-                            return setBody(it.getOut(), new Error(e));
-                        }
-
-
+                                    it.getOut().setBody(node.getId());
+                                    return null;
+                                });
+                            } catch (Exception e) {
+                                log.error("Cannot process: " + it.getIn().getBody(), e);
+                                it.getOut().setBody(new Error(e));
+                            }
 //                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
 //                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
-                    }
-
-                }).bean(toJson).to("log:OUT.avatar.NAO.data.battery?showAll=true&multiline=true");
+                    })
+                        .bean(toJson)
+                        .to("log:OUT.avatar.NAO.data.battery?showAll=true&multiline=true");
             }
 
         };
@@ -700,61 +464,47 @@ public class LumenRouteConfig {
     public RouteBuilder jointRouteBuilder() {
         log.info("Initializing joint RouteBuilder");
 
-        new TransactionTemplate(txMgr).execute(new Closure<Void>(this, this) {
-            public void doCall(Object tx) {
-                neo4j.query("CREATE INDEX ON :JournalJoint(name)", new LinkedHashMap()).finish();
-                neo4j.query("CREATE INDEX ON :JournalJoint(dateCreated)", new LinkedHashMap()).finish();
-            }
-
+        new TransactionTemplate(txMgr).execute(tx -> {
+            neo4j.query("CREATE INDEX ON :JournalJoint(name)", new LinkedHashMap()).finish();
+            neo4j.query("CREATE INDEX ON :JournalJoint(dateCreated)", new LinkedHashMap()).finish();
+            return null;
         });
 
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.joint").sample(1, TimeUnit.SECONDS).to("log:IN.avatar.NAO.data.joint?showHeaders=true&showAll=true&multiline=true").process(new Closure<Object>(this, this) {
-                    public Object doCall(final Exchange it) {
-                        try {
-                            final JsonNode inBodyJson = toJson.getMapper().readTree(DefaultGroovyMethods.asType(it.getIn().getBody(), Byte[].class));
-                            final JointSetLegacy jointSet = toJson.getMapper().convertValue(inBodyJson, JointSetLegacy.class);
-                            return new TransactionTemplate(txMgr).execute(new Closure<List<Long>>(this, this) {
-                                public List<Long> doCall(Object tx) {
-                                    final DateTime now = new DateTime();
-                                    final List<Node> nodes = new ArrayList<Node>();
-                                    DefaultGroovyMethods.eachWithIndex(jointSet.getNames(), new Closure<Boolean>(this, this) {
-                                        public Boolean doCall(Object jointName, Object i) {
-                                            final Map<String, Object> props = new Map<String, Object>() {
-                                            };
-                                            final Node node = neo4j.createNode(props, new ArrayList<String>(Arrays.asList("JournalJoint")));
-                                            return nodes.add(node);
-                                        }
-
-                                    });
-                                    log.debug("Created {} JournalJoint(s) {} from {}", nodes, jointSet);
-                                    return setBody(it.getOut(), DefaultGroovyMethods.collect(nodes, new Closure<Long>(this, this) {
-                                        public Long doCall(Node it) {
-                                            return it.getId();
-                                        }
-
-                                        public Long doCall() {
-                                            return doCall(null);
-                                        }
-
-                                    }));
-                                }
-
-                            });
-                        } catch (Exception e) {
-                            log.error("Cannot process: " + it.getIn().getBody(), e);
-                            return setBody(it.getOut(), new Error(e));
-                        }
-
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.joint")
+                        .sample(1, TimeUnit.SECONDS)
+                        .to("log:IN.avatar.NAO.data.joint?showHeaders=true&showAll=true&multiline=true")
+                        .process(it -> {
+                                    try {
+                                        final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
+                                        final JointSetLegacy jointSet = toJson.getMapper().convertValue(inBodyJson, JointSetLegacy.class);
+                                        new TransactionTemplate(txMgr).execute(tx -> {
+                                            final DateTime now = new DateTime();
+                                            final List<Node> nodes = new ArrayList<>();
+                                            for (String jointName : jointSet.getNames()) {
+                                                final Map<String, Object> props = new HashMap<String, Object>();
+                                                final Node node = neo4j.createNode(props, new ArrayList<String>(Arrays.asList("JournalJoint")));
+                                                nodes.add(node);
+                                            }
+                                            log.debug("Created {} JournalJoint(s) {} from {}", nodes, jointSet);
+                                            it.getOut().setBody(nodes.stream().map(Node::getId).collect(Collectors.toList()));
+                                            return null;
+                                        });
+                                    } catch (Exception e) {
+                                        log.error("Cannot process: " + it.getIn().getBody(), e);
+                                        it.getOut().setBody(new Error(e));
+                                    }
 
 //                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
 //                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
-                    }
+                                }
 
-                }).bean(toJson).to("log:OUT.avatar.NAO.data.joint?showAll=true&multiline=true");
+                        )
+                    .bean(toJson)
+                        .to("log:OUT.avatar.NAO.data.joint?showAll=true&multiline=true");
             }
 
         };
@@ -764,83 +514,46 @@ public class LumenRouteConfig {
     public RouteBuilder tactileRouteBuilder() {
         log.info("Initializing tactile RouteBuilder");
 
-        new TransactionTemplate(txMgr).execute(new Closure<Void>(this, this) {
-            public void doCall(Object tx) {
-                neo4j.query("CREATE INDEX ON :JournalTactile(name)", new LinkedHashMap()).finish();
-                neo4j.query("CREATE INDEX ON :JournalTactile(dateCreated)", new LinkedHashMap()).finish();
-            }
-
+        new TransactionTemplate(txMgr).execute(tx -> {
+            neo4j.query("CREATE INDEX ON :JournalTactile(name)", new LinkedHashMap()).finish();
+            neo4j.query("CREATE INDEX ON :JournalTactile(dateCreated)", new LinkedHashMap()).finish();
+            return null;
         });
 
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.tactile").sample(1, TimeUnit.SECONDS).to("log:IN.avatar.NAO.data.tactile?showHeaders=true&showAll=true&multiline=true").process(new Closure<Object>(this, this) {
-                    public Object doCall(final Exchange it) {
-                        try {
-                            final JsonNode inBodyJson = toJson.getMapper().readTree(DefaultGroovyMethods.asType(it.getIn().getBody(), Byte[].class));
-                            final TactileSetLegacy tactileSet = toJson.getMapper().convertValue(inBodyJson, TactileSetLegacy.class);
-                            return new TransactionTemplate(txMgr).execute(new Closure<List<Long>>(this, this) {
-                                public List<Long> doCall(Object tx) {
-                                    final DateTime now = new DateTime();
-                                    final List<Node> nodes = new ArrayList<Node>();
-                                    DefaultGroovyMethods.eachWithIndex(tactileSet.getNames(), new Closure<Boolean>(this, this) {
-                                        public Boolean doCall(Object tactileName, Object i) {
-                                            final Map<String, Object> props = new Map<String, Object>() {
-                                            };
-                                            final Node node = neo4j.createNode(props, new ArrayList<String>(Arrays.asList("JournalTactile")));
-                                            return nodes.add(node);
-                                        }
-
-                                    });
-                                    log.debug("Created {} JournalTactile(s) {} from {}", nodes, tactileSet);
-                                    return setBody(it.getOut(), DefaultGroovyMethods.collect(nodes, new Closure<Long>(this, this) {
-                                        public Long doCall(Node it) {
-                                            return it.getId();
-                                        }
-
-                                        public Long doCall() {
-                                            return doCall(null);
-                                        }
-
-                                    }));
-                                }
-
-                            });
-                        } catch (Exception e) {
-                            log.error("Cannot process: " + it.getIn().getBody(), e);
-                            return setBody(it.getOut(), new Error(e));
-                        }
-
-
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.tactile")
+                        .sample(1, TimeUnit.SECONDS)
+                        .to("log:IN.avatar.NAO.data.tactile?showHeaders=true&showAll=true&multiline=true")
+                        .process(it -> {
+                                    try {
+                                        final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
+                                        final TactileSetLegacy tactileSet = toJson.getMapper().convertValue(inBodyJson, TactileSetLegacy.class);
+                                        new TransactionTemplate(txMgr).execute(tx -> {
+                                            final DateTime now = new DateTime();
+                                            final List<Node> nodes = new ArrayList<>();
+                                            for (String tactileName : tactileSet.getNames()) {
+                                                final Map<String, Object> props = new HashMap<>();
+                                                final Node node = neo4j.createNode(props, ImmutableSet.of("JournalTactile"));
+                                                return nodes.add(node);
+                                            }
+                                            log.debug("Created {} JournalTactile(s) {} from {}", nodes, tactileSet);
+                                            it.getOut().setBody(nodes.stream().map(Node::getId).collect(Collectors.toList()));
+                                            return null;
+                                        });
+                                    } catch (Exception e) {
+                                        log.error("Cannot process: " + it.getIn().getBody(), e);
+                                        it.getOut().setBody(new Error(e));
+                                    }
 //                    it.out.headers['rabbitmq.ROUTING_KEY'] = Preconditions.checkNotNull(it.in.headers['rabbitmq.REPLY_TO'],
 //                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
-                    }
-
-                }).bean(toJson).to("log:OUT.avatar.NAO.data.tactile?showAll=true&multiline=true");
+                                }
+                        ).bean(toJson).to("log:OUT.avatar.NAO.data.tactile?showAll=true&multiline=true");
             }
 
         };
     }
 
-    private static final Logger log = LoggerFactory.getLogger(LumenRouteConfig.class);
-    @Inject
-    protected Environment env;
-    @Inject
-    protected ToJson toJson;
-    @Inject
-    protected PlatformTransactionManager txMgr;
-    @Inject
-    protected Neo4jTemplate neo4j;
-
-    private static <K, V, Value extends Value> Value putAt0(Map<K, V> propOwner, K key, Value value) {
-        propOwner.put(key, value);
-        return value;
-    }
-
-    private static <Value> Value setBody(Message propOwner, Value var1) {
-        propOwner.setBody(var1);
-        return var1;
-    }
 }

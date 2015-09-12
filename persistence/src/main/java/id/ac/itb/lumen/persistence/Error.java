@@ -4,15 +4,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Throwables;
-import groovy.transform.CompileStatic;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 /**
  * Created by ceefour on 2/4/15.
  */
-@CompileStatic
-@JsonInclude(JsonInclude.com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-@JsonTypeInfo(use = JsonTypeInfo.com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = CypherQuery.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = CypherQuery.class)
 @JsonSubTypes(@JsonSubTypes.Type(name = "Error", value = CypherQuery.class))
 public class Error {
     public Error(String exceptionClass, String message, String stackTrace) {

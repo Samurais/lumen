@@ -12,9 +12,8 @@ import org.springframework.data.domain.Pageable;
  *
  * @todo should be {@link Pageable}
  */
-@CompileStatic
-@JsonInclude(JsonInclude.com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-@JsonTypeInfo(use = JsonTypeInfo.com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = JournalTactileQuery.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = JournalTactileQuery.class)
 @JsonSubTypes(@JsonSubTypes.Type(name = "JournalTactileQuery", value = JournalTactileQuery.class))
 public class JournalTactileQuery {
     public String getMaxDateCreated() {

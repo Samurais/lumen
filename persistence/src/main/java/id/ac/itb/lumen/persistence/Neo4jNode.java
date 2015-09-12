@@ -4,9 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import groovy.lang.Closure;
-import groovy.transform.CompileStatic;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.neo4j.graphdb.Node;
 
@@ -16,9 +17,8 @@ import java.util.*;
  * JSON-friendly Neo4j Node.
  * Created on 2/4/15.
  */
-@CompileStatic
-@JsonInclude(JsonInclude.com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-@JsonTypeInfo(use = JsonTypeInfo.com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = Neo4jNode.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type", defaultImpl = Neo4jNode.class)
 @JsonSubTypes(@JsonSubTypes.Type(name = "Neo4jNode", value = Neo4jNode.class))
 public class Neo4jNode {
     public Neo4jNode(Long nodeId, Set<String> labels, Map<String, Object> properties) {
@@ -38,25 +38,8 @@ public class Neo4jNode {
     }
 
     public Neo4jNode(final Node node) {
-        this(node.getId(), DefaultGroovyMethods.toSet(DefaultGroovyMethods.collect(node.getLabels(), new Closure<String>(this, this) {
-            public String doCall(Object it) {
-                return (String) it;
-            }
-
-            public String doCall() {
-                return doCall(null);
-            }
-
-        })), DefaultGroovyMethods.collectEntries(node.getPropertyKeys(), new Closure<ArrayList<Object>>(this, this) {
-            public ArrayList<Object> doCall(String it) {
-                return new ArrayList<Object>(Arrays.asList(it, node.getProperty(it)));
-            }
-
-            public ArrayList<Object> doCall() {
-                return doCall(null);
-            }
-
-        }));
+        this(node.getId(), FluentIterable.from(node.getLabels()).transform(Object::toString).toSet(),
+                Maps.asMap(ImmutableSet.copyOf(node.getPropertyKeys()), k -> node.getProperty(k)));
     }
 
     public Long getNodeId() {
@@ -75,7 +58,7 @@ public class Neo4jNode {
         this.labels = labels;
     }
 
-    public LinkedHashMap<String, Object> getProperties() {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
@@ -85,6 +68,6 @@ public class Neo4jNode {
 
     @JsonProperty("id")
     private Long nodeId;
-    private Set<String> labels = new ArrayList();
+    private Set<String> labels = new LinkedHashSet<>();
     private Map<String, Object> properties = new LinkedHashMap<String, Object>();
 }
