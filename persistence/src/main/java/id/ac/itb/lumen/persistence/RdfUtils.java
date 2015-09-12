@@ -9,6 +9,7 @@ import org.apache.jena.vocabulary.*;
  */
 public class RdfUtils {
 
+    public static final String SCHEMA_NAMESPACE = "http://schema.org/";
     public static final String YAGO_NAMESPACE = "http://yago-knowledge.org/resource/";
     public static final String LUMEN_NAMESPACE = "http://lumen.lskk.ee.itb.ac.id/resource/";
     private static final FastAbbreviatingPrefixMap PREFIX_MAP;
@@ -21,6 +22,7 @@ public class RdfUtils {
         PREFIX_MAP.add("owl", OWL.getURI());
         PREFIX_MAP.add("skos", SKOS.getURI());
         PREFIX_MAP.add("skosxl", SKOSXL.getURI());
+        PREFIX_MAP.add("schema", SCHEMA_NAMESPACE);
         PREFIX_MAP.add("yago", YAGO_NAMESPACE);
         PREFIX_MAP.add("lumen", LUMEN_NAMESPACE);
     }

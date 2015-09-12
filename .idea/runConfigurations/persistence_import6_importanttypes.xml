@@ -6,7 +6,7 @@
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
-    <option name="MAIN_CLASS_NAME" value="id.ac.itb.lumen.persistence.LumenPersistenceImportApp" />
+    <option name="MAIN_CLASS_NAME" value="id.ac.itb.lumen.persistence.LumenPersistenceImportLegacyApp" />
     <option name="VM_PARAMETERS" value="-Xmx1g" />
     <option name="PROGRAM_PARAMETERS" value="/media/ceefour/passport/databank/yago2s/tsv_extracted/yagoImportantTypes.tsv" />
     <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />

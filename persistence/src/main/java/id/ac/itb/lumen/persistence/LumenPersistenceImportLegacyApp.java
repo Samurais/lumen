@@ -11,8 +11,6 @@ import com.google.common.collect.Iterators;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.sparql.util.NodeFactoryExtra;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
-import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.*;
 import org.slf4j.Logger;
@@ -38,7 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @SpringBootApplication
 @Profile("import")
-public class LumenPersistenceImportApp implements CommandLineRunner {
+public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
     @PostConstruct
     public void init() {
 //        txTemplate = new TransactionTemplate(txMgr)
@@ -46,7 +44,7 @@ public class LumenPersistenceImportApp implements CommandLineRunner {
     }
 
     public void importFile(final File file) throws IOException, InterruptedException {
-        log.info("Importing {} ({} KiB) ...", file, NUMBER.format(DefaultGroovyMethods.asType(file.length() / 1024, Long.class)));
+        log.info("Importing {} ({} KiB) ...", file, NUMBER.format(file.length() / 1024));
 
         final Label resourceLabel = DynamicLabel.label("Resource");
         final Label literalLabel = DynamicLabel.label("Literal");
@@ -58,7 +56,7 @@ public class LumenPersistenceImportApp implements CommandLineRunner {
         final AtomicLong commits = new AtomicLong(0l);
         ImportBatch batch = new ImportBatch();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8), (int) 1024 * 1024)) {
-            try (final CSVReader csv = new CSVReader(reader, StringGroovyMethods.asType("\t", Character.class), CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)) {
+            try (final CSVReader csv = new CSVReader(reader, '\t', CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)) {
 //                def tx = txMgr.getTransaction(txTemplate)
                 Transaction tx = db.beginTx();
                 // spare threads for the main thread and Neo4j's transaction-write thread
@@ -164,13 +162,13 @@ public class LumenPersistenceImportApp implements CommandLineRunner {
                             if (subjectGraphNode == null || !subjectGraphNode.hasProperty("prefLabel")) {
                                 if (subjectGraphNode == null) {
                                     subjectGraphNode = db.createNode(resourceLabel);
-                                    DefaultGroovyMethods.getProperties(subjectGraphNode).put("href", subjectHref);
+                                    subjectGraphNode.setProperty("href", subjectHref);
                                 }
 
-                                if (new ArrayList<String>(Arrays.asList("rdfs:label", "skos:prefLabel")).equals(property)) {
-                                    DefaultGroovyMethods.getProperties(subjectGraphNode).put("prefLabel", literalValue);
+                                if (ImmutableSet.of("rdfs:label", "skos:prefLabel").contains(property)) {
+                                    subjectGraphNode.setProperty("prefLabel", literalValue);
                                 } else if ("<isPreferredMeaningOf>".equals(property)) {
-                                    DefaultGroovyMethods.getProperties(subjectGraphNode).put("isPreferredMeaningOf", literalValue);
+                                    subjectGraphNode.setProperty("isPreferredMeaningOf", literalValue);
                                 }
                                 importeds++;
                             }
@@ -347,14 +345,14 @@ public class LumenPersistenceImportApp implements CommandLineRunner {
     }
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(LumenPersistenceImportApp.class).profiles("import").run(args);
+        new SpringApplicationBuilder(LumenPersistenceImportLegacyApp.class).profiles("import").run(args);
     }
 
     public static String getLUMEN_NAMESPACE() {
         return LUMEN_NAMESPACE;
     }
 
-    protected static final Logger log = LoggerFactory.getLogger(LumenPersistenceImportApp.class);
+    protected static final Logger log = LoggerFactory.getLogger(LumenPersistenceImportLegacyApp.class);
     private static final String LUMEN_NAMESPACE = "http://lumen.lskk.ee.itb.ac.id/resource/";
     protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.ENGLISH);
     /**
