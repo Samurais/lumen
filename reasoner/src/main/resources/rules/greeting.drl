@@ -1,0 +1,10 @@
+import org.lskk.lumen.reasoner.*
+import org.lskk.lumen.reasoner.event.*
+
+rule "Greeting" dialect "mvel"
+when
+    gr : GreetingReceived(fromName : fromName)
+then
+    System.out.println("We received yay " + fromName);
+    retract(gr)
+end

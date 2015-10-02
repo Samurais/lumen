@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner;
 
 import org.apache.camel.builder.RouteBuilder;
+import org.kie.api.runtime.KieSession;
 import org.lskk.lumen.reasoner.event.GreetingReceived;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,19 +15,23 @@ import javax.inject.Inject;
  */
 @Component
 @Profile("reasonerApp")
-public class ReasonerRouter extends RouteBuilder {
+public class DroolsRouter extends RouteBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(ReasonerRouter.class);
+    private static final Logger log = LoggerFactory.getLogger(DroolsRouter.class);
 
     @Inject
     private ToJson toJson;
+    @Inject
+    private KieSession kieSession;
 
     @Override
     public void configure() throws Exception {
-        from("timer:hello?period=3s")
+        from("seda:greetingReceived")
                 .process(exchange -> {
-                    exchange.getIn().setBody(new GreetingReceived("Hendy"));
+                    final GreetingReceived greetingReceived = exchange.getIn().getBody(GreetingReceived.class);
+                    kieSession.insert(greetingReceived);
+                    kieSession.fireAllRules();
                 })
-                .to("seda:greetingReceived");
+                .to("log:echo");
     }
 }
