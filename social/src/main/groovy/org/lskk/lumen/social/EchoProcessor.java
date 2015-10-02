@@ -1,6 +1,6 @@
 package org.lskk.lumen.social;
 
-import id.ac.itb.lumen.core.StatusUpdate;
+import org.lskk.lumen.core.StatusUpdate;
 
 /**
  * Created by NADIA on 27/02/2015.
