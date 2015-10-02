@@ -3,8 +3,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>id.ac.itb.lumen</groupId>
-	<artifactId>id.ac.itb.lumen.parent</artifactId>
+	<groupId>org.lskk.lumen</groupId>
+	<artifactId>org.lskk.lumen.parent</artifactId>
 	<version>0.2.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Lumen Social Robot Foundation Modules</name>
