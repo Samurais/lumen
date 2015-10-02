@@ -1,4 +1,4 @@
-package org.lskk.lumen.social;
+package org.lskk.lumen.reasoner;
 
 import com.google.common.base.Strings;
 import org.slf4j.Logger;

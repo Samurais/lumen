@@ -1,4 +1,4 @@
-package org.lskk.lumen.social;
+package org.lskk.lumen.reasoner;
 
 import java.io.Serializable;
 

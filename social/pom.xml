@@ -20,7 +20,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>org.lskk.lumen.social.LumenSocialApplication</start-class>
+		<start-class>org.lskk.lumen.reasoner.LumenSocialApplication</start-class>
 		<java.version>1.8</java.version>
 	</properties>
 

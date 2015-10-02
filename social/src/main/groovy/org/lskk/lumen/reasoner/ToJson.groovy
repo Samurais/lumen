@@ -1,4 +1,4 @@
-package org.lskk.lumen.social
+package org.lskk.lumen.reasoner
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
