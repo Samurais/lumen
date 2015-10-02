@@ -1,0 +1,24 @@
+{
+  "id": "syamil",
+  "name": "Syamil Lumen",
+  "email": "yudialcampari@gmail.com",
+  "facebook": {
+    "facebookProfileId": "100009287822936",
+    "facebookProfileName": "Syamil Lumen"
+  },
+  "facebookSys": {
+    "facebookAppId": "1425887797693485",
+    "facebookAppSecret": "",
+    "facebookAccessToken": ""
+  },
+  "twitter": {
+    "twitterUserId": null,
+    "twitterScreenName": null
+  },
+  "twitterSys": {
+    "twitterApiKey": null,
+    "twitterApiSecret": null,
+    "twitterToken": null,
+    "twitterTokenSecret": null
+  }
+}
