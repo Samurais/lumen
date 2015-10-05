@@ -38,34 +38,40 @@ public class ProxyConfig {
 
     @PostConstruct
     public void init() {
-        if (!Strings.isNullOrEmpty(env.getProperty("http.proxyHost"))) {
-            System.setProperty("http.proxyHost", env.getProperty("http.proxyHost"));
+        final String proxyHost = env.getProperty("http.proxyHost");
+        if (!Strings.isNullOrEmpty(proxyHost)) {
+            System.setProperty("http.proxyHost", proxyHost);
         }
 
-        if (!Strings.isNullOrEmpty(env.getProperty("http.proxyPort"))) {
-            System.setProperty("http.proxyPort", env.getProperty("http.proxyPort"));
+        final Integer proxyPort = env.getProperty("http.proxyPort", Integer.class);
+        if (proxyPort != null) {
+            System.setProperty("http.proxyPort", proxyPort.toString());
         }
 
-        if (!Strings.isNullOrEmpty(env.getProperty("https.proxyHost"))) {
-            System.setProperty("https.proxyHost", env.getProperty("https.proxyHost"));
+        final String httpsProxyHost = env.getProperty("https.proxyHost");
+        if (!Strings.isNullOrEmpty(httpsProxyHost)) {
+            System.setProperty("https.proxyHost", httpsProxyHost);
         }
 
-        if (!Strings.isNullOrEmpty(env.getProperty("https.proxyPort"))) {
-            System.setProperty("https.proxyPort", env.getProperty("https.proxyPort"));
+        final Integer httpsProxyPort = env.getProperty("https.proxyPort", Integer.class);
+        if (httpsProxyPort != null) {
+            System.setProperty("https.proxyPort", httpsProxyPort.toString());
         }
 
-        if (!Strings.isNullOrEmpty(env.getProperty("http.proxyUser"))) {
-            System.setProperty("http.proxyUser", env.getProperty("http.proxyUser"));
-            System.setProperty("http.proxyPassword", env.getProperty("http.proxyPassword", ""));
-            log.info("Using authenticated proxy http://{}:{}@{}:{}", env.getProperty("http.proxyUser"), "********", env.getProperty("http.proxyHost"), env.getProperty("http.proxyPort"));
+        final String proxyUser = env.getProperty("http.proxyUser");
+        if (!Strings.isNullOrEmpty(proxyUser)) {
+            System.setProperty("http.proxyUser", proxyUser);
+            final String proxyPassword = env.getRequiredProperty("http.proxyPassword");
+            System.setProperty("http.proxyPassword", proxyPassword);
+            log.info("Using authenticated proxy http://{}:{}@{}:{}", env.getRequiredProperty("http.proxyUser"), "********", proxyHost, proxyPort);
             Authenticator.setDefault(new Authenticator() {
                 public PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(env.getProperty("http.proxyUser"), env.getProperty("http.proxyPassword", "").toCharArray());
+                    return new PasswordAuthentication(proxyUser, proxyPassword.toCharArray());
                 }
 
             });
-        } else if (!Strings.isNullOrEmpty(env.getProperty("http.proxyHost"))) {
-            log.info("Using unauthenticated proxy http://{}:{}", env.getProperty("http.proxyHost"), env.getProperty("http.proxyPort"));
+        } else if (!Strings.isNullOrEmpty(proxyHost)) {
+            log.info("Using unauthenticated proxy http://{}:{}", proxyHost, proxyPort);
         }
 
     }
