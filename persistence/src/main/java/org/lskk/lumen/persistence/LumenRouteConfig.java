@@ -383,8 +383,8 @@ public class LumenRouteConfig {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.sonar")
-                        .sample(1, TimeUnit.SECONDS).to("log:IN.avatar.NAO.data.sonar?showHeaders=true&showAll=true&multiline=true")
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.nao1.data.sonar")
+                        .sample(1, TimeUnit.SECONDS).to("log:IN.avatar.nao1.data.sonar?showHeaders=true&showAll=true&multiline=true")
                         .process(it -> {
                         try {
                             final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
@@ -407,7 +407,7 @@ public class LumenRouteConfig {
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
                     })
                         .bean(toJson)
-                        .to("log:OUT.avatar.NAO.data.sonar?showAll=true&multiline=true");
+                        .to("log:OUT.avatar.nao1.data.sonar?showAll=true&multiline=true");
             }
 
         };
@@ -425,9 +425,9 @@ public class LumenRouteConfig {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.battery")
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.nao1.data.battery")
                         .sample(1, TimeUnit.SECONDS)
-                        .to("log:IN.avatar.NAO.data.battery?showHeaders=true&showAll=true&multiline=true")
+                        .to("log:IN.avatar.nao1.data.battery?showHeaders=true&showAll=true&multiline=true")
                         .process(it -> {
                             try {
                                 final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
@@ -449,7 +449,7 @@ public class LumenRouteConfig {
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
                     })
                         .bean(toJson)
-                        .to("log:OUT.avatar.NAO.data.battery?showAll=true&multiline=true");
+                        .to("log:OUT.avatar.nao1.data.battery?showAll=true&multiline=true");
             }
 
         };
@@ -468,9 +468,9 @@ public class LumenRouteConfig {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.joint")
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.nao1.data.joint")
                         .sample(1, TimeUnit.SECONDS)
-                        .to("log:IN.avatar.NAO.data.joint?showHeaders=true&showAll=true&multiline=true")
+                        .to("log:IN.avatar.nao1.data.joint?showHeaders=true&showAll=true&multiline=true")
                         .process(it -> {
                                     try {
                                         final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
@@ -499,7 +499,7 @@ public class LumenRouteConfig {
 
                         )
                     .bean(toJson)
-                        .to("log:OUT.avatar.NAO.data.joint?showAll=true&multiline=true");
+                        .to("log:OUT.avatar.nao1.data.joint?showAll=true&multiline=true");
             }
 
         };
@@ -518,9 +518,9 @@ public class LumenRouteConfig {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.NAO.data.tactile")
+                from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.nao1.data.tactile")
                         .sample(1, TimeUnit.SECONDS)
-                        .to("log:IN.avatar.NAO.data.tactile?showHeaders=true&showAll=true&multiline=true")
+                        .to("log:IN.avatar.nao1.data.tactile?showHeaders=true&showAll=true&multiline=true")
                         .process(it -> {
                                     try {
                                         final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
@@ -545,7 +545,7 @@ public class LumenRouteConfig {
 //                            '"rabbitmq.REPLY_TO" header must be specified, found headers: %s', it.in.headers)
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
                                 }
-                        ).bean(toJson).to("log:OUT.avatar.NAO.data.tactile?showAll=true&multiline=true");
+                        ).bean(toJson).to("log:OUT.avatar.nao1.data.tactile?showAll=true&multiline=true");
             }
 
         };
