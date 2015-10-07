@@ -39,7 +39,7 @@ import java.util.*;
 public class ImportYagoTaxonomyApp implements CommandLineRunner {
 
     protected static final Logger log = LoggerFactory.getLogger(ImportYagoTaxonomyApp.class);
-    protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.ENGLISH);
+    protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.US);
     /**
      * For tmpfs/SSD, set multithreaded to true
      */

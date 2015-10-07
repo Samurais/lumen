@@ -39,7 +39,7 @@ import java.util.Map;
 @Profile("indexlabels")
 public class LumenPersistenceIndexLabelsApp implements CommandLineRunner {
     protected static final Logger log = LoggerFactory.getLogger(LumenPersistenceIndexLabelsApp.class);
-    protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.ENGLISH);
+    protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.US);
     protected ObjectMapper mapper;
 
     @PostConstruct
