@@ -41,11 +41,14 @@ public class ImageRouter extends RouteBuilder {
     @Inject
     private PlatformTransactionManager txMgr;
 
+    private File mediaUploadPath;
+    private String mediaUploadPrefix;
+
     @PostConstruct
     public void init() {
-        final File mediaUploadPath = new File(env.getRequiredProperty("media.upload.path"));
+        mediaUploadPath = new File(env.getRequiredProperty("media.upload.path"));
         mediaUploadPath.mkdirs();
-        final String mediaUploadPrefix = env.getRequiredProperty("media.upload.prefix");
+        mediaUploadPrefix = env.getRequiredProperty("media.upload.prefix");
         LinkedHashMap<String, String> map = new LinkedHashMap<String, String>(4);
         map.put("image/jpeg", "jpg");
         map.put("image/png", "png");
@@ -61,7 +64,7 @@ public class ImageRouter extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        final String avatarId = "NAO";
+        final String avatarId = "nao1";
         from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar." + avatarId + ".data.image").sample(1, TimeUnit.SECONDS).to("log:IN.avatar." + avatarId + ".data.image?showHeaders=true&showAll=true&multiline=true")
                 .process(it -> {
                     try {
