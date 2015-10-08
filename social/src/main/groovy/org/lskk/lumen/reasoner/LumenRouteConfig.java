@@ -233,8 +233,8 @@ Body: {
                         statusUpdate.getChannel().setName("Facebook");
                         it.getIn().setBody(statusUpdate);
                     }).bean(toJson)
-                            .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.SOCIAL_PERCEPTION.key(ag.getId()))
-                            .to("log:" + Channel.SOCIAL_PERCEPTION.key(ag.getId()));
+                            .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()))
+                            .to("log:" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()));
                 });
             }
         };
@@ -295,8 +295,8 @@ Body: {
                                 // Echo
                                 echoProcessor.processStatus(statusUpdate, replier);
                             }).bean(toJson)
-                                    .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.SOCIAL_PERCEPTION.key(ag.getId()))
-                                    .to("log:" + Channel.SOCIAL_PERCEPTION.key(ag.getId()));
+                                    .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()))
+                                    .to("log:" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()));
                 });
             }
         };
@@ -316,7 +316,7 @@ Body: {
                                     .buildAndExpand(ag.getFacebookSys().getFacebookAppId(), ag.getFacebookSys().getFacebookAppSecret(), ag.getFacebookSys().getFacebookAccessToken()).toString();
                             final String twitterTimelineUser = UriComponentsBuilder.fromUriString("twitter://timeline/user?consumerKey={twitterApiKey}&consumerSecret={twitterApiSecret}&accessToken={twitterToken}&accessTokenSecret={twitterTokenSecret}")
                                             .buildAndExpand(ag.getTwitterSys().getTwitterApiKey(), ag.getTwitterSys().getTwitterApiSecret(), ag.getTwitterSys().getTwitterToken(), ag.getTwitterSys().getTwitterTokenSecret()).toString();
-                            from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.SOCIAL_EXPRESSION.key(ag.getId()))
+                            from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.SOCIAL_EXPRESSION.key(ag.getId()))
                                 .to("log:social-expression")
                                 .process((Exchange it) -> {
                                     final StatusUpdate statusUpdate=toJson.mapper.readValue((byte[]) it.getIn().getBody(),StatusUpdate.class);
@@ -376,8 +376,8 @@ Body: {
                                 statusUpdate.getChannel().setName("Twitter");
                                 it.getIn().setBody(statusUpdate);
                             }).bean(toJson)
-                                    .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.SOCIAL_PERCEPTION.key(ag.getId()))
-                                    .to("log:" + Channel.SOCIAL_PERCEPTION.key(ag.getId()));
+                                    .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()))
+                                    .to("log:" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()));
                         });
             }
         };
@@ -419,8 +419,8 @@ Body: {
                                 mention.getChannel().setName("Twitter");
                                 it.getIn().setBody(mention);
                             }).bean(toJson)
-                                    .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.SOCIAL_PERCEPTION.key(ag.getId()))
-                                    .to("log:" + Channel.SOCIAL_PERCEPTION.key(ag.getId()));
+                                    .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()))
+                                    .to("log:" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()));
                         });
             }
         };
@@ -463,8 +463,8 @@ Body: {
                                         privateMessage.getChannel().setName("Twitter");
                                         it.getIn().setBody(privateMessage);
                                     }).bean(toJson)
-                                            .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.SOCIAL_PERCEPTION.key(ag.getId()))
-                                            .to("log:" + Channel.SOCIAL_PERCEPTION.key(ag.getId()));
+                                            .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()))
+                                            .to("log:" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()));
                         });
             }
         };

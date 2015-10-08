@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import org.apache.camel.builder.RouteBuilder;
-import org.lskk.lumen.core.Channel;
+import org.lskk.lumen.core.AvatarChannel;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.springframework.context.annotation.Profile;
@@ -37,7 +37,7 @@ public class FactRouter extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.PERSISTENCE_FACT.key("arkan"))
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.PERSISTENCE_FACT.key("arkan"))
                 .to("log:IN.persistence-fact?showHeaders=true&showAll=true&multiline=true")
                 .process(it -> {
                     try {

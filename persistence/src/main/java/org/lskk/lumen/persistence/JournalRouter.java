@@ -41,7 +41,7 @@ public class JournalRouter extends RouteBuilder {
     public void configure() throws Exception {
         final String mediaUploadPrefix = env.getRequiredProperty("media.upload.prefix");
         final String mediaDownloadPrefix = env.getRequiredProperty("media.download.prefix");
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + Channel.PERSISTENCE_JOURNAL.key("arkan"))
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.PERSISTENCE_JOURNAL.key("arkan"))
                 .to("log:IN.persistence-journal?showHeaders=true&showAll=true&multiline=true")
                 .process(it -> {
                     try {
