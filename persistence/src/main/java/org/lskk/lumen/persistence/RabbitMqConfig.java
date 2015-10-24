@@ -25,9 +25,9 @@ public class RabbitMqConfig {
     @Bean
     public ConnectionFactory amqpConnFactory() {
         final ConnectionFactory connFactory = new ConnectionFactory();
-        connFactory.setHost(env.getProperty("amqp.host", "localhost"));
-        connFactory.setUsername(env.getProperty("amqp.username", "guest"));
-        connFactory.setPassword(env.getProperty("amqp.password", "guest"));
+        connFactory.setHost(env.getRequiredProperty("amqp.host"));
+        connFactory.setUsername(env.getRequiredProperty("amqp.username"));
+        connFactory.setPassword(env.getRequiredProperty("amqp.password"));
         log.info("AMQP configuration: host={} username={}", connFactory.getHost(), connFactory.getUsername());
         return connFactory;
     }
