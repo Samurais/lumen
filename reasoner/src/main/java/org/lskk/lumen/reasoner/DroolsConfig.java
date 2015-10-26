@@ -35,7 +35,9 @@ public class DroolsConfig {
 
     @Bean(destroyMethod = "dispose")
     public KieSession kieSession() {
-        return kieContainer().newKieSession();
+        final KieSession kieSession = kieContainer().newKieSession();
+        kieSession.setGlobal("log", log);
+        return kieSession;
     }
 
     // https://issues.jboss.org/browse/DROOLS-937

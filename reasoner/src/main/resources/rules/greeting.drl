@@ -1,10 +1,28 @@
+dialect "mvel"
+
 import org.lskk.lumen.reasoner.*
 import org.lskk.lumen.reasoner.event.*
 
-rule "Greeting" dialect "mvel"
+global org.slf4j.Logger log
+
+rule "Greeting"
 when
-    gr : GreetingReceived(fromName : fromName)
+    $gr : GreetingReceived(fromName : fromName)
 then
-    System.out.println("We received yay " + fromName);
-    retract(gr)
+    log.info("Received greeting from {}", fromName);
+    retract($gr);
+    Greeting greetingResp = new Greeting();
+    greetingResp.fromName = "Lumen";
+    greetingResp.timeOfDay = TimeOfDay.MORNING;
+    greetingResp.toPronoun = Pronoun.YOU;
+    AgentResponse resp = new AgentResponse($gr, greetingResp);
+    insert(resp);
+end
+
+rule "AgentResponse"
+when
+    $ar : AgentResponse($greeting : response#Greeting)
+then
+    log.info("Good {}, {}", $greeting.timeOfDay, $greeting.toPronoun);
+    retract($ar);
 end
