@@ -24,6 +24,10 @@ public class NounClause implements Serializable {
         this.pronoun = pronoun;
     }
 
+    public NounClause(String href) {
+        this.href = href;
+    }
+
     /**
      * Mentions an exact name, directly to be uttered.
      * @return
@@ -70,5 +74,15 @@ public class NounClause implements Serializable {
 
     public void setOwner(NounClause owner) {
         this.owner = owner;
+    }
+
+    @Override
+    public String toString() {
+        return "NounClause{" +
+                "name='" + name + '\'' +
+                ", href='" + href + '\'' +
+                ", pronoun=" + pronoun +
+                ", owner=" + owner +
+                '}';
     }
 }

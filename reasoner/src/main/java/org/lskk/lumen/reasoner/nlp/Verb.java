@@ -22,4 +22,11 @@ public class Verb implements Serializable {
     public void setHref(String href) {
         this.href = href;
     }
+
+    @Override
+    public String toString() {
+        return "Verb{" +
+                href +
+                '}';
+    }
 }
