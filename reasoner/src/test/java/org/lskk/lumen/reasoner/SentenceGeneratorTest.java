@@ -1,11 +1,11 @@
 package org.lskk.lumen.reasoner;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.lskk.lumen.reasoner.expression.SpoNoun;
-import org.lskk.lumen.reasoner.nlp.NounClause;
-import org.lskk.lumen.reasoner.nlp.PronounMapper;
-import org.lskk.lumen.reasoner.nlp.Verb;
+import org.lskk.lumen.reasoner.nlp.*;
+import org.lskk.lumen.reasoner.nlp.en.IndonesianSentenceGenerator;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -26,12 +26,19 @@ import static org.junit.Assert.*;
 @ContextConfiguration(classes = SentenceGeneratorTest.Config.class)
 public class SentenceGeneratorTest {
 
+    public static final Locale INDONESIAN = Locale.forLanguageTag("id-ID");
+
     @Configuration
     @Import(JacksonAutoConfiguration.class)
     public static class Config {
         @Bean
-        public SentenceGenerator sentenceGenerator() {
+        public SentenceGenerator sentenceGenerator_en() {
             return new SentenceGenerator();
+        }
+
+        @Bean
+        public SentenceGenerator sentenceGenerator_id() {
+            return new IndonesianSentenceGenerator();
         }
 
         @Bean
@@ -40,16 +47,32 @@ public class SentenceGeneratorTest {
         }
     }
 
-    @Inject
-    private SentenceGenerator sentenceGenerator;
+    @Inject @NaturalLanguage("en")
+    private SentenceGenerator sentenceGenerator_en;
+    @Inject @NaturalLanguage("id")
+    private SentenceGenerator sentenceGenerator_id;
 
     @Test
     public void spoNoun() {
-        assertEquals("I love you", sentenceGenerator.generate(Locale.US,
-                new SpoNoun(NounClause.I, new Verb("love"), NounClause.YOU)).getObject());
-        assertEquals("he loves me", sentenceGenerator.generate(Locale.US,
-                new SpoNoun(NounClause.HE, new Verb("love"), NounClause.I)).getObject());
+        generate(new SpoNoun(NounClause.I, new Verb("love"), NounClause.YOU),
+            "I love you", "aku cinta kamu");
+        generate(new SpoNoun(NounClause.HE, new Verb("love"), NounClause.I),
+            "he loves me", "dia cinta aku");
     }
 
+    protected void generate(Object sentence, String english, String indonesian) {
+        assertEquals(english, sentenceGenerator_en.generate(Locale.US,
+                sentence).getObject());
+        assertEquals(indonesian, sentenceGenerator_id.generate(INDONESIAN,
+                sentence).getObject());
+    }
+
+    @Test
+    public void makeSentence() {
+        assertEquals("I love it!",
+                sentenceGenerator_en.makeSentence(ImmutableList.of("I love it"), SentenceMood.EXCLAMATION));
+        assertEquals("He doesn't like me...",
+                sentenceGenerator_en.makeSentence(ImmutableList.of("he doesn't like me"), SentenceMood.DANGLING));
+    }
 
 }

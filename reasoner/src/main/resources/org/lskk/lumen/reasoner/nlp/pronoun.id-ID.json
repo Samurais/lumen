@@ -1,18 +1,121 @@
 {
-  "I": "saya",
-  "YOU": "kamu",
-  "WE": "kami",
-  "THEY": "mereka",
-  "HE": "dia",
-  "SHE": "dia",
-  "SOMEONE": "seseorang",
-  "SOMETHING": "sesuatu",
-  "NO_ONE": "tiada orang",
-  "EVERYONE": "semua orang",
-  "ANYONE": "siapa pun",
-  "NOBODY": "tiada orang",
-  "EVERYBODY": "semua orang",
-  "ANYBODY": "siapa pun",
-  "ANYTHING": "apa pun",
-  "EVERYTHING": "semuanya"
+  "I": {
+    "subject": "aku",
+    "object": "aku",
+    "possessiveAdj": "aku",
+    "possessivePronoun": "aku",
+    "reflexive": "aku sendiri"
+  },
+  "YOU": {
+    "subject": "kamu",
+    "object": "kamu",
+    "possessiveAdj": "kamu",
+    "possessivePronoun": "kamu",
+    "reflexive": "kamu sendiri"
+  },
+  "WE": {
+    "subject": "kami",
+    "object": "kami",
+    "possessiveAdj": "kami",
+    "possessivePronoun": "kami",
+    "reflexive": "kami sendiri"
+  },
+  "THEY": {
+    "subject": "mereka",
+    "object": "mereka",
+    "possessiveAdj": "mereka",
+    "possessivePronoun": "mereka",
+    "reflexive": "mereka sendiri"
+  },
+  "HE": {
+    "subject": "dia",
+    "object": "dia",
+    "possessiveAdj": "dia",
+    "possessivePronoun": "dia",
+    "reflexive": "dia sendiri"
+  },
+  "SHE": {
+    "subject": "dia",
+    "object": "dia",
+    "possessiveAdj": "dia",
+    "possessivePronoun": "dia",
+    "reflexive": "dia sendiri"
+  },
+  "IT": {
+    "subject": "itu",
+    "object": "itu",
+    "possessiveAdj": "itu",
+    "possessivePronoun": "itu",
+    "reflexive": "itu sendiri"
+  },
+  "SOMEONE": {
+    "subject": "seseorang",
+    "object": "seseorang",
+    "possessiveAdj": "seseorang",
+    "possessivePronoun": "seseorang",
+    "reflexive": "seseorang"
+  },
+  "SOMETHING": {
+    "subject": "sesuatu",
+    "object": "sesuatu",
+    "possessiveAdj": "sesuatu",
+    "possessivePronoun": "sesuatu",
+    "reflexive": "sesuatu"
+  },
+  "NO_ONE": {
+    "subject": "tiada orang",
+    "object": "tiada orang",
+    "possessiveAdj": "tiada orang",
+    "possessivePronoun": "tiada orang",
+    "reflexive": "tiada orang"
+  },
+  "EVERYONE": {
+    "subject": "semua orang",
+    "object": "semua orang",
+    "possessiveAdj": "semua orang",
+    "possessivePronoun": "semua orang",
+    "reflexive": "semua orang"
+  },
+  "ANYONE": {
+    "subject": "siapa pun",
+    "object": "siapa pun",
+    "possessiveAdj": "siapa pun",
+    "possessivePronoun": "siapa pun",
+    "reflexive": "siapa pun"
+  },
+  "NOBODY": {
+    "subject": "tiada orang",
+    "object": "tiada orang",
+    "possessiveAdj": "tiada orang",
+    "possessivePronoun": "tiada orang",
+    "reflexive": "tiada orang"
+  },
+  "EVERYBODY": {
+    "subject": "semua orang",
+    "object": "semua orang",
+    "possessiveAdj": "semua orang",
+    "possessivePronoun": "semua orang",
+    "reflexive": "semua orang"
+  },
+  "ANYBODY": {
+    "subject": "siapa pun",
+    "object": "siapa pun",
+    "possessiveAdj": "siapa pun",
+    "possessivePronoun": "siapa pun",
+    "reflexive": "siapa pun"
+  },
+  "ANYTHING": {
+    "subject": "apa saja",
+    "object": "apa saja",
+    "possessiveAdj": "apa saja",
+    "possessivePronoun": "apa saja",
+    "reflexive": "apa saja"
+  },
+  "EVERYTHING": {
+    "subject": "semuanya",
+    "object": "semuanya",
+    "possessiveAdj": "semuanya",
+    "possessivePronoun": "semuanya",
+    "reflexive": "semuanya"
+  }
 }

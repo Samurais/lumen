@@ -19,26 +19,16 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Natural language generation.
- *
- * The process of language generation involves a series of stages, which may be defined in various ways, such as:
- * <ol>
- *     <li>Content determination: figuring out what needs to be said in a given context</li>
- *     <li>Discourse planning: overall organization of the information to be communicated</li>
- *     <li>Lexicalization: assigning words to concepts</li>
- *     <li>Reference generation: linking words in the generated sentences using pronouns and other kinds of reference</li>
- *     <li>Syntactic and morphological realization: the generation of sentences via a process inverse to parsing, representing the information gathered in the above phases</li>
- *     <li>Phonological or orthographic realization: turning the above into spoken or written words, complete with timing (in the spoken case), punctuation (in the written case), etc.</li>
- * </ol>
- *
+ * Natural language generation for Indonesian.
  * Created by ceefour on 27/10/2015.
  *
  * @see <a href="http://wiki.opencog.org/w/SegSim">SegSim | OpenCog</a>
  */
 @Service
-@NaturalLanguage("en")
-public class SentenceGenerator {
-    private static Logger log = LoggerFactory.getLogger(SentenceGenerator.class);
+@NaturalLanguage("id")
+public class IndonesianSentenceGenerator extends SentenceGenerator {
+    private static Logger log = LoggerFactory.getLogger(IndonesianSentenceGenerator.class);
+    public static final Locale INDONESIAN = Locale.forLanguageTag("id-ID");
 
     @Inject
     private PronounMapper pronounMapper;
@@ -49,16 +39,17 @@ public class SentenceGenerator {
      * @param expression
      * @return
      */
+    @Override
     public CommunicateAction generate(Locale locale, Object expression) {
         Preconditions.checkNotNull(expression, "expression not null");
         final CommunicateAction action = new CommunicateAction();
         String msg = null;
         if (expression instanceof Greeting) {
             Greeting greeting = (Greeting) expression;
-            msg = "Good " + greeting.getTimeOfDay();
+            msg = "Selamat " + greeting.getTimeOfDay();
             if (Pronoun.YOU != greeting.getToPronoun()) {
                 // TODO: this is weird
-                msg += ", " + pronounMapper.getPronounLabel(Locale.US, greeting.getToPronoun(), PronounCase.OBJECT).get();
+                msg += ", " + pronounMapper.getPronounLabel(INDONESIAN, greeting.getToPronoun(), PronounCase.OBJECT).get();
             }
         } else if (expression instanceof SpoNoun) {
             final SpoNoun spo = (SpoNoun) expression;
@@ -81,24 +72,18 @@ public class SentenceGenerator {
 
     public String toText(Locale locale, NounClause noun, PronounCase pronounCase) {
         String result = "";
-        if (noun.getOwner() != null) {
-            result += toText(locale, noun.getOwner(), PronounCase.POSSESSIVE_ADJ) + " ";
-        }
         if (noun.getName() != null) {
             result += noun.getName();
-            if (PronounCase.POSSESSIVE_ADJ == pronounCase) {
-                result += "'s";
-            }
         } else if (noun.getPronoun() != null) {
-            result += pronounMapper.getPronounLabel(Locale.US, noun.getPronoun(), pronounCase).get();
+            result += pronounMapper.getPronounLabel(INDONESIAN, noun.getPronoun(), pronounCase).get();
         } else if (noun.getHref() != null) {
             // FIXME: yago entity to text
             result += noun.getHref();
-            if (PronounCase.POSSESSIVE_ADJ == pronounCase) {
-                result += "'s";
-            }
         } else {
             throw new ReasonerException("Invalid noun: " + noun);
+        }
+        if (noun.getOwner() != null) {
+            result += " " + toText(locale, noun.getOwner(), PronounCase.POSSESSIVE_ADJ);
         }
         return result;
     }

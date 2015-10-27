@@ -1,18 +1,121 @@
 {
-  "I": "I",
-  "YOU": "you",
-  "WE": "we",
-  "THEY": "they",
-  "HE": "he",
-  "SHE": "she",
-  "SOMEONE": "someone",
-  "SOMETHING": "something",
-  "NO_ONE": "no one",
-  "EVERYONE": "everyone",
-  "ANYONE": "anyone",
-  "NOBODY": "nobody",
-  "EVERYBODY": "everybody",
-  "ANYBODY": "anybody",
-  "ANYTHING": "anything",
-  "EVERYTHING": "everything"
+  "I": {
+    "subject": "I",
+    "object": "me",
+    "possessiveAdj": "my",
+    "possessivePronoun": "mine",
+    "reflexive": "myself"
+  },
+  "YOU": {
+    "subject": "you",
+    "object": "you",
+    "possessiveAdj": "your",
+    "possessivePronoun": "yours",
+    "reflexive": "yourself"
+  },
+  "WE": {
+    "subject": "we",
+    "object": "us",
+    "possessiveAdj": "our",
+    "possessivePronoun": "ours",
+    "reflexive": "ourselves"
+  },
+  "THEY": {
+    "subject": "they",
+    "object": "them",
+    "possessiveAdj": "their",
+    "possessivePronoun": "theirs",
+    "reflexive": "themselves"
+  },
+  "HE": {
+    "subject": "he",
+    "object": "him",
+    "possessiveAdj": "his",
+    "possessivePronoun": "his",
+    "reflexive": "himself"
+  },
+  "SHE": {
+    "subject": "she",
+    "object": "her",
+    "possessiveAdj": "her",
+    "possessivePronoun": "hers",
+    "reflexive": "herself"
+  },
+  "IT": {
+    "subject": "it",
+    "object": "it",
+    "possessiveAdj": "its",
+    "possessivePronoun": "its",
+    "reflexive": "itself"
+  },
+  "SOMEONE": {
+    "subject": "someone",
+    "object": "someone",
+    "possessiveAdj": "someone's",
+    "possessivePronoun": "someone's",
+    "reflexive": "someone"
+  },
+  "SOMETHING": {
+    "subject": "something",
+    "object": "something",
+    "possessiveAdj": "something's",
+    "possessivePronoun": "something's",
+    "reflexive": "something"
+  },
+  "NO_ONE": {
+    "subject": "no one",
+    "object": "no one",
+    "possessiveAdj": "no one's",
+    "possessivePronoun": "no one's",
+    "reflexive": "no one"
+  },
+  "EVERYONE": {
+    "subject": "everyone",
+    "object": "everyone",
+    "possessiveAdj": "everyone's",
+    "possessivePronoun": "everyone's",
+    "reflexive": "everyone"
+  },
+  "ANYONE": {
+    "subject": "anyone",
+    "object": "anyone",
+    "possessiveAdj": "anyone's",
+    "possessivePronoun": "anyone's",
+    "reflexive": "anyone"
+  },
+  "NOBODY": {
+    "subject": "nobody",
+    "object": "nobody",
+    "possessiveAdj": "nobody's",
+    "possessivePronoun": "nobody's",
+    "reflexive": "nobody"
+  },
+  "EVERYBODY": {
+    "subject": "everybody",
+    "object": "everybody",
+    "possessiveAdj": "everybody's",
+    "possessivePronoun": "everybody's",
+    "reflexive": "everybody"
+  },
+  "ANYBODY": {
+    "subject": "anybody",
+    "object": "anybody",
+    "possessiveAdj": "anybody's",
+    "possessivePronoun": "anybody's",
+    "reflexive": "anybody"
+  },
+  "ANYTHING": {
+    "subject": "anything",
+    "object": "anything",
+    "possessiveAdj": "anything's",
+    "possessivePronoun": "anything's",
+    "reflexive": "anything"
+  },
+  "EVERYTHING": {
+    "subject": "everything",
+    "object": "everything",
+    "possessiveAdj": "everything's",
+    "possessivePronoun": "everything's",
+    "reflexive": "everything"
+  }
 }

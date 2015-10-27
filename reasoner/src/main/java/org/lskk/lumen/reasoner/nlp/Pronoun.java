@@ -10,6 +10,7 @@ public enum Pronoun {
     THEY("lumen:pronoun_they", PronounPerson.THIRD, PronounNumber.PLURAL),
     HE("lumen:pronoun_he", PronounPerson.THIRD, PronounNumber.SINGULAR),
     SHE("lumen:pronoun_she", PronounPerson.THIRD, PronounNumber.SINGULAR),
+    IT("lumen:pronoun_it", PronounPerson.THIRD, PronounNumber.SINGULAR),
     SOMEONE("lumen:pronoun_someone", PronounPerson.THIRD, PronounNumber.SINGULAR),
     SOMETHING("lumen:pronoun_something", PronounPerson.THIRD, PronounNumber.SINGULAR),
     NO_ONE("lumen:pronoun_no_one", PronounPerson.THIRD, PronounNumber.SINGULAR),

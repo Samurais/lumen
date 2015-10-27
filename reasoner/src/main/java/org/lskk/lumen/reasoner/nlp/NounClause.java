@@ -13,6 +13,7 @@ public class NounClause implements Serializable {
     public static final NounClause THEY = new NounClause(Pronoun.THEY);
     public static final NounClause HE = new NounClause(Pronoun.HE);
     public static final NounClause SHE = new NounClause(Pronoun.SHE);
+    public static final NounClause IT = new NounClause(Pronoun.IT);
 
     private String name;
     private String href;
