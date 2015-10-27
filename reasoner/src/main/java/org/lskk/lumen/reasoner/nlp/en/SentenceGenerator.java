@@ -1,6 +1,11 @@
 package org.lskk.lumen.reasoner.nlp.en;
 
 import com.google.common.base.Preconditions;
+import edu.mit.jwi.IDictionary;
+import edu.mit.jwi.item.ISynset;
+import edu.mit.jwi.item.ISynsetID;
+import edu.mit.jwi.item.IWord;
+import edu.mit.jwi.item.SynsetID;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.ReasonerException;
@@ -42,6 +47,8 @@ public class SentenceGenerator {
 
     @Inject
     private PronounMapper pronounMapper;
+    @Inject @NaturalLanguage("en")
+    private IDictionary wordNet;
 
     /**
      * Generates a clause (not a proper sentence). The first word is not capitalized.
@@ -92,8 +99,8 @@ public class SentenceGenerator {
         } else if (noun.getPronoun() != null) {
             result += pronounMapper.getPronounLabel(Locale.US, noun.getPronoun(), pronounCase).get();
         } else if (noun.getHref() != null) {
-            // FIXME: yago entity to text
-            result += noun.getHref();
+//            result += noun.getHref();
+            result += getSynsetLemma(noun.getHref());
             if (PronounCase.POSSESSIVE_ADJ == pronounCase) {
                 result += "'s";
             }
@@ -106,8 +113,8 @@ public class SentenceGenerator {
     public String toText(Locale locale, Adjective adj) {
         String result = "";
         if (adj.getHref() != null) {
-            // FIXME: yago entity to text
-            result += adj.getHref();
+//            result += adj.getHref();
+            result += getSynsetLemma(adj.getHref());
         } else {
             throw new ReasonerException("Invalid adjective: " + adj);
         }
@@ -117,8 +124,8 @@ public class SentenceGenerator {
     public String toText(Locale locale, Verb verb, PronounPerson person, PronounNumber number) {
         String result = "";
         if (verb.getHref() != null) {
-            // FIXME: yago entity to text
-            result += verb.getHref();
+//            result += verb.getHref();
+            result += getSynsetLemma(verb.getHref());
             if (PronounPerson.THIRD == person && PronounNumber.SINGULAR == number) {
                 result += "s";
             }
@@ -142,6 +149,54 @@ public class SentenceGenerator {
                 throw new ReasonerException("Unknown sentence mood: " + mood);
         }
         return sentence;
+    }
+
+    /**
+     * The first digit of the synset identifies the part-of-speech according to the following table
+     Part-of-speech	Letter code	Numeric code
+     Noun	n	1
+     Verb	v	2
+     Adjective	a	3
+     Adverb	r	4
+     Adjective Satellite	s	3
+     Phrase	p	4
+     * @param href Format must be "[namespace]:wordnet_[word]_[synsetId]".
+     *             Synset ID in WordNet 3.1 format (but we're still using WordNet 3.0 data).
+     *             Example: "yago:wordnet_entity_100001740".
+     * @return
+     */
+    public ISynsetID hrefToSynsetId(String href) {
+        final String digits9 = StringUtils.substringAfterLast(href, "_");
+        final char numeric = digits9.charAt(0);
+        final char pos;
+        switch (numeric) {
+            case '1': pos = 'n'; break;
+            case '2': pos = 'v'; break;
+            case '3': pos = 'a'; break; // TODO: can be 'a' or 's' !
+            case '4': pos = 'r'; break; // TODO: can be 'r' or 'p' !
+            default:
+                throw new ReasonerException("Unknown WordNet QName: " + href);
+        }
+        final String synsetId = "SID-" + digits9.substring(1, digits9.length()) + "-" + Character.toUpperCase(pos);
+        try {
+            return SynsetID.parseSynsetID(synsetId);
+        } catch (Exception e) {
+            throw new ReasonerException(e, "Cannot parse synset '%s'", synsetId);
+        }
+    }
+
+    public ISynset getSynset(String href) {
+        return wordNet.getSynset(hrefToSynsetId(href));
+    }
+
+    public String getSynsetLemma(String href) {
+        final ISynsetID synsetId = hrefToSynsetId(href);
+        final ISynset synset = Preconditions.checkNotNull(wordNet.getSynset(synsetId),
+                "href %s synset %s not found, probably synset ID mismatch due to different WordNet version", href, synsetId);
+        Preconditions.checkState(!synset.getWords().isEmpty(),
+                "No words for href %s synset %s", href, synset);
+        final IWord word = synset.getWords().iterator().next();
+        return word.getLemma();
     }
 
 }

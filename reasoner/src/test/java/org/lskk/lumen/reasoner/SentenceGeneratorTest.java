@@ -8,9 +8,8 @@ import org.lskk.lumen.reasoner.nlp.*;
 import org.lskk.lumen.reasoner.nlp.en.IndonesianSentenceGenerator;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -29,7 +28,10 @@ public class SentenceGeneratorTest {
     public static final Locale INDONESIAN = Locale.forLanguageTag("id-ID");
 
     @Configuration
-    @Import(JacksonAutoConfiguration.class)
+    @Import({JacksonAutoConfiguration.class, WordNetConfig.class})
+    @PropertySource(value = "config/application.properties", ignoreResourceNotFound = true)
+    @PropertySource("classpath:application.properties")
+//    @EnableConfigurationProperties
     public static class Config {
         @Bean
         public SentenceGenerator sentenceGenerator_en() {
@@ -54,9 +56,9 @@ public class SentenceGeneratorTest {
 
     @Test
     public void spoNoun() {
-        generate(new SpoNoun(NounClause.I, new Verb("love"), NounClause.YOU),
+        generate(new SpoNoun(NounClause.I, new Verb("wn30:wordnet_love_201775535"), NounClause.YOU),
             "I love you", "aku cinta kamu");
-        generate(new SpoNoun(NounClause.HE, new Verb("love"), NounClause.I),
+        generate(new SpoNoun(NounClause.HE, new Verb("wn30:wordnet_love_201775535"), NounClause.I),
             "he loves me", "dia cinta aku");
     }
 
