@@ -1,9 +1,11 @@
 # Lumen Reasoner
 
-## Requirement: WordNet 3.0
+## Requirement: WordNet 3.0 and ind.zip
 
 1. Download WordNet 3.0 database from http://wordnetcode.princeton.edu/3.0/WNdb-3.0.tar.gz
 2. Extract to `D:\wn30`. After extraction make sure you have a folder called `D:\wn30\dict`.
+3. Download WordNet Bahasa ind from http://compling.hss.ntu.edu.sg/omw/wns/ind.zip
+4. Extract `ind.zip` to `D:\wn30`. After extraction make sure you have a folder called `D:\wn30\msa`.
 
 ## Building and Running
 

@@ -60,13 +60,16 @@ public class SentenceGeneratorTest {
 
     @Test
     public void spoNoun() {
+        generate(new SpoNoun(NounClause.THEY, new Verb("wn30:wordnet_drive_201930874"),
+                        new NounClause("yago:wordnet_car_102958343", NounClause.SHE)),
+                "they drive her car", "mereka memandu auto dia");
         generate(new SpoNoun(NounClause.SHE, new Verb("wn30:wordnet_eat_201168468"),
                         new NounClause("yago:wordnet_rice_107804323")),
-                "she eats rice", "dia makan nasi");
+                "she eats rice", "dia memakan nasi");
         generate(new SpoNoun(NounClause.I, new Verb("wn30:wordnet_love_201775535"), NounClause.YOU),
-            "I love you", "aku cinta kamu");
+            "I love you", "aku jatuh cinta kamu");
         generate(new SpoNoun(NounClause.HE, new Verb("wn30:wordnet_love_201775535"), NounClause.I),
-            "he loves me", "dia cinta aku");
+            "he loves me", "dia jatuh cinta aku");
     }
 
     protected void generate(Object sentence, String english, String indonesian) {

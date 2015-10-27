@@ -48,4 +48,13 @@ public class SpoNoun implements Serializable {
     public void setObject(NounClause object) {
         this.object = object;
     }
+
+    @Override
+    public String toString() {
+        return "SpoNoun{" +
+                subject +
+                predicate +
+                object +
+                '}';
+    }
 }

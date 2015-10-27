@@ -1,6 +1,11 @@
 package org.lskk.lumen.reasoner.nlp.en;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Multimap;
+import edu.mit.jwi.item.ISynset;
+import edu.mit.jwi.item.ISynsetID;
+import edu.mit.jwi.item.IWord;
+import edu.mit.jwi.item.SynsetID;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.ReasonerException;
@@ -10,9 +15,12 @@ import org.lskk.lumen.reasoner.expression.SpoNoun;
 import org.lskk.lumen.reasoner.nlp.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -32,6 +40,8 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
 
     @Inject
     private PronounMapper pronounMapper;
+    @Inject @NaturalLanguage("id")
+    private Multimap<String, String> wordNet;
 
     /**
      * Generates a clause (not a proper sentence). The first word is not capitalized.
@@ -77,8 +87,8 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
         } else if (noun.getPronoun() != null) {
             result += pronounMapper.getPronounLabel(INDONESIAN, noun.getPronoun(), pronounCase).get();
         } else if (noun.getHref() != null) {
-            // FIXME: yago entity to text
-            result += noun.getHref();
+//            result += noun.getHref();
+            result += getSynsetLemma(noun.getHref());
         } else {
             throw new ReasonerException("Invalid noun: " + noun);
         }
@@ -91,8 +101,8 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
     public String toText(Locale locale, Adjective adj) {
         String result = "";
         if (adj.getHref() != null) {
-            // FIXME: yago entity to text
-            result += adj.getHref();
+//            result += adj.getHref();
+            result += getSynsetLemma(adj.getHref());
         } else {
             throw new ReasonerException("Invalid adjective: " + adj);
         }
@@ -102,11 +112,8 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
     public String toText(Locale locale, Verb verb, PronounPerson person, PronounNumber number) {
         String result = "";
         if (verb.getHref() != null) {
-            // FIXME: yago entity to text
-            result += verb.getHref();
-            if (PronounPerson.THIRD == person && PronounNumber.SINGULAR == number) {
-                result += "s";
-            }
+//            result += verb.getHref();
+            result += getSynsetLemma(verb.getHref());
         } else {
             throw new ReasonerException("Invalid verb: " + verb);
         }
@@ -127,6 +134,24 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
                 throw new ReasonerException("Unknown sentence mood: " + mood);
         }
         return sentence;
+    }
+
+    protected String getSynsetLemma(String href) {
+        final String digits9 = StringUtils.substringAfterLast(href, "_");
+        final char numeric = digits9.charAt(0);
+        final char pos;
+        switch (numeric) {
+            case '1': pos = 'n'; break;
+            case '2': pos = 'v'; break;
+            case '3': pos = 'a'; break; // TODO: can be 'a' or 's' !
+            case '4': pos = 'r'; break; // TODO: can be 'r' or 'p' !
+            default:
+                throw new ReasonerException("Unknown WordNet QName: " + href);
+        }
+        final String synsetId = digits9.substring(1, digits9.length()) + "-" + pos;
+        final Collection<String> lemmas = Preconditions.checkNotNull(wordNet.get(synsetId),
+                "Cannot get Indonesian WordNet lemma(s) for %s (from %s)", synsetId, href);
+        return lemmas.iterator().next();
     }
 
 }

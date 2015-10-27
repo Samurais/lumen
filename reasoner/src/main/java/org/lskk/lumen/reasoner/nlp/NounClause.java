@@ -28,6 +28,16 @@ public class NounClause implements Serializable {
         this.href = href;
     }
 
+    public NounClause(String href, NounClause owner) {
+        this.href = href;
+        this.owner = owner;
+    }
+
+    public NounClause(Pronoun pronoun, NounClause owner) {
+        this.pronoun = pronoun;
+        this.owner = owner;
+    }
+
     /**
      * Mentions an exact name, directly to be uttered.
      * @return

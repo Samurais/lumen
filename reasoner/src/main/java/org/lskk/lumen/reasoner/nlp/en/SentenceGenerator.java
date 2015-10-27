@@ -185,11 +185,11 @@ public class SentenceGenerator {
         }
     }
 
-    public ISynset getSynset(String href) {
+    private ISynset getSynset(String href) {
         return wordNet.getSynset(hrefToSynsetId(href));
     }
 
-    public String getSynsetLemma(String href) {
+    protected String getSynsetLemma(String href) {
         final ISynsetID synsetId = hrefToSynsetId(href);
         final ISynset synset = Preconditions.checkNotNull(wordNet.getSynset(synsetId),
                 "href %s synset %s not found, probably synset ID mismatch due to different WordNet version", href, synsetId);
