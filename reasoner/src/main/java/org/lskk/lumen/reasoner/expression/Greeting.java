@@ -1,4 +1,7 @@
-package org.lskk.lumen.reasoner.event;
+package org.lskk.lumen.reasoner.expression;
+
+import org.lskk.lumen.reasoner.nlp.Pronoun;
+import org.lskk.lumen.reasoner.event.TimeOfDay;
 
 import java.io.Serializable;
 
@@ -8,7 +11,7 @@ import java.io.Serializable;
 public class Greeting implements Serializable {
     private String fromName;
     private TimeOfDay timeOfDay;
-    private String toPronoun;
+    private Pronoun toPronoun;
 
     public TimeOfDay getTimeOfDay() {
         return timeOfDay;
@@ -26,11 +29,11 @@ public class Greeting implements Serializable {
         this.fromName = fromName;
     }
 
-    public String getToPronoun() {
+    public Pronoun getToPronoun() {
         return toPronoun;
     }
 
-    public void setToPronoun(String toPronoun) {
+    public void setToPronoun(Pronoun toPronoun) {
         this.toPronoun = toPronoun;
     }
 }

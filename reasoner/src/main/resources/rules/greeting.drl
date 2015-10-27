@@ -2,6 +2,7 @@ dialect "mvel"
 
 import org.lskk.lumen.reasoner.*
 import org.lskk.lumen.reasoner.event.*
+import org.lskk.lumen.reasoner.expression.*
 
 global org.slf4j.Logger log
 
