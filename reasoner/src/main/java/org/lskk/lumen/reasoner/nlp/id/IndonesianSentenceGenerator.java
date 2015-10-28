@@ -1,11 +1,7 @@
-package org.lskk.lumen.reasoner.nlp.en;
+package org.lskk.lumen.reasoner.nlp.id;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
-import edu.mit.jwi.item.ISynset;
-import edu.mit.jwi.item.ISynsetID;
-import edu.mit.jwi.item.IWord;
-import edu.mit.jwi.item.SynsetID;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.ReasonerException;
@@ -13,13 +9,12 @@ import org.lskk.lumen.reasoner.expression.Greeting;
 import org.lskk.lumen.reasoner.expression.SpoAdj;
 import org.lskk.lumen.reasoner.expression.SpoNoun;
 import org.lskk.lumen.reasoner.nlp.*;
+import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;

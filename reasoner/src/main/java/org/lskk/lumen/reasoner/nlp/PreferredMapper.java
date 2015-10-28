@@ -57,6 +57,22 @@ public class PreferredMapper {
 
     public Optional<String> getPreferred(String nodeName, Locale locale) {
         final Optional<String> physicalEntity = getPreferred(preferredPhysicalEntities, nodeName, locale);
+        if (physicalEntity.isPresent()) {
+            return physicalEntity;
+        }
+        final Optional<String> scene = getPreferred(preferredScenes, nodeName, locale);
+        if (scene.isPresent()) {
+            return scene;
+        }
+        final Optional<String> verb = getPreferred(preferredVerbs, nodeName, locale);
+        if (verb.isPresent()) {
+            return verb;
+        }
+        final Optional<String> adj = getPreferred(preferredAdjectives, nodeName, locale);
+        if (adj.isPresent()) {
+            return adj;
+        }
+        return Optional.empty();
     }
 
     public Optional<String> getPreferred(Map<String, Map<Locale, String>> map, String nodeName, Locale locale) {
