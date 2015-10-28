@@ -46,9 +46,11 @@ public class SentenceGenerator {
     private static Logger log = LoggerFactory.getLogger(SentenceGenerator.class);
 
     @Inject
-    private PronounMapper pronounMapper;
+    protected PronounMapper pronounMapper;
     @Inject @NaturalLanguage("en")
     private IDictionary wordNet;
+    @Inject
+    protected PreferredMapper preferredMapper;
 
     /**
      * Generates a clause (not a proper sentence). The first word is not capitalized.
@@ -190,6 +192,12 @@ public class SentenceGenerator {
     }
 
     protected String getSynsetLemma(String href) {
+        // return preferred lemma if exists
+        final Optional<String> prefLemma = preferredMapper.getPreferred(href, Locale.US);
+        if (prefLemma.isPresent()) {
+            return prefLemma.get();
+        }
+        // otherwise consult WordNet
         final ISynsetID synsetId = hrefToSynsetId(href);
         final ISynset synset = Preconditions.checkNotNull(wordNet.getSynset(synsetId),
                 "href %s synset %s not found, probably synset ID mismatch due to different WordNet version", href, synsetId);

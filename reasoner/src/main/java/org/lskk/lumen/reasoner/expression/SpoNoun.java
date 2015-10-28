@@ -1,6 +1,5 @@
 package org.lskk.lumen.reasoner.expression;
 
-import org.lskk.lumen.reasoner.nlp.Adjective;
 import org.lskk.lumen.reasoner.nlp.NounClause;
 import org.lskk.lumen.reasoner.nlp.Verb;
 

@@ -1,11 +1,14 @@
 package org.lskk.lumen.reasoner.nlp;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.opencsv.CSVReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -28,6 +31,7 @@ public class PreferredMapper {
     private Map<String, Map<Locale, String>> preferredScenes;
     private Map<String, Map<Locale, String>> preferredAdjectives;
 
+    @PostConstruct
     public void init() throws IOException {
         preferredPhysicalEntities = readPreferredCsv(PreferredMapper.class.getResource("preferred_physical_entity.csv"));
         preferredScenes = readPreferredCsv(PreferredMapper.class.getResource("preferred_scene.csv"));
@@ -40,9 +44,10 @@ public class PreferredMapper {
         try (final CSVReader reader = new CSVReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8), ';', '"', 1)) {
             while (true) {
                 final String[] line = reader.readNext();
-                if (line == null) {
+                if (line == null || line.length <= 1) {
                     break;
                 }
+                Preconditions.checkState(line.length >= 3, "CSV line contains insufficient fields: %s %s", line.length, ImmutableList.copyOf(line));
                 final String nodeName = line[0];
                 final String preferred_en_US = line[1];
                 final String preferred_id_ID = line[2];
@@ -76,6 +81,8 @@ public class PreferredMapper {
     }
 
     public Optional<String> getPreferred(Map<String, Map<Locale, String>> map, String nodeName, Locale locale) {
+        assert map != null;
+        Preconditions.checkNotNull(nodeName, "nodeName cannot be null");
         return Optional.ofNullable(map.get(nodeName)).map(it -> it.get(locale));
     }
 

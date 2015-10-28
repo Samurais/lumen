@@ -132,6 +132,12 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
     }
 
     protected String getSynsetLemma(String href) {
+        // return preferred lemma if exists
+        final Optional<String> prefLemma = preferredMapper.getPreferred(href, INDONESIAN);
+        if (prefLemma.isPresent()) {
+            return prefLemma.get();
+        }
+        // otherwise consult WordNet
         final String digits9 = StringUtils.substringAfterLast(href, "_");
         final char numeric = digits9.charAt(0);
         final char pos;

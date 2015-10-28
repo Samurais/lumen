@@ -32,8 +32,8 @@ public class SentenceGeneratorTest {
 
     @Configuration
     @Import({JacksonAutoConfiguration.class, WordNetConfig.class})
-    @PropertySource(value = "config/application.properties", ignoreResourceNotFound = true)
-    @PropertySource("classpath:application.properties")
+    @PropertySource(value = {"classpath:application.properties", "file:config/application.properties"},
+            ignoreResourceNotFound = true)
 //    @EnableConfigurationProperties
     public static class Config {
         @Bean
@@ -50,6 +50,9 @@ public class SentenceGeneratorTest {
         public PronounMapper pronounMapper() {
             return new PronounMapper();
         }
+
+        @Bean
+        public PreferredMapper preferredMapper() { return new PreferredMapper(); }
     }
 
     @Inject @NaturalLanguage("en")
@@ -61,14 +64,14 @@ public class SentenceGeneratorTest {
     public void spoNoun() {
         generate(new SpoNoun(NounClause.THEY, new Verb("wn30:wordnet_drive_201930874"),
                         new NounClause("yago:wordnet_car_102958343", NounClause.SHE)),
-                "they drive her car", "mereka memandu auto dia");
+                "they drive her car", "mereka mengendarai mobil dia");
         generate(new SpoNoun(NounClause.SHE, new Verb("wn30:wordnet_eat_201168468"),
                         new NounClause("yago:wordnet_rice_107804323")),
-                "she eats rice", "dia memakan nasi");
+                "she eats rice", "dia makan nasi");
         generate(new SpoNoun(NounClause.I, new Verb("wn30:wordnet_love_201775535"), NounClause.YOU),
-            "I love you", "aku jatuh cinta kamu");
+            "I love you", "aku cinta kamu");
         generate(new SpoNoun(NounClause.HE, new Verb("wn30:wordnet_love_201775535"), NounClause.I),
-            "he loves me", "dia jatuh cinta aku");
+            "he loves me", "dia cinta aku");
     }
 
     protected void generate(Object sentence, String english, String indonesian) {
