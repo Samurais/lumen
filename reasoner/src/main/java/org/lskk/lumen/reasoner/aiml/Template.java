@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class Template implements Serializable {
     /**
      * Symbolic reduction artificial intelligence.
+     * i.e. redirect to another {@link Category}, using the srai as input text.
      */
     @XmlElement(name="srai")
     private String srai;
@@ -25,7 +26,7 @@ public class Template implements Serializable {
     @XmlElementRef(name = "get", type = Get.class)
     private List<Serializable> contents;
     @XmlElementWrapper(name = "random") @XmlElement(name="li")
-    private List<String> randoms;
+    private List<Choice> randoms;
 
     @XmlTransient
     public String getSrai() {
@@ -48,6 +49,14 @@ public class Template implements Serializable {
     @XmlTransient
     public String getContentsString() {
         return contents != null ? contents.stream().map(Object::toString).collect(Collectors.joining(" ")).trim() : "";
+    }
+
+    public Sr getSr() {
+        return sr;
+    }
+
+    public List<Choice> getRandoms() {
+        return randoms;
     }
 
     @Override

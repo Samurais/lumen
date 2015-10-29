@@ -2,8 +2,11 @@ package org.lskk.lumen.reasoner.aiml;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import org.apache.commons.lang3.StringUtils;
+import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.event.AgentResponse;
+import org.lskk.lumen.reasoner.event.UnrecognizedInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,9 +16,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -25,10 +26,11 @@ import java.util.stream.Collectors;
 public class AimlService {
     private static final Logger log = LoggerFactory.getLogger(AimlService.class);
     private Aiml aiml;
+    private static final Random RANDOM = new Random();
 
     @PostConstruct
     public void init() throws JAXBException {
-        final JAXBContext jaxbContext = JAXBContext.newInstance(Aiml.class, Category.class, Srai.class, Sr.class, Template.class,
+        final JAXBContext jaxbContext = JAXBContext.newInstance(Aiml.class, Category.class, Sr.class, Template.class,
             Get.class);
         final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
         final URL url = AimlService.class.getResource("alice/salutations.aiml");
@@ -117,15 +119,63 @@ public class AimlService {
     }
 
     public AgentResponse process(Locale locale, String origInput) {
-        final List<MatchingCategory> categories = new ArrayList<>();
-        final CharMatcher punct = CharMatcher.anyOf(",.!");
-        final String punctRemoved = punct.removeFrom(origInput).trim();
-        final String whitespaced = punctRemoved.replaceAll("\\s+", " ").trim();
-        final String upperCased = whitespaced.toUpperCase(locale);
-//        aiml.getCategories().forEach(cat -> {
-//
-//        });
-        return null;
+        final CommunicateAction stimulus = new CommunicateAction(locale, origInput, null);
+
+        MatchingCategory bestMatch = null;
+        String currentInput = origInput;
+        String bestReply = null;
+        while (true) {
+            final List<MatchingCategory> matches = new ArrayList<>();
+            final CharMatcher punct = CharMatcher.anyOf(",.!");
+            final String punctRemoved = punct.removeFrom(currentInput).trim();
+            final String whitespaced = punctRemoved.replaceAll("\\s+", " ").trim();
+            final String upperCased = whitespaced.toUpperCase(locale);
+            aiml.getCategories().forEach(cat -> {
+                final MatchingCategory match = match(locale, upperCased, cat.getPattern());
+                if (match.truthValue[1] > 0f) {
+                    match.category = cat;
+                    matches.add(match);
+                }
+            });
+            matches.sort((a, b) -> a.truthValue[1] == a.truthValue[1] ? 0 : (a.truthValue[1] > b.truthValue[1] ? 1 : -1));
+            log.info("{} matched for '{}': {}", matches.size(), upperCased, matches);
+            bestMatch = Iterables.getFirst(matches, null);
+            if (bestMatch == null) {
+                // oh no!
+                break;
+            } else {
+                if (bestMatch.category.getTemplate().getSrai() != null) {
+                    // here we go again
+                    currentInput = bestMatch.category.getTemplate().getSrai();
+                } else if (bestMatch.category.getTemplate().getRandoms() != null) {
+                    // pick one first
+                    final Choice choice = bestMatch.category.getTemplate().getRandoms().get(
+                            RANDOM.nextInt(bestMatch.category.getTemplate().getRandoms().size()) );
+                    log.info("Randomly picked from {}: {}", bestMatch.category.getTemplate().getRandoms().size(),
+                            choice);
+                    if (choice.getSrai() != null) {
+                        // here we go again
+                        currentInput = choice.getSrai();
+                    } else {
+                        // done
+                        bestReply = choice.getContentsString();
+                        break;
+                    }
+                } else {
+                    // done
+                    bestReply = bestMatch.category.getTemplate().getContentsString();
+                    break;
+                }
+            }
+
+        }
+        if (bestMatch != null) {
+            log.info("{} -> {}", stimulus, bestReply);
+            return new AgentResponse(stimulus, new CommunicateAction(locale, bestReply, null));
+        } else {
+            log.info("UNRECOGNIZED {}", stimulus);
+            return new AgentResponse(stimulus, new UnrecognizedInput());
+        }
     }
 
     public static class MatchingCategory {
@@ -146,6 +196,16 @@ public class AimlService {
             this.category = category;
             this.truthValue = truthValue;
             this.groups = groups;
+        }
+
+        @Override
+        public String toString() {
+            return "MatchingCategory{" +
+                    "pattern='" + pattern + '\'' +
+                    ", category=" + category +
+                    ", truthValue=" + Arrays.toString(truthValue) +
+                    ", groups=" + groups +
+                    '}';
         }
     }
 }

@@ -3,6 +3,7 @@ package org.lskk.lumen.reasoner;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
@@ -70,6 +71,13 @@ public class AimlServiceTest {
         assertThat(matching.groups, contains("ALLAH"));
         matching = AimlService.match(Locale.US, "I LOVE ALLAH SO MUCH", "I LOVE _");
         assertThat(matching.truthValue[1], equalTo(0f));
+    }
+
+    @Test
+    public void process() {
+        AgentResponse resp;
+        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
+        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
     }
 
 }

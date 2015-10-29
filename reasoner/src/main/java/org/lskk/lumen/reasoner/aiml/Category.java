@@ -2,6 +2,7 @@ package org.lskk.lumen.reasoner.aiml;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlList;
+import javax.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
 
 /**
@@ -12,6 +13,16 @@ public class Category implements Serializable {
     private String pattern;
     @XmlElement
     private Template template;
+
+    @XmlTransient
+    public String getPattern() {
+        return pattern;
+    }
+
+    @XmlTransient
+    public Template getTemplate() {
+        return template;
+    }
 
     @Override
     public String toString() {
