@@ -7,7 +7,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-class LumenSocmedApp implements CommandLineRunner {
+public class LumenSocmedApp implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(LumenSocmedApp.class);
 

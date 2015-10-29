@@ -1,4 +1,5 @@
 {
+  "@type": "AgentSocialConfig",
   "id": "arkan",
   "name": "Arkan Lumen",
   "email": "arkan.lumen@gmail.com",

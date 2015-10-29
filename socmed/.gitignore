@@ -1,0 +1,3 @@
+/config/*.TwitterApp.jsonld
+/config/agent/*.TwitterAuthorization.jsonld
+/config/agent/*.AgentSocialConfig.json

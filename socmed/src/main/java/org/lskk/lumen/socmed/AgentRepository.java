@@ -15,6 +15,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -23,28 +24,25 @@ import java.util.Arrays;
 @CompileStatic
 @Repository
 public class AgentRepository extends AbstractCrudRepository<AgentSocialConfig, String> {
-    public AgentRepository() {
-        final String pattern = "file:config/agent/*.json";
+    private static final Logger log = LoggerFactory.getLogger(AgentRepository.class);
+    protected final ImmutableMap<String, AgentSocialConfig> agents;
+
+    public AgentRepository() throws IOException {
+        final String pattern = "file:config/agent/*.AgentSocialConfig.json";
         log.info("Searching \"{}\" in \"{}\"...", pattern, System.getProperty("user.dir"));
         final ObjectMapper mapper = new ObjectMapper();
-        final Resource[] resources = new PathMatchingResourcePatternResolver(((AgentRepository) org.lskk.lumen.socmed.AgentRepository).getClassLoader()).getResources(pattern);
-        agents = FluentIterable.from(Arrays.asList(resources)).filter(DefaultGroovyMethods.asType(new Closure<Object>(this, this) {
-            public Object doCall(Resource it) {
-                return !FilenameUtils.getBaseName(it.getFilename()).contains(".");
-            }
-
-        }, Predicate.class < Resource.class)).transform(DefaultGroovyMethods.asType(new Closure<AgentSocialConfig>(this, this) {
-            public AgentSocialConfig doCall(Resource it) {
-                return mapper.readValue(it.getURL(), AgentSocialConfig.class);
-            }
-
-        }, Function.class < Resource.class)).uniqueIndex(DefaultGroovyMethods.asType(new Closure<String>(this, this) {
-            public String doCall(AgentSocialConfig it) {
-                return it.getId();
-            }
-
-        }, Function.class < AgentSocialConfig.class));
-        log.info("Loaded {} agents: {}", new Object[]{agents.size(), agents.keySet()});
+        final Resource[] resources = new PathMatchingResourcePatternResolver(AgentRepository.class.getClassLoader()).getResources(pattern);
+        agents = FluentIterable.from(Arrays.asList(resources))
+                .filter(it -> !FilenameUtils.getBaseName(it.getFilename()).contains("."))
+                .transform(it -> {
+                    try {
+                        return mapper.readValue(it.getURL(), AgentSocialConfig.class);
+                    } catch (IOException e) {
+                        throw new SocmedException(e, "Cannot read JSON from %s", it);
+                    }
+                })
+                .uniqueIndex(AgentSocialConfig::getId);
+        log.info("Loaded {} agents: {}", agents.size(), agents.keySet());
     }
 
     @Override
@@ -77,6 +75,4 @@ public class AgentRepository extends AbstractCrudRepository<AgentSocialConfig, S
         throw new UnsupportedOperationException();
     }
 
-    private static final Logger log = LoggerFactory.getLogger(AgentRepository.class);
-    protected final ImmutableMap<String, AgentSocialConfig> agents;
 }
