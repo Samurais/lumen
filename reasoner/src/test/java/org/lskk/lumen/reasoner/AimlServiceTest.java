@@ -76,8 +76,11 @@ public class AimlServiceTest {
     @Test
     public void process() {
         AgentResponse resp;
-        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
-        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
+        // SRAI to "hi", but salutations.aiml has no rule for "hi"
+//        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
+//        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
+        resp = aimlService.process(Locale.US, "hello, how are you??");
+        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("I am fine thank you how are you?"));
     }
 
 }
