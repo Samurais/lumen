@@ -9,12 +9,15 @@ import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.event.UnrecognizedInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,15 +32,21 @@ public class AimlService {
     private static final Random RANDOM = new Random();
 
     @PostConstruct
-    public void init() throws JAXBException {
+    public void init() throws JAXBException, IOException {
         final JAXBContext jaxbContext = JAXBContext.newInstance(Aiml.class, Category.class, Sr.class, Template.class,
             Get.class);
         final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-        final URL url = AimlService.class.getResource("alice/salutations.aiml");
-        final Aiml aiml = (Aiml) unmarshaller.unmarshal(url);
-        log.info("Loaded {} AIML categories from {}", aiml.getCategories().size(), url);
-        log.trace("{} AIML: {}", aiml.getCategories().size(), aiml.getCategories().stream().map(Category::toString).collect(Collectors.joining("\n")));
-        this.aiml = aiml;
+        final PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(AimlService.class.getClassLoader());
+        final Resource[] resources = resolver.getResources("classpath:org/lskk/lumen/reasoner/aiml/alice/*.aiml");
+        log.info("Loading {} AIML files: {}", resources.length, resources);
+        this.aiml = new Aiml();
+        for (final Resource res : resources) {
+            final Aiml curAiml = (Aiml) unmarshaller.unmarshal(res.getURL());
+            log.info("Loaded {} AIML categories from {}", curAiml.getCategories().size(), res);
+            log.trace("{} AIML: {}", curAiml.getCategories().size(), curAiml.getCategories().stream().map(Category::toString).collect(Collectors.joining("\n")));
+            aiml.getCategories().addAll(curAiml.getCategories());
+        }
+        log.info("Total {} AIML categories from {} resources", aiml.getCategories().size(), resources.length);
     }
 
     public Aiml getAiml() {
