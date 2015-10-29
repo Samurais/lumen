@@ -35,7 +35,8 @@ public class AimlService {
         final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
         final URL url = AimlService.class.getResource("alice/salutations.aiml");
         final Aiml aiml = (Aiml) unmarshaller.unmarshal(url);
-        log.info("Loaded AIML from {}: {}", url, aiml.getCategories().stream().map(Category::toString).collect(Collectors.joining("\n")));
+        log.info("Loaded {} AIML categories from {}", aiml.getCategories().size(), url);
+        log.trace("{} AIML: {}", aiml.getCategories().size(), aiml.getCategories().stream().map(Category::toString).collect(Collectors.joining("\n")));
         this.aiml = aiml;
     }
 

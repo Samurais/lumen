@@ -5,7 +5,6 @@ import groovy.transform.CompileStatic;
 /**
  * Created by ceefour on 1/17/15.
  */
-@CompileStatic
 public class AgentSocialConfig {
     public String getId() {
         return id;

@@ -21,7 +21,6 @@ import java.util.Arrays;
 /**
  * Created by ceefour on 1/19/15.
  */
-@CompileStatic
 @Repository
 public class AgentRepository extends AbstractCrudRepository<AgentSocialConfig, String> {
     private static final Logger log = LoggerFactory.getLogger(AgentRepository.class);

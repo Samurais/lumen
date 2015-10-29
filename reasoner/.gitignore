@@ -1,2 +1,4 @@
-/config/agent/*.json
-/config/*.properties
+/config/application.properties
+/config/*.TwitterApp.jsonld
+/config/agent/*.TwitterAuthorization.jsonld
+/config/agent/*.AgentSocialConfig.json
