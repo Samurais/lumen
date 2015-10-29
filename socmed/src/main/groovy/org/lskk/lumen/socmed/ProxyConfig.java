@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner;
+package org.lskk.lumen.socmed;
 
 import com.google.common.base.Strings;
 import org.slf4j.Logger;

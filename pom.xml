@@ -12,7 +12,7 @@
 
 	<modules>
 		<module>persistence</module>
-		<module>social</module>
+		<module>socmed</module>
 		<module>reasoner</module>
 	</modules>
 

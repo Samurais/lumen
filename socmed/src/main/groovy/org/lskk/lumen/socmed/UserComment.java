@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner;
+package org.lskk.lumen.socmed;
 
 import java.io.Serializable;
 

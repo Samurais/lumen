@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.lskk.lumen</groupId>
-	<artifactId>org.lskk.lumen.social</artifactId>
+	<artifactId>org.lskk.lumen.socmed</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>Lumen Social</name>
-	<description>Social network integration for Lumen</description>
+	<name>Lumen Social Media</name>
+	<description>Social media integration for Lumen</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -20,7 +20,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>org.lskk.lumen.reasoner.LumenSocialApplication</start-class>
+		<start-class>org.lskk.lumen.reasoner.LumenSocmedApp</start-class>
 		<java.version>1.8</java.version>
 	</properties>
 

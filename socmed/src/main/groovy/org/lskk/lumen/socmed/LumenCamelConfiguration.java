@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner;
+package org.lskk.lumen.socmed;
 
 import org.apache.camel.spring.javaconfig.CamelConfiguration;
 import org.springframework.context.annotation.Configuration;
