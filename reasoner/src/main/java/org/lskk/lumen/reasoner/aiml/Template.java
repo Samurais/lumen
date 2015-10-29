@@ -9,8 +9,11 @@ import java.util.stream.Collectors;
  * Created by ceefour on 10/28/15.
  */
 public class Template implements Serializable {
+    /**
+     * Symbolic reduction artificial intelligence.
+     */
     @XmlElement(name="srai")
-    private Srai srai;
+    private String srai;
     @XmlElement(name="sr")
     private Sr sr;
     /**
@@ -25,11 +28,11 @@ public class Template implements Serializable {
     private List<String> randoms;
 
     @XmlTransient
-    public Srai getSrai() {
+    public String getSrai() {
         return srai;
     }
 
-    public void setSrai(Srai srai) {
+    public void setSrai(String srai) {
         this.srai = srai;
     }
 
