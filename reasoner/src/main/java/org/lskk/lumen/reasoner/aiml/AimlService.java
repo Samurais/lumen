@@ -69,7 +69,7 @@ public class AimlService {
         // starts with
         if (pattern.endsWith(" _")) {
             final String pattern2 = StringUtils.removeEnd(pattern, " _");
-            if (preparedInput.startsWith(pattern2)) {
+            if (preparedInput.startsWith(pattern2 + " ")) {
                 final String group0 = StringUtils.removeStartIgnoreCase(preparedInput, pattern2).trim();
                 if (!group0.contains(" ")) { // group[0] must be single word
                     return new MatchingCategory(null, new float[]{1f, 0.92f, 0f}, ImmutableList.of(group0));
@@ -78,19 +78,19 @@ public class AimlService {
         }
         if (pattern.endsWith(" *")) {
             final String pattern2 = StringUtils.removeEnd(pattern, " *");
-            if (preparedInput.startsWith(pattern2)) {
+            if (preparedInput.startsWith(pattern2 + " ")) {
                 final String group0 = StringUtils.removeStartIgnoreCase(preparedInput, pattern2).trim();
                 return new MatchingCategory(null, new float[] {1f, 0.91f, 0f}, ImmutableList.of(group0));
             }
         }
-        if (preparedInput.startsWith(pattern)) {
+        if (preparedInput.startsWith(pattern + " ")) {
             final String group0 = StringUtils.removeStartIgnoreCase(preparedInput, pattern).trim();
             return new MatchingCategory(null, new float[] {1f, 0.90f, 0f}, ImmutableList.of(group0));
         }
         // ends with
         if (pattern.startsWith("_ ")) {
             final String pattern2 = StringUtils.removeStart(pattern, "_ ");
-            if (preparedInput.endsWith(pattern2)) {
+            if (preparedInput.endsWith(" " + pattern2)) {
                 final String group0 = StringUtils.removeEndIgnoreCase(preparedInput, pattern2).trim();
                 if (!group0.contains(" ")) { // group[0] must be single word
                     return new MatchingCategory(null, new float[]{1f, 0.82f, 0f}, ImmutableList.of(group0));
@@ -99,30 +99,30 @@ public class AimlService {
         }
         if (pattern.startsWith("* ")) {
             final String pattern2 = StringUtils.removeStart(pattern, "* ");
-            if (preparedInput.endsWith(pattern2)) {
+            if (preparedInput.endsWith(" " + pattern2)) {
                 final String group0 = StringUtils.removeEndIgnoreCase(preparedInput, pattern2).trim();
                 return new MatchingCategory(null, new float[] {1f, 0.81f, 0f}, ImmutableList.of(group0));
             }
         }
-        if (preparedInput.endsWith(pattern)) {
+        if (preparedInput.endsWith(" " + pattern)) {
             return new MatchingCategory(null, new float[]{1f, 0.80f, 0f});
         }
         // contains
         if (pattern.endsWith(" *")) {
             final String pattern2 = StringUtils.removeEnd(pattern, " *");
-            if (StringUtils.containsIgnoreCase(preparedInput, pattern2)) {
+            if (StringUtils.containsIgnoreCase(preparedInput, " " + pattern2 + " ")) {
                 final String group0 = StringUtils.substringAfter(preparedInput, pattern2).trim();
                 return new MatchingCategory(null, new float[] {1f, 0.61f, 0f}, ImmutableList.of(group0));
             }
         }
         if (pattern.startsWith("* ")) {
             final String pattern2 = StringUtils.removeStart(pattern, "* ");
-            if (StringUtils.containsIgnoreCase(preparedInput, pattern2)) {
+            if (StringUtils.containsIgnoreCase(preparedInput, " " + pattern2 + " ")) {
                 final String group0 = StringUtils.substringBefore(preparedInput, pattern2).trim();
                 return new MatchingCategory(null, new float[] {1f, 0.61f, 0f}, ImmutableList.of(group0));
             }
         }
-        if (preparedInput.contains(pattern)) {
+        if (preparedInput.contains(" " + pattern + " ")) {
             return new MatchingCategory(null, new float[]{1f, 0.60f, 0f});
         }
         return new MatchingCategory(null, new float[]{1f, 0f, 0f});
@@ -136,7 +136,7 @@ public class AimlService {
         String bestReply = null;
         while (true) {
             final List<MatchingCategory> matches = new ArrayList<>();
-            final CharMatcher punct = CharMatcher.anyOf(",.!");
+            final CharMatcher punct = CharMatcher.anyOf(",.!?:;()'\"");
             final String punctRemoved = punct.removeFrom(currentInput).trim();
             final String whitespaced = punctRemoved.replaceAll("\\s+", " ").trim();
             final String upperCased = whitespaced.toUpperCase(locale);
