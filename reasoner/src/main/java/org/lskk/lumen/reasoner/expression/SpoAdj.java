@@ -11,7 +11,7 @@ import java.io.Serializable;
  * e.g. "My mood is sad", "I am happy".
  * Created by ceefour on 10/2/15.
  */
-public class SpoAdj implements Serializable {
+public class SpoAdj extends Proposition {
     private NounClause subject;
     private Verb predicate;
     private Adjective object;

@@ -9,9 +9,7 @@ import edu.mit.jwi.item.SynsetID;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.ReasonerException;
-import org.lskk.lumen.reasoner.expression.Greeting;
-import org.lskk.lumen.reasoner.expression.SpoAdj;
-import org.lskk.lumen.reasoner.expression.SpoNoun;
+import org.lskk.lumen.reasoner.expression.*;
 import org.lskk.lumen.reasoner.nlp.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +56,7 @@ public class SentenceGenerator {
      * @param expression
      * @return
      */
-    public CommunicateAction generate(Locale locale, Object expression) {
+    public CommunicateAction generate(Locale locale, Proposition expression) {
         Preconditions.checkNotNull(expression, "expression not null");
         final CommunicateAction action = new CommunicateAction();
         String msg = null;
@@ -81,15 +79,34 @@ public class SentenceGenerator {
             final Pronoun pronoun = Optional.ofNullable(spo.getSubject().getPronoun()).orElse(Pronoun.IT);
             msg += toText(locale, spo.getPredicate(), pronoun.getPerson(), pronoun.getNumber()) + " ";
             msg += toText(locale, spo.getObject());
+        } else if (expression instanceof SpInfinite) {
+            final SpInfinite spi = (SpInfinite) expression;
+            msg = toText(locale, spi.getSubject(), PronounCase.SUBJECT) + " ";
+            final Pronoun pronoun = Optional.ofNullable(spi.getSubject().getPronoun()).orElse(Pronoun.IT);
+            msg += toText(locale, spi.getPredicate(), pronoun.getPerson(), pronoun.getNumber());
+            if (spi.getToPlace() != null) {
+                msg += " to ";
+                msg += toText(locale, spi.getToPlace(), PronounCase.OBJECT);
+            }
         } else {
-            log.warn("Unknown expression class: {}", expression.getClass().getName());
+            throw new ReasonerException("Unknown proposition class: " + expression.getClass().getName());
         }
         action.setObject(msg);
         return action;
     }
 
+    /**
+     * Express noun with its {@link NounArticle}.
+     * @param locale
+     * @param noun
+     * @param pronounCase
+     * @return
+     */
     public String toText(Locale locale, NounClause noun, PronounCase pronounCase) {
         String result = "";
+        if (noun.getArticle() != null) {
+            result += noun.getArticle().getEnglish() + " ";
+        }
         if (noun.getOwner() != null) {
             result += toText(locale, noun.getOwner(), PronounCase.POSSESSIVE_ADJ) + " ";
         }
@@ -124,9 +141,13 @@ public class SentenceGenerator {
     }
 
     public String toText(Locale locale, Verb verb, PronounPerson person, PronounNumber number) {
+        Preconditions.checkNotNull(verb, "Verb is required");
+        Preconditions.checkNotNull(verb.getHref(), "Verb %s must have href", verb);
         String result = "";
+        if (verb.getModal() != null) {
+            result += verb.getModal().getEnglish() + " ";
+        }
         if (verb.getHref() != null) {
-//            result += verb.getHref();
             result += getSynsetLemma(verb.getHref());
             if (PronounPerson.THIRD == person && PronounNumber.SINGULAR == number) {
                 result += "s";
@@ -162,24 +183,40 @@ public class SentenceGenerator {
      Adverb	r	4
      Adjective Satellite	s	3
      Phrase	p	4
-     * @param href Format must be "[namespace]:wordnet_[word]_[synsetId]".
+     * @param href Format must be either "yago:wordnet_[word]_[synsetId]" or "wn30:[8digit]-[pos]".
      *             Synset ID in WordNet 3.1 format (but we're still using WordNet 3.0 data).
      *             Example: "yago:wordnet_entity_100001740".
      * @return
      */
     public ISynsetID hrefToSynsetId(String href) {
-        final String digits9 = StringUtils.substringAfterLast(href, "_");
-        final char numeric = digits9.charAt(0);
-        final char pos;
-        switch (numeric) {
-            case '1': pos = 'n'; break;
-            case '2': pos = 'v'; break;
-            case '3': pos = 'a'; break; // TODO: can be 'a' or 's' !
-            case '4': pos = 'r'; break; // TODO: can be 'r' or 'p' !
-            default:
-                throw new ReasonerException("Unknown WordNet QName: " + href);
+        final String nsPrefix = StringUtils.substringBefore(href, ":");
+        final String synsetId;
+        if ("yago".equals(nsPrefix)) {
+            final String digits9 = StringUtils.substringAfterLast(href, "_");
+            final char numeric = digits9.charAt(0);
+            final char pos;
+            switch (numeric) {
+                case '1':
+                    pos = 'n';
+                    break;
+                case '2':
+                    pos = 'v';
+                    break;
+                case '3':
+                    pos = 'a';
+                    break; // TODO: can be 'a' or 's' !
+                case '4':
+                    pos = 'r';
+                    break; // TODO: can be 'r' or 'p' !
+                default:
+                    throw new ReasonerException("Unknown WordNet QName: " + href);
+            }
+            synsetId = "SID-" + digits9.substring(1, digits9.length()) + "-" + Character.toUpperCase(pos);
+        } else if ("wn30".equals(nsPrefix)) {
+            synsetId = "SID-" + StringUtils.substringAfter(href, ":").toUpperCase();
+        } else {
+            throw new ReasonerException("Unknown nsPrefix: " + nsPrefix);
         }
-        final String synsetId = "SID-" + digits9.substring(1, digits9.length()) + "-" + Character.toUpperCase(pos);
         try {
             return SynsetID.parseSynsetID(synsetId);
         } catch (Exception e) {

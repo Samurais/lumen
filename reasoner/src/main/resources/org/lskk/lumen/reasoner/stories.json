@@ -1,0 +1,24 @@
+[
+  {
+    "@type": "Story",
+    "propositions": [
+      {
+        "@type": "SpInfinite",
+        "subject": {
+          "@type": "NounClause",
+          "pronoun": "I"
+        },
+        "predicate": {
+          "@type": "Verb",
+          "href": "wn30:01835496-v",
+          "modal": "SHOULD"
+        },
+        "toPlace": {
+          "@type": "NounClause",
+          "href": "yago:wordnet_menagerie_103745146",
+          "article": "THE"
+        }
+      }
+    ]
+  }
+]

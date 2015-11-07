@@ -33,15 +33,15 @@ public class PreferredMapper {
 
     @PostConstruct
     public void init() throws IOException {
-        preferredPhysicalEntities = readPreferredCsv(PreferredMapper.class.getResource("preferred_physical_entity.csv"));
-        preferredScenes = readPreferredCsv(PreferredMapper.class.getResource("preferred_scene.csv"));
-        preferredVerbs = readPreferredCsv(PreferredMapper.class.getResource("preferred_verb.csv"));
-        preferredAdjectives = readPreferredCsv(PreferredMapper.class.getResource("preferred_adjective.csv"));
+        preferredPhysicalEntities = readPreferredCsv(PreferredMapper.class.getResource("preferred_physical_entity.tsv"));
+        preferredScenes = readPreferredCsv(PreferredMapper.class.getResource("preferred_scene.tsv"));
+        preferredVerbs = readPreferredCsv(PreferredMapper.class.getResource("preferred_verb.tsv"));
+        preferredAdjectives = readPreferredCsv(PreferredMapper.class.getResource("preferred_adjective.tsv"));
     }
 
     protected Map<String, Map<Locale, String>> readPreferredCsv(URL url) throws IOException {
         final ImmutableMap.Builder<String, Map<Locale, String>> mab = ImmutableMap.builder();
-        try (final CSVReader reader = new CSVReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8), ';', '"', 1)) {
+        try (final CSVReader reader = new CSVReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8), '\t', '"', 1)) {
             while (true) {
                 final String[] line = reader.readNext();
                 if (line == null || line.length <= 1) {

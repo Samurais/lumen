@@ -1,9 +1,12 @@
 package org.lskk.lumen.reasoner;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.reasoner.expression.Proposition;
 import org.lskk.lumen.reasoner.expression.SpoNoun;
 import org.lskk.lumen.reasoner.nlp.*;
 import org.lskk.lumen.reasoner.nlp.id.IndonesianSentenceGenerator;
@@ -16,6 +19,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
 import static org.junit.Assert.*;
@@ -59,6 +64,8 @@ public class SentenceGeneratorTest {
     private SentenceGenerator sentenceGenerator_en;
     @Inject @NaturalLanguage("id")
     private SentenceGenerator sentenceGenerator_id;
+    @Inject
+    private ObjectMapper mapper;
 
     @Test
     public void spoNoun() {
@@ -74,7 +81,7 @@ public class SentenceGeneratorTest {
                 "he loves me", "dia cinta aku");
     }
 
-    protected void assertSentence(Object sentence, String english, String indonesian) {
+    protected void assertSentence(Proposition sentence, String english, String indonesian) {
         final CommunicateAction action_en = sentenceGenerator_en.generate(Locale.US,
                 sentence);
         final CommunicateAction action_id = sentenceGenerator_id.generate(INDONESIAN,
@@ -92,6 +99,14 @@ public class SentenceGeneratorTest {
                 sentenceGenerator_en.makeSentence(ImmutableList.of("I love it"), SentenceMood.EXCLAMATION));
         assertEquals("He doesn't like me...",
                 sentenceGenerator_en.makeSentence(ImmutableList.of("he doesn't like me"), SentenceMood.DANGLING));
+    }
+
+    @Test
+    public void story1() throws IOException {
+        final List<Story> stories = mapper.readValue(SentenceGeneratorTest.class.getResource("stories.json"),
+                new TypeReference<List<Story>>() {});
+        assertSentence(stories.get(0).getPropositions().get(0),
+                "I should go to the zoo", "aku sebaiknya pergi ke kebun binatang");
     }
 
 }

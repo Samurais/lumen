@@ -19,6 +19,10 @@ public class NounClause implements Serializable {
     private String href;
     private Pronoun pronoun;
     private NounClause owner;
+    private NounArticle article;
+
+    public NounClause() {
+    }
 
     public NounClause(Pronoun pronoun) {
         this.pronoun = pronoun;
@@ -84,6 +88,14 @@ public class NounClause implements Serializable {
 
     public void setOwner(NounClause owner) {
         this.owner = owner;
+    }
+
+    public NounArticle getArticle() {
+        return article;
+    }
+
+    public void setArticle(NounArticle article) {
+        this.article = article;
     }
 
     @Override

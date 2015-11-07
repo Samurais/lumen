@@ -27,12 +27,14 @@ public class DroolsConfig {
 
     @Bean
     public KieServices kieServices() {
-        return KieServices.Factory.get();
+        final KieServices kieServices = KieServices.Factory.get();
+        return kieServices;
     }
 
     @Bean
     public KieContainer kieContainer() {
-        return kieServices().getKieClasspathContainer(DroolsConfig.class.getClassLoader());
+        final KieContainer kieContainer = kieServices().getKieClasspathContainer(DroolsConfig.class.getClassLoader());
+        return kieContainer;
     }
 
     @Bean(destroyMethod = "dispose")

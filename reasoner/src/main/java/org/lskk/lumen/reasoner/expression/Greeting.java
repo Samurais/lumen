@@ -8,7 +8,7 @@ import java.io.Serializable;
 /**
  * Created by ceefour on 10/2/15.
  */
-public class Greeting implements Serializable {
+public class Greeting extends Proposition {
     private String fromName;
     private TimeOfDay timeOfDay;
     private Pronoun toPronoun;

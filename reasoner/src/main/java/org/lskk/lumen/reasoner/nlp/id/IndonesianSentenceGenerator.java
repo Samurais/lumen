@@ -5,9 +5,7 @@ import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.ReasonerException;
-import org.lskk.lumen.reasoner.expression.Greeting;
-import org.lskk.lumen.reasoner.expression.SpoAdj;
-import org.lskk.lumen.reasoner.expression.SpoNoun;
+import org.lskk.lumen.reasoner.expression.*;
 import org.lskk.lumen.reasoner.nlp.*;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
 import org.slf4j.Logger;
@@ -45,7 +43,7 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
      * @return
      */
     @Override
-    public CommunicateAction generate(Locale locale, Object expression) {
+    public CommunicateAction generate(Locale locale, Proposition expression) {
         Preconditions.checkNotNull(expression, "expression not null");
         final CommunicateAction action = new CommunicateAction();
         String msg = null;
@@ -68,8 +66,17 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
             final Pronoun pronoun = Optional.ofNullable(spo.getSubject().getPronoun()).orElse(Pronoun.IT);
             msg += toText(locale, spo.getPredicate(), pronoun.getPerson(), pronoun.getNumber()) + " ";
             msg += toText(locale, spo.getObject());
+        } else if (expression instanceof SpInfinite) {
+            final SpInfinite spi = (SpInfinite) expression;
+            msg = toText(locale, spi.getSubject(), PronounCase.SUBJECT) + " ";
+            final Pronoun pronoun = Optional.ofNullable(spi.getSubject().getPronoun()).orElse(Pronoun.IT);
+            msg += toText(locale, spi.getPredicate(), pronoun.getPerson(), pronoun.getNumber());
+            if (spi.getToPlace() != null) {
+                msg += " ke ";
+                msg += toText(locale, spi.getToPlace(), PronounCase.OBJECT);
+            }
         } else {
-            log.warn("Unknown expression class: {}", expression.getClass().getName());
+            throw new ReasonerException("Unknown expression class: " + expression.getClass().getName());
         }
         action.setObject(msg);
         return action;
@@ -87,6 +94,21 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
         } else {
             throw new ReasonerException("Invalid noun: " + noun);
         }
+        if (noun.getArticle() != null) {
+            switch (noun.getArticle()) {
+                case THIS:
+                case THESE:
+                case THAT:
+                case THOSE:
+                    result += noun.getArticle().getIndonesian() + " ";
+                    break;
+                case THE:
+                    break;
+                default:
+                    result = noun.getArticle().getIndonesian() + " " + result;
+            }
+        }
+
         if (noun.getOwner() != null) {
             result += " " + toText(locale, noun.getOwner(), PronounCase.POSSESSIVE_ADJ);
         }
@@ -105,9 +127,13 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
     }
 
     public String toText(Locale locale, Verb verb, PronounPerson person, PronounNumber number) {
+        Preconditions.checkNotNull(verb, "Verb is required");
+        Preconditions.checkNotNull(verb.getHref(), "Verb %s must have href", verb);
         String result = "";
+        if (verb.getModal() != null) {
+            result += verb.getModal().getIndonesian() + " ";
+        }
         if (verb.getHref() != null) {
-//            result += verb.getHref();
             result += getSynsetLemma(verb.getHref());
         } else {
             throw new ReasonerException("Invalid verb: " + verb);
@@ -138,19 +164,37 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
             return prefLemma.get();
         }
         // otherwise consult WordNet
-        final String digits9 = StringUtils.substringAfterLast(href, "_");
-        final char numeric = digits9.charAt(0);
-        final char pos;
-        switch (numeric) {
-            case '1': pos = 'n'; break;
-            case '2': pos = 'v'; break;
-            case '3': pos = 'a'; break; // TODO: can be 'a' or 's' !
-            case '4': pos = 'r'; break; // TODO: can be 'r' or 'p' !
-            default:
-                throw new ReasonerException("Unknown WordNet QName: " + href);
+        final String nsPrefix = StringUtils.substringBefore(href, ":");
+        final String synsetId;
+        if ("yago".equals(nsPrefix)) {
+            final String digits9 = StringUtils.substringAfterLast(href, "_");
+            final char numeric = digits9.charAt(0);
+            final char pos;
+            switch (numeric) {
+                case '1':
+                    pos = 'n';
+                    break;
+                case '2':
+                    pos = 'v';
+                    break;
+                case '3':
+                    pos = 'a';
+                    break; // TODO: can be 'a' or 's' !
+                case '4':
+                    pos = 'r';
+                    break; // TODO: can be 'r' or 'p' !
+                default:
+                    throw new ReasonerException("Unknown WordNet QName: " + href);
+            }
+            synsetId = digits9.substring(1, digits9.length()) + "-" + pos;
+        } else if ("wn30".equals(nsPrefix)) {
+            synsetId = StringUtils.substringAfter(href, ":");
+        } else {
+            throw new ReasonerException("Unknown nsPrefix: " + nsPrefix);
         }
-        final String synsetId = digits9.substring(1, digits9.length()) + "-" + pos;
         final Collection<String> lemmas = Preconditions.checkNotNull(wordNet.get(synsetId),
+                "Cannot get Indonesian WordNet lemma(s) for %s (from %s)", synsetId, href);
+        Preconditions.checkState(!lemmas.isEmpty(),
                 "Cannot get Indonesian WordNet lemma(s) for %s (from %s)", synsetId, href);
         return lemmas.iterator().next();
     }

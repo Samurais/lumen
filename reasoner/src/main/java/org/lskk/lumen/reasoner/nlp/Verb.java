@@ -7,6 +7,7 @@ import java.io.Serializable;
  */
 public class Verb implements Serializable {
     private String href;
+    private ModalVerb modal;
 
     public Verb() {
     }
@@ -15,12 +16,25 @@ public class Verb implements Serializable {
         this.href = href;
     }
 
+    public Verb(String href, ModalVerb modal) {
+        this.href = href;
+        this.modal = modal;
+    }
+
     public String getHref() {
         return href;
     }
 
     public void setHref(String href) {
         this.href = href;
+    }
+
+    public ModalVerb getModal() {
+        return modal;
+    }
+
+    public void setModal(ModalVerb modal) {
+        this.modal = modal;
     }
 
     @Override
