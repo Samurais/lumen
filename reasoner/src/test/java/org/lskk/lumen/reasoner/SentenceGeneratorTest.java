@@ -11,6 +11,7 @@ import org.lskk.lumen.reasoner.expression.SpoNoun;
 import org.lskk.lumen.reasoner.nlp.*;
 import org.lskk.lumen.reasoner.nlp.id.IndonesianSentenceGenerator;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
+import org.lskk.lumen.reasoner.story.Story;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;

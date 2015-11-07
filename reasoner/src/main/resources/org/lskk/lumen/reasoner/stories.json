@@ -1,6 +1,8 @@
 [
   {
     "@type": "Story",
+    "id": "soon_see",
+    "name": "Soon See",
     "propositions": [
       {
         "@type": "SpInfinite",

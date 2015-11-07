@@ -1,0 +1,21 @@
+dialect "mvel"
+
+import org.lskk.lumen.reasoner.*
+import org.lskk.lumen.reasoner.event.*
+import org.lskk.lumen.reasoner.expression.*
+import org.lskk.lumen.reasoner.goal.*
+import org.lskk.lumen.reasoner.story.*
+
+global org.slf4j.Logger log
+global StoryRepository storyRepo
+
+rule "get random story"
+when
+    $goal : TellStory(story == null)
+then
+    log.info("Setting story for goal {}", $goal);
+    modify($goal) {
+        setStoryId("soon_see"),
+        setStory(storyRepo.findOne("soon_see"))
+    }
+end
