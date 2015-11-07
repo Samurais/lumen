@@ -60,6 +60,9 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
             final Pronoun pronoun = Optional.ofNullable(spo.getSubject().getPronoun()).orElse(Pronoun.IT);
             msg += toText(locale, spo.getPredicate(), pronoun.getPerson(), pronoun.getNumber()) + " ";
             msg += toText(locale, spo.getObject(), PronounCase.OBJECT);
+            if (spo.getTime() != null) {
+                msg += " " + toText(locale, spo.getTime());
+            }
         } else if (expression instanceof SpoAdj) {
             final SpoAdj spo = (SpoAdj) expression;
             msg = toText(locale, spo.getSubject(), PronounCase.SUBJECT) + " ";
@@ -104,6 +107,18 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
                     break;
                 case THE:
                     break;
+                case A:
+                    switch (Optional.ofNullable(noun.getCategory()).orElse(NounCategory.THING)) {
+                        case PERSON:
+                            result = "seorang " + result;
+                            break;
+                        case ANIMAL:
+                            result = "seekor " + result;
+                            break;
+                        default:
+                            result = "sebuah " + result;
+                    }
+                    break;
                 default:
                     result = noun.getArticle().getIndonesian() + " " + result;
             }
@@ -139,6 +154,11 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
             throw new ReasonerException("Invalid verb: " + verb);
         }
         return result;
+    }
+
+    @Override
+    protected String toText(Locale locale, TimeAdverb timeAdverb) {
+        return timeAdverb.getIndonesian();
     }
 
     public String makeSentence(List<String> clauses, SentenceMood mood) {

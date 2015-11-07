@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.expression;
 
 import org.lskk.lumen.reasoner.nlp.NounClause;
+import org.lskk.lumen.reasoner.nlp.TimeAdverb;
 import org.lskk.lumen.reasoner.nlp.Verb;
 
 import java.io.Serializable;
@@ -14,6 +15,7 @@ public class SpoNoun extends Proposition {
     private NounClause subject;
     private Verb predicate;
     private NounClause object;
+    private TimeAdverb time;
 
     public SpoNoun() {
     }
@@ -46,6 +48,14 @@ public class SpoNoun extends Proposition {
 
     public void setObject(NounClause object) {
         this.object = object;
+    }
+
+    public TimeAdverb getTime() {
+        return time;
+    }
+
+    public void setTime(TimeAdverb time) {
+        this.time = time;
     }
 
     @Override

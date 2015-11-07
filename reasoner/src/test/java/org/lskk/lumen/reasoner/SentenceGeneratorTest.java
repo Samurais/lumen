@@ -105,8 +105,17 @@ public class SentenceGeneratorTest {
     public void story1() throws IOException {
         final List<Story> stories = mapper.readValue(SentenceGeneratorTest.class.getResource("stories.json"),
                 new TypeReference<List<Story>>() {});
-        assertSentence(stories.get(0).getPropositions().get(0),
+        final Story soonSee = stories.get(0);
+        assertSentence(soonSee.getPropositions().get(0),
                 "I should go to the zoo", "aku sebaiknya pergi ke kebun binatang");
+        assertSentence(soonSee.getPropositions().get(1),
+                "I would see a lion soon", "aku akan melihat seekor singa sebentar lagi");
+        assertSentence(soonSee.getPropositions().get(2),
+                "I would see a giraffe soon", "aku akan melihat seekor jerapah sebentar lagi");
+        assertSentence(soonSee.getPropositions().get(3),
+                "I would see an alligator soon", "aku akan melihat seekor buaya sebentar lagi");
+        assertSentence(soonSee.getPropositions().get(4),
+                "I would see an elephant soon", "aku akan melihat seekor gajah sebentar lagi");
     }
 
 }

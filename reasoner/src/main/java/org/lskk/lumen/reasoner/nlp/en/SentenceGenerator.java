@@ -73,6 +73,9 @@ public class SentenceGenerator {
             final Pronoun pronoun = Optional.ofNullable(spo.getSubject().getPronoun()).orElse(Pronoun.IT);
             msg += toText(locale, spo.getPredicate(), pronoun.getPerson(), pronoun.getNumber()) + " ";
             msg += toText(locale, spo.getObject(), PronounCase.OBJECT);
+            if (spo.getTime() != null) {
+                msg += " " + toText(locale, spo.getTime());
+            }
         } else if (expression instanceof SpoAdj) {
             final SpoAdj spo = (SpoAdj) expression;
             msg = toText(locale, spo.getSubject(), PronounCase.SUBJECT) + " ";
@@ -104,9 +107,7 @@ public class SentenceGenerator {
      */
     public String toText(Locale locale, NounClause noun, PronounCase pronounCase) {
         String result = "";
-        if (noun.getArticle() != null) {
-            result += noun.getArticle().getEnglish() + " ";
-        }
+        boolean startsWithVocal = false; // to pick article: "a" vs "an"
         if (noun.getOwner() != null) {
             result += toText(locale, noun.getOwner(), PronounCase.POSSESSIVE_ADJ) + " ";
         }
@@ -119,13 +120,24 @@ public class SentenceGenerator {
             result += pronounMapper.getPronounLabel(Locale.US, noun.getPronoun(), pronounCase).get();
         } else if (noun.getHref() != null) {
 //            result += noun.getHref();
-            result += getSynsetLemma(noun.getHref());
+            final String synsetLemma = getSynsetLemma(noun.getHref());
+            result += synsetLemma;
+            startsWithVocal = synsetLemma.toLowerCase().matches("^([aiueo]|hou).*");
             if (PronounCase.POSSESSIVE_ADJ == pronounCase) {
                 result += "'s";
             }
         } else {
             throw new ReasonerException("Invalid noun: " + noun);
         }
+
+        if (noun.getArticle() != null) {
+            if (NounArticle.A == noun.getArticle() && startsWithVocal) {
+                result = "an " + result;
+            } else {
+                result = noun.getArticle().getEnglish() + " " + result;
+            }
+        }
+
         return result;
     }
 
@@ -222,6 +234,10 @@ public class SentenceGenerator {
         } catch (Exception e) {
             throw new ReasonerException(e, "Cannot parse synset '%s'", synsetId);
         }
+    }
+
+    protected String toText(Locale locale, TimeAdverb timeAdverb) {
+        return timeAdverb.getEnglish();
     }
 
     private ISynset getSynset(String href) {

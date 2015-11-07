@@ -18,6 +18,82 @@
           "href": "yago:wordnet_menagerie_103745146",
           "article": "THE"
         }
+      },
+      {
+        "@type": "SpoNoun",
+        "subject": {
+          "@type": "NounClause",
+          "pronoun": "I"
+        },
+        "predicate": {
+          "@type": "Verb",
+          "href": "wn30:02129289-v",
+          "modal": "WOULD"
+        },
+        "object": {
+          "@type": "NounClause",
+          "href": "yago:wordnet_lion_102129165",
+          "article": "A",
+          "category": "ANIMAL"
+        },
+        "time": "SOON"
+      },
+      {
+        "@type": "SpoNoun",
+        "subject": {
+          "@type": "NounClause",
+          "pronoun": "I"
+        },
+        "predicate": {
+          "@type": "Verb",
+          "href": "wn30:02129289-v",
+          "modal": "WOULD"
+        },
+        "object": {
+          "@type": "NounClause",
+          "href": "yago:wordnet_giraffe_102439033",
+          "article": "A",
+          "category": "ANIMAL"
+        },
+        "time": "SOON"
+      },
+      {
+        "@type": "SpoNoun",
+        "subject": {
+          "@type": "NounClause",
+          "pronoun": "I"
+        },
+        "predicate": {
+          "@type": "Verb",
+          "href": "wn30:02129289-v",
+          "modal": "WOULD"
+        },
+        "object": {
+          "@type": "NounClause",
+          "href": "yago:wordnet_alligator_114760447",
+          "article": "A",
+          "category": "ANIMAL"
+        },
+        "time": "SOON"
+      },
+      {
+        "@type": "SpoNoun",
+        "subject": {
+          "@type": "NounClause",
+          "pronoun": "I"
+        },
+        "predicate": {
+          "@type": "Verb",
+          "href": "wn30:02129289-v",
+          "modal": "WOULD"
+        },
+        "object": {
+          "@type": "NounClause",
+          "href": "yago:wordnet_elephant_102503517",
+          "article": "A",
+          "category": "ANIMAL"
+        },
+        "time": "SOON"
       }
     ]
   }

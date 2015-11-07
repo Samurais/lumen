@@ -20,6 +20,7 @@ public class NounClause implements Serializable {
     private Pronoun pronoun;
     private NounClause owner;
     private NounArticle article;
+    private NounCategory category;
 
     public NounClause() {
     }
@@ -96,6 +97,14 @@ public class NounClause implements Serializable {
 
     public void setArticle(NounArticle article) {
         this.article = article;
+    }
+
+    public NounCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(NounCategory category) {
+        this.category = category;
     }
 
     @Override
