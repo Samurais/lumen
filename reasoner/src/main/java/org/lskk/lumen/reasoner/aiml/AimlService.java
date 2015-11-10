@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.aiml;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.commons.lang3.StringUtils;
@@ -147,8 +148,8 @@ public class AimlService {
                     matches.add(match);
                 }
             });
-            matches.sort((a, b) -> a.truthValue[1] == a.truthValue[1] ? 0 : (a.truthValue[1] > b.truthValue[1] ? 1 : -1));
-            log.info("{} matched for '{}': {}", matches.size(), upperCased, matches);
+            matches.sort((a, b) -> a.truthValue[1] == b.truthValue[1] ? 0 : (a.truthValue[1] > b.truthValue[1] ? -1 : 1));
+            log.info("{} matched for '{}':\n{}", matches.size(), upperCased, Joiner.on("\n").join(matches));
             bestMatch = Iterables.getFirst(matches, null);
             if (bestMatch == null) {
                 // oh no!
