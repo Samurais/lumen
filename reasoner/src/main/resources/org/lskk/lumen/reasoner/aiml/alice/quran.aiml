@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="1.0">
+    <category>
+        <pattern>Read Al Kahfi</pattern>
+        <template>
+            الْحَمْدُ لِلَّهِ الَّذِي أَنْزَلَ عَلَى عَبْدِهِ الْكِتَابَ وَلَمْ يَجْعَلْ لَهُ عِوَجَا
+            1. Segala puji bagi Allah yang telah menurunkan kepada hamba-Nya Al-Kitab (Al-Qur’an) dan dia tidak mengadakan kebengkokan 871 didalamnya; (QS. 18:1)
+        </template>
+    </category>
+</aiml>
