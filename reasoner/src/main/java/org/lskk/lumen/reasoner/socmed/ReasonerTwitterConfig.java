@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.socmed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
@@ -16,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.PropertyConfiguration;
@@ -78,6 +81,7 @@ public class ReasonerTwitterConfig {
 
     @Bean
     public DirectMessageHandler arkanDirectMessageHandler() throws IOException {
+        final PathMatchingResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver(ReasonerTwitterConfig.class.getClassLoader());
         final DirectMessageHandler dmHandler = new DirectMessageHandler();
         dmHandler.setAuthorization(twitterAuthorization());
         final Twitter twitter = twitterFactory().getInstance(new AccessToken(twitterAuthorization().getAccessToken(), twitterAuthorization().getAccessTokenSecret()));
@@ -123,6 +127,17 @@ public class ReasonerTwitterConfig {
                 final CommunicateAction communicateAction = (CommunicateAction) resp.getResponse();
                 final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(communicateAction.getObject(), 140-20);
                 final StatusUpdate replyStatus = new StatusUpdate(replyTweet);
+                if (communicateAction.getImage() != null) {
+                    final String url = communicateAction.getImage().getUrl();
+                    Preconditions.checkArgument(url != null,
+                            "CommunicateAction.ImageObject.url is required");
+//                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
+//                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
+                    final Resource res = resourceResolver.getResource(url);
+                    Preconditions.checkState(res.exists(), "%s does not exist", res);
+                    replyStatus.setMedia(res.getFilename(), res.getInputStream());
+//                    replyStatus.setMedia("");
+                }
                 replyStatus.setInReplyToStatusId(status.getId());
                 twitter.tweets().updateStatus(replyStatus);
                 return replyTweet;
