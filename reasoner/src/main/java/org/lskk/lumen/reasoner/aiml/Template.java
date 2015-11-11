@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.aiml;
 
+import org.lskk.lumen.core.ImageObject;
+
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.List;
@@ -27,6 +29,7 @@ public class Template implements Serializable {
     private List<Serializable> contents;
     @XmlElementWrapper(name = "random") @XmlElement(name="li")
     private List<Choice> randoms;
+    private ImageObject image;
 
     @XmlTransient
     public String getSrai() {
@@ -59,12 +62,22 @@ public class Template implements Serializable {
         return randoms;
     }
 
+    public ImageObject getImage() {
+        return image;
+    }
+
+    @XmlElement(name="image")
+    public void setImage(ImageObject image) {
+        this.image = image;
+    }
+
     @Override
     public String toString() {
         return "Template{" +
                 "srai=" + srai +
                 ", contents=" + getContentsString() +
                 ", randoms=" + randoms +
+                ", image=" + image +
                 '}';
     }
 }

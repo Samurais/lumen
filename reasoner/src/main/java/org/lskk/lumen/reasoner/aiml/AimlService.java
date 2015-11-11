@@ -182,7 +182,11 @@ public class AimlService {
         }
         if (bestMatch != null) {
             log.info("{} -> {}", stimulus, bestReply);
-            return new AgentResponse(stimulus, new CommunicateAction(locale, bestReply, null));
+            final CommunicateAction communicateAction = new CommunicateAction(locale, bestReply, null);
+            if (bestMatch.category.getTemplate().getImage() != null) {
+                communicateAction.setImage(bestMatch.category.getTemplate().getImage());
+            }
+            return  new AgentResponse(stimulus, communicateAction);
         } else {
             log.info("UNRECOGNIZED {}", stimulus);
             return new AgentResponse(stimulus, new UnrecognizedInput());
