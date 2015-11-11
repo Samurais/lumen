@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML">
     <category>
-        <pattern>cat</pattern>
+        <pattern>funny cat</pattern>
         <template>
             Here's a funny cat! :)
-            <image url="file:image/funny-animal/" />
+            <image url="file:image/funny-animal/funny-cat01.jpg" />
         </template>
     </category>
 </aiml>

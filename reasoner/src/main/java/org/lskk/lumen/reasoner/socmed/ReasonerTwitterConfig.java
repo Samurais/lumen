@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.socmed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import org.apache.commons.lang3.StringUtils;
@@ -101,6 +102,7 @@ public class ReasonerTwitterConfig {
                 twitter.sendDirectMessage(dm.getSenderId(), replyDm);
                 return replyDm;
             } catch (Exception e) {
+                log.error(String.format("Error DM @%s %s from: %s", dm.getSenderScreenName(), dm.getSenderId(), dm.getText()), e);
                 final String stackTraceAsString = Throwables.getStackTraceAsString(e);
                 try {
                     final String replyDm = StringUtils.abbreviate(stackTraceAsString, 255);
@@ -125,7 +127,10 @@ public class ReasonerTwitterConfig {
                 final String realMessage = StringUtils.removeStartIgnoreCase(status.getText(), "@" + twitterAuthorization().getScreenName()).trim();
                 final AgentResponse resp = aimlService.process(Locale.US, realMessage);
                 final CommunicateAction communicateAction = (CommunicateAction) resp.getResponse();
-                final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(communicateAction.getObject(), 140-20);
+                final boolean replyHasImage = communicateAction.getImage() != null;
+                final int maxReplyLength = 140 - (status.getUser().getScreenName().length() + 2)
+                        - (replyHasImage ? 23 : 0);
+                final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(communicateAction.getObject(), maxReplyLength);
                 final StatusUpdate replyStatus = new StatusUpdate(replyTweet);
                 if (communicateAction.getImage() != null) {
                     final String url = communicateAction.getImage().getUrl();
@@ -134,14 +139,15 @@ public class ReasonerTwitterConfig {
 //                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
 //                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
                     final Resource res = resourceResolver.getResource(url);
-                    Preconditions.checkState(res.exists(), "%s does not exist", res);
-                    replyStatus.setMedia(res.getFilename(), res.getInputStream());
-//                    replyStatus.setMedia("");
+                    Preconditions.checkState(res.exists() && res.isReadable(), "%s does not exist or is not readable", res);
+                    replyStatus.setMedia(Optional.fromNullable(res.getFilename()).or("image.jpg"), res.getInputStream());
+//                    replyStatus.setMedia(res.getFile());
                 }
                 replyStatus.setInReplyToStatusId(status.getId());
                 twitter.tweets().updateStatus(replyStatus);
                 return replyTweet;
             } catch (Exception e) {
+                log.error("Error replying @" + status.getUser().getScreenName()+ "'s mention: " + status.getText(), e);
                 final String stackTraceAsString = Throwables.getStackTraceAsString(e);
                 try {
                     final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(stackTraceAsString, 140-20);

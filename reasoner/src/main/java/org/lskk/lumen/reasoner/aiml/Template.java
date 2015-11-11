@@ -29,6 +29,7 @@ public class Template implements Serializable {
     private List<Serializable> contents;
     @XmlElementWrapper(name = "random") @XmlElement(name="li")
     private List<Choice> randoms;
+    @XmlElement(name="image")
     private ImageObject image;
 
     @XmlTransient
@@ -58,15 +59,20 @@ public class Template implements Serializable {
         return sr;
     }
 
+    @XmlTransient
     public List<Choice> getRandoms() {
         return randoms;
     }
 
+//    public void setRandoms(List<Choice> randoms) {
+//        this.randoms = randoms;
+//    }
+
+    @XmlTransient
     public ImageObject getImage() {
         return image;
     }
 
-    @XmlElement(name="image")
     public void setImage(ImageObject image) {
         this.image = image;
     }

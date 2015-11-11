@@ -57,7 +57,7 @@ public class AimlService {
     /**
      *
      * @param preparedInput Punctuation removed, trimmed, whitespace normalization, uppercased.
-     * @param pattern
+     * @param pattern Must be uppercase
      * @return If exact match, confidence == 1.0. If not match, confidence == 0.0.
      *      If starts with, confidence == 0.9x.
      *      If ends with, confidence == 0.8x.
@@ -142,14 +142,14 @@ public class AimlService {
             final String whitespaced = punctRemoved.replaceAll("\\s+", " ").trim();
             final String upperCased = whitespaced.toUpperCase(locale);
             aiml.getCategories().forEach(cat -> {
-                final MatchingCategory match = match(locale, upperCased, cat.getPattern());
+                final MatchingCategory match = match(locale, upperCased, cat.getPattern().toUpperCase());
                 if (match.truthValue[1] > 0f) {
                     match.category = cat;
                     matches.add(match);
                 }
             });
             matches.sort((a, b) -> a.truthValue[1] == b.truthValue[1] ? 0 : (a.truthValue[1] > b.truthValue[1] ? -1 : 1));
-            log.info("{} matched for '{}':\n{}", matches.size(), upperCased, Joiner.on("\n").join(matches));
+            log.info("{} matched for '{}' ordered by confidence:\n{}", matches.size(), upperCased, Joiner.on("\n").join(matches));
             bestMatch = Iterables.getFirst(matches, null);
             if (bestMatch == null) {
                 // oh no!

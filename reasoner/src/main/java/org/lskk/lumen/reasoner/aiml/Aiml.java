@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by ceefour on 10/28/15.
  */
-@XmlRootElement(name = "aiml", namespace = "http://alicebot.org/2001/AIML")
+@XmlRootElement(name = "aiml")
 public class Aiml implements Serializable {
     private String version;
     @XmlElement(name="category")
