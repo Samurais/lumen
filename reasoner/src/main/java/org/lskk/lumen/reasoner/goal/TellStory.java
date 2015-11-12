@@ -10,6 +10,7 @@ public class TellStory extends Goal {
     private String storyId;
     private Story story;
     private Integer lastPropositionIndex;
+    private boolean done;
 
     public String getStoryId() {
         return storyId;
@@ -37,5 +38,13 @@ public class TellStory extends Goal {
 
     public void setLastPropositionIndex(Integer lastPropositionIndex) {
         this.lastPropositionIndex = lastPropositionIndex;
+    }
+
+    public boolean isDone() {
+        return done;
+    }
+
+    public void setDone(boolean done) {
+        this.done = done;
     }
 }

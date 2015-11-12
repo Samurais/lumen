@@ -3,6 +3,7 @@ package org.lskk.lumen.reasoner;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import org.drools.core.time.SessionPseudoClock;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +32,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -85,10 +87,26 @@ public class StoryTest {
 
     @Test
     public void story1() throws IOException {
+        final SessionPseudoClock clock = kieSession.getSessionClock();
         final TellStory tellStory = new TellStory();
         kieSession.insert(tellStory);
         kieSession.fireAllRules();
         assertThat(tellStory.getStoryId(), Matchers.equalTo("soon_see"));
+        log.info("Waiting...");
+        clock.advanceTime(4, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(1, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(5, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(5, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(5, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
     }
 
 }

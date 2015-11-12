@@ -56,7 +56,7 @@ public class PreferredMapper {
             }
         }
         final ImmutableMap<String, Map<Locale, String>> map = mab.build();
-        log.info("Loaded {} preferred synset mappings from {}", url);
+        log.info("Loaded {} preferred synset mappings from {}", map.size(), url);
         return map;
     }
 

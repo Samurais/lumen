@@ -70,15 +70,15 @@ public class SentenceGeneratorTest {
 
     @Test
     public void spoNoun() {
-        assertSentence(new SpoNoun(NounClause.THEY, new Verb("wn30:wordnet_drive_201930874"),
+        assertSentence(new SpoNoun(NounClause.THEY, new Verb("wn30:01930874-v"),
                         new NounClause("yago:wordnet_car_102958343", NounClause.SHE)),
                 "they drive her car", "mereka mengendarai mobil dia");
-        assertSentence(new SpoNoun(NounClause.SHE, new Verb("wn30:wordnet_eat_201168468"),
+        assertSentence(new SpoNoun(NounClause.SHE, new Verb("wn30:01168468-v"),
                         new NounClause("yago:wordnet_rice_107804323")),
                 "she eats rice", "dia makan nasi");
-        assertSentence(new SpoNoun(NounClause.I, new Verb("wn30:wordnet_love_201775535"), NounClause.YOU),
+        assertSentence(new SpoNoun(NounClause.I, new Verb("wn30:01775535-v"), NounClause.YOU),
                 "I love you", "aku cinta kamu");
-        assertSentence(new SpoNoun(NounClause.HE, new Verb("wn30:wordnet_love_201775535"), NounClause.I),
+        assertSentence(new SpoNoun(NounClause.HE, new Verb("wn30:01775535-v"), NounClause.I),
                 "he loves me", "dia cinta aku");
     }
 

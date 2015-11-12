@@ -9,6 +9,14 @@ import org.lskk.lumen.reasoner.story.*
 global org.slf4j.Logger log
 global StoryRepository storyRepo
 
+declare TellStory
+    @role( event )
+end
+
+declare PropositionTold
+    @role( event )
+end
+
 rule "get random story"
 when
     $goal : TellStory(story == null)
@@ -19,3 +27,41 @@ then
         setStory(storyRepo.findOne("soon_see"))
     }
 end
+
+rule "tell initial proposition"
+when
+    $tellStory : TellStory(story != null)
+    not( PropositionTold(tellStory == $tellStory) )
+then
+    log.info("Telling initial proposition for {}", $tellStory);
+    PropositionTold $propositionTold = new PropositionTold($tellStory, 0);
+    insert($propositionTold);
+    boolean done = $propositionTold.index >= $tellStory.story.propositions.size - 1;
+    if (done) {
+        log.info("Done telling {} propositions for {}", $tellStory.story.propositions.size, $tellStory);
+    }
+    modify($tellStory) {
+        setLastPropositionIndex($propositionTold.index),
+        setDone(done)
+    }
+end
+
+rule "tell next proposition until done"
+when
+    $lastProposition : PropositionTold($tellStory : tellStory, $lastIndex : index,
+        tellStory.done == false)
+    not( PropositionTold(this != $lastProposition, tellStory == $tellStory, this after[0s,5s] $lastProposition) )
+then
+    log.info("Telling proposition {} for {}", $lastIndex + 1, $tellStory);
+    PropositionTold $propositionTold = new PropositionTold($tellStory, $lastIndex + 1);
+    insert($propositionTold);
+    boolean done = $propositionTold.index >= $tellStory.story.propositions.size - 1;
+    if (done) {
+        log.info("Done telling {} propositions for {}", $tellStory.story.propositions.size, $tellStory);
+    }
+    modify($tellStory) {
+        setLastPropositionIndex($propositionTold.index),
+        setDone(done)
+    }
+end
+
