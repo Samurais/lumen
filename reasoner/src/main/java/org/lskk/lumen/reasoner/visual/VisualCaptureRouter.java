@@ -44,7 +44,7 @@ public class VisualCaptureRouter extends RouteBuilder {
                     final DataUri dataUri = DataUri.parse(imageObject.getContentUrl(), StandardCharsets.UTF_8);
                     cameraMain = dataUri.getData();
                     cameraMainType = dataUri.getMime();
-                    log.info("Got nao1.camera.main {} {} bytes", cameraMainType, cameraMain.length);
+                    log.trace("Got nao1.camera.main {} {} bytes", cameraMainType, cameraMain.length);
                 });
     }
 
