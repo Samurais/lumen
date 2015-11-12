@@ -1,22 +1,27 @@
 package org.lskk.lumen.reasoner.socmed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.imgur.ImgUr;
+import com.github.imgur.api.account.AccountRequest;
+import com.github.imgur.api.upload.UploadRequest;
+import com.github.imgur.api.upload.UploadResponse;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.entity.ContentType;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
-import org.lskk.lumen.socmed.AgentRepository;
-import org.lskk.lumen.socmed.DirectMessageHandler;
-import org.lskk.lumen.socmed.TwitterApp;
-import org.lskk.lumen.socmed.TwitterAuthorization;
+import org.lskk.lumen.socmed.*;
+import org.scribe.model.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -34,6 +39,7 @@ import java.util.Properties;
  * Created by ceefour on 29/10/2015.
  */
 @Configuration
+@Import(ImgurConfig.class)
 public class ReasonerTwitterConfig {
 
     private static final Logger log = LoggerFactory.getLogger(ReasonerTwitterConfig.class);
@@ -46,6 +52,10 @@ public class ReasonerTwitterConfig {
     private ObjectMapper mapper;
     @Inject
     private AimlService aimlService;
+    @Inject
+    private ImgUr imgur;
+    @Inject
+    private ImgurConfig imgurConfig;
 
     @Bean
     public AgentRepository agentRepo() throws IOException {
@@ -89,10 +99,34 @@ public class ReasonerTwitterConfig {
         dmHandler.setOnDirectMessage(dm -> {
             try {
                 final AgentResponse resp = aimlService.process(Locale.US, dm.getText());
-                final String replyDm;
+                String replyDm;
                 if (resp.getResponse() instanceof CommunicateAction) {
                     final CommunicateAction communicateAction = (CommunicateAction) resp.getResponse();
-                    replyDm = StringUtils.abbreviate(communicateAction.getObject(), 10000);
+                    // allow some characters for imgur URI
+                    replyDm = StringUtils.abbreviate(communicateAction.getObject(), 10000 - 100);
+
+                    if (communicateAction.getImage() != null) {
+                        final String url = communicateAction.getImage().getUrl();
+                        Preconditions.checkArgument(url != null,
+                                "CommunicateAction.ImageObject.url is required");
+//                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
+//                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
+                        final Resource res = resourceResolver.getResource(url);
+                        Preconditions.checkState(res.exists() && res.isReadable(), "%s does not exist or is not readable", res);
+                        final byte[] media = IOUtils.toByteArray(res.getURL());
+
+                        final String imageId = imgurConfig.upload(ContentType.create("image/jpeg"), media, communicateAction.getObject());
+                        replyDm += " http://imgur.com/" + imageId;
+
+                        // NOT WORKING!
+//                        final UploadRequest uploadRequest = new UploadRequest.Builder()
+//                                .withAccessToken(new Token(imgurConfig.getAccessToken(), ""))
+//                                .withImageData(media)
+//                                .withTitle(communicateAction.getObject())
+//                                .build();
+//                        final UploadResponse uploaded = imgur.call(uploadRequest);
+//                        replyDm += " " + uploaded.getLinks().getImgurPage();
+                    }
                 } else {
                     log.warn("AIML service cannot understand @{} {}: {}",
                             dm.getSenderScreenName(), dm.getSenderId(), dm.getText());
@@ -105,7 +139,7 @@ public class ReasonerTwitterConfig {
                 log.error(String.format("Error DM @%s %s from: %s", dm.getSenderScreenName(), dm.getSenderId(), dm.getText()), e);
                 final String stackTraceAsString = Throwables.getStackTraceAsString(e);
                 try {
-                    final String replyDm = StringUtils.abbreviate(stackTraceAsString, 255);
+                    final String replyDm = StringUtils.abbreviate(stackTraceAsString, 1000);
                     log.warn("Sending exception DM @{} {}: {}", dm.getSenderScreenName(), dm.getSenderId(), replyDm);
                     twitter.sendDirectMessage(dm.getSenderId(), replyDm);
                     return stackTraceAsString;
