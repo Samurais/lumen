@@ -12,9 +12,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
+import org.lskk.lumen.reasoner.visual.VisualCaptureRouter;
 import org.lskk.lumen.socmed.*;
 import org.scribe.model.Token;
 import org.slf4j.Logger;
@@ -30,6 +32,7 @@ import twitter4j.auth.AccessToken;
 import twitter4j.conf.PropertyConfiguration;
 
 import javax.inject.Inject;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
@@ -43,6 +46,7 @@ import java.util.Properties;
 public class ReasonerTwitterConfig {
 
     private static final Logger log = LoggerFactory.getLogger(ReasonerTwitterConfig.class);
+    private static final PathMatchingResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver(ReasonerTwitterConfig.class.getClassLoader());
     public static final String APP_ID = "lumen";
     public static final String AGENT_ID = "arkan";
 
@@ -56,6 +60,8 @@ public class ReasonerTwitterConfig {
     private ImgUr imgur;
     @Inject
     private ImgurConfig imgurConfig;
+    @Inject
+    private VisualCaptureRouter visualCaptureRouter;
 
     @Bean
     public AgentRepository agentRepo() throws IOException {
@@ -90,9 +96,28 @@ public class ReasonerTwitterConfig {
         return new TwitterStreamFactory(twitterConf);
     }
 
+    protected void resolveImageObject(ImageObject imageObject) throws IOException {
+        Preconditions.checkArgument(imageObject.getUrl() != null,
+                "CommunicateAction.ImageObject.url is required");
+//                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
+//                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
+
+        if (imageObject.getUrl().startsWith("lumen:")) {
+            imageObject.setContent(visualCaptureRouter.getCameraMain());
+            imageObject.setContentType(visualCaptureRouter.getCameraMainType());
+        } else {
+            final Resource res = resourceResolver.getResource(imageObject.getUrl());
+            Preconditions.checkState(res.exists() && res.isReadable(), "%s does not exist or is not readable", res);
+            final byte[] media = IOUtils.toByteArray(res.getURL());
+            imageObject.setContent(media);
+            if (imageObject.getContentType() == null) {
+                imageObject.setContentType("image/jpeg");
+            }
+        }
+    }
+
     @Bean
     public DirectMessageHandler arkanDirectMessageHandler() throws IOException {
-        final PathMatchingResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver(ReasonerTwitterConfig.class.getClassLoader());
         final DirectMessageHandler dmHandler = new DirectMessageHandler();
         dmHandler.setAuthorization(twitterAuthorization());
         final Twitter twitter = twitterFactory().getInstance(new AccessToken(twitterAuthorization().getAccessToken(), twitterAuthorization().getAccessTokenSecret()));
@@ -106,17 +131,13 @@ public class ReasonerTwitterConfig {
                     replyDm = StringUtils.abbreviate(communicateAction.getObject(), 10000 - 100);
 
                     if (communicateAction.getImage() != null) {
-                        final String url = communicateAction.getImage().getUrl();
-                        Preconditions.checkArgument(url != null,
-                                "CommunicateAction.ImageObject.url is required");
-//                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
-//                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
-                        final Resource res = resourceResolver.getResource(url);
-                        Preconditions.checkState(res.exists() && res.isReadable(), "%s does not exist or is not readable", res);
-                        final byte[] media = IOUtils.toByteArray(res.getURL());
-
-                        final String imageId = imgurConfig.upload(ContentType.create("image/jpeg"), media, communicateAction.getObject());
-                        replyDm += " http://imgur.com/" + imageId;
+                        resolveImageObject(communicateAction.getImage());
+                        if (communicateAction.getImage().getContent() != null) {
+                            final String imageId = imgurConfig.upload(
+                                    ContentType.create(communicateAction.getImage().getContentType()),
+                                    communicateAction.getImage().getContent(), communicateAction.getObject());
+                            replyDm += " http://imgur.com/" + imageId;
+                        }
 
                         // NOT WORKING!
 //                        final UploadRequest uploadRequest = new UploadRequest.Builder()
@@ -167,15 +188,13 @@ public class ReasonerTwitterConfig {
                 final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(communicateAction.getObject(), maxReplyLength);
                 final StatusUpdate replyStatus = new StatusUpdate(replyTweet);
                 if (communicateAction.getImage() != null) {
-                    final String url = communicateAction.getImage().getUrl();
-                    Preconditions.checkArgument(url != null,
-                            "CommunicateAction.ImageObject.url is required");
-//                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
-//                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
-                    final Resource res = resourceResolver.getResource(url);
-                    Preconditions.checkState(res.exists() && res.isReadable(), "%s does not exist or is not readable", res);
-                    replyStatus.setMedia(Optional.fromNullable(res.getFilename()).or("image.jpg"), res.getInputStream());
-//                    replyStatus.setMedia(res.getFile());
+                    resolveImageObject(communicateAction.getImage());
+                    if (communicateAction.getImage().getContent() != null) {
+                        final String imageId = imgurConfig.upload(
+                                ContentType.create(communicateAction.getImage().getContentType()),
+                                communicateAction.getImage().getContent(), communicateAction.getObject());
+                        replyStatus.setMedia("image.jpg", new ByteArrayInputStream(communicateAction.getImage().getContent()));
+                    }
                 }
                 replyStatus.setInReplyToStatusId(status.getId());
                 twitter.tweets().updateStatus(replyStatus);
