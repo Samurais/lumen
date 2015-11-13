@@ -13,6 +13,7 @@ public class AgentResponse implements Serializable {
 
     private List<Object> stimulus = new ArrayList<>();
     private CommunicateAction communicateAction;
+    private UnrecognizedInput unrecognizedInput;
     private List<Serializable> insertables = new ArrayList<>();
 
     public AgentResponse(Object stimulus, CommunicateAction communicateAction) {
@@ -23,6 +24,16 @@ public class AgentResponse implements Serializable {
     public AgentResponse(List<Object> stimulus, CommunicateAction communicateAction) {
         this.stimulus.addAll(stimulus);
         this.communicateAction = communicateAction;
+    }
+
+    public AgentResponse(List<Object> stimulus, UnrecognizedInput unrecognizedInput) {
+        this.stimulus.addAll(stimulus);
+        this.unrecognizedInput = unrecognizedInput;
+    }
+
+    public AgentResponse(Object stimulus, UnrecognizedInput unrecognizedInput) {
+        this.stimulus.add(stimulus);
+        this.unrecognizedInput = unrecognizedInput;
     }
 
     public List<Object> getStimulus() {
@@ -43,6 +54,10 @@ public class AgentResponse implements Serializable {
      */
     public List<Serializable> getInsertables() {
         return insertables;
+    }
+
+    public UnrecognizedInput getUnrecognizedInput() {
+        return unrecognizedInput;
     }
 
     @Override
