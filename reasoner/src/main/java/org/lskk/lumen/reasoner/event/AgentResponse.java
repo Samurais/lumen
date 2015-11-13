@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.event;
 
+import org.lskk.lumen.core.CommunicateAction;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,35 +12,44 @@ import java.util.List;
 public class AgentResponse implements Serializable {
 
     private List<Object> stimulus = new ArrayList<>();
-    private Object response;
+    private CommunicateAction communicateAction;
+    private List<Serializable> insertables = new ArrayList<>();
 
-    public AgentResponse(Object stimulus, Object response) {
+    public AgentResponse(Object stimulus, CommunicateAction communicateAction) {
         this.stimulus.add(stimulus);
-        this.response = response;
+        this.communicateAction = communicateAction;
     }
 
-    public AgentResponse(List<Object> stimulus, Object response) {
+    public AgentResponse(List<Object> stimulus, CommunicateAction communicateAction) {
         this.stimulus.addAll(stimulus);
-        this.response = response;
+        this.communicateAction = communicateAction;
     }
 
     public List<Object> getStimulus() {
         return stimulus;
     }
 
-    public Object getResponse() {
-        return response;
+    public Object getCommunicateAction() {
+        return communicateAction;
     }
 
-    public void setResponse(Object response) {
-        this.response = response;
+    public void setCommunicateAction(CommunicateAction communicateAction) {
+        this.communicateAction = communicateAction;
+    }
+
+    /**
+     * Events to be inserted.
+     * @return
+     */
+    public List<Serializable> getInsertables() {
+        return insertables;
     }
 
     @Override
     public String toString() {
         return "AgentResponse{" +
                 "stimulus=" + stimulus +
-                ", response=" + response +
+                ", response=" + communicateAction +
                 '}';
     }
 }

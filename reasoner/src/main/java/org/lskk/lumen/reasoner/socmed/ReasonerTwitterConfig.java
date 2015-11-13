@@ -2,10 +2,6 @@ package org.lskk.lumen.reasoner.socmed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.imgur.ImgUr;
-import com.github.imgur.api.account.AccountRequest;
-import com.github.imgur.api.upload.UploadRequest;
-import com.github.imgur.api.upload.UploadResponse;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import org.apache.commons.io.IOUtils;
@@ -18,7 +14,6 @@ import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.visual.VisualCaptureRouter;
 import org.lskk.lumen.socmed.*;
-import org.scribe.model.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -125,8 +120,8 @@ public class ReasonerTwitterConfig {
             try {
                 final AgentResponse resp = aimlService.process(Locale.US, dm.getText());
                 String replyDm;
-                if (resp.getResponse() instanceof CommunicateAction) {
-                    final CommunicateAction communicateAction = (CommunicateAction) resp.getResponse();
+                if (resp.getCommunicateAction() instanceof CommunicateAction) {
+                    final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
                     // allow some characters for imgur URI
                     replyDm = StringUtils.abbreviate(communicateAction.getObject(), 10000 - 100);
 
@@ -181,7 +176,7 @@ public class ReasonerTwitterConfig {
 
                 final String realMessage = StringUtils.removeStartIgnoreCase(status.getText(), "@" + twitterAuthorization().getScreenName()).trim();
                 final AgentResponse resp = aimlService.process(Locale.US, realMessage);
-                final CommunicateAction communicateAction = (CommunicateAction) resp.getResponse();
+                final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
                 final boolean replyHasImage = communicateAction.getImage() != null;
                 final int maxReplyLength = 140 - (status.getUser().getScreenName().length() + 2)
                         - (replyHasImage ? 23 : 0);

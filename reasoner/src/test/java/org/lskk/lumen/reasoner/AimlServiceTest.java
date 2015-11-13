@@ -1,10 +1,8 @@
 package org.lskk.lumen.reasoner;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.lskk.lumen.core.CommunicateAction;
-import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
@@ -81,7 +79,7 @@ public class AimlServiceTest {
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
         resp = aimlService.process(Locale.US, "hello, how are you??");
-        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("I am fine thank you how are you?"));
+        assertThat(((CommunicateAction) resp.getCommunicateAction()).getObject(), equalTo("I am fine thank you how are you?"));
     }
 
     @Test
@@ -91,7 +89,7 @@ public class AimlServiceTest {
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
         resp = aimlService.process(Locale.US, "how are you");
-        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("I am fine thank you how are you?"));
+        assertThat(((CommunicateAction) resp.getCommunicateAction()).getObject(), equalTo("I am fine thank you how are you?"));
     }
 
     @Test
@@ -101,7 +99,7 @@ public class AimlServiceTest {
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
         resp = aimlService.process(Locale.US, "cat");
-        final CommunicateAction communicateAction = (CommunicateAction) resp.getResponse();
+        final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
         assertThat(communicateAction.getObject(), containsString("funny cat"));
         assertThat(communicateAction.getImage(), notNullValue());
     }

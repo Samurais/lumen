@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.aiml;
 
 import org.lskk.lumen.core.ImageObject;
+import org.lskk.lumen.reasoner.goal.Goal;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
@@ -11,28 +12,18 @@ import java.util.stream.Collectors;
  * Created by ceefour on 10/28/15.
  */
 public class Template implements Serializable {
+    private String srai;
+    private Sr sr;
+    private List<Serializable> contents;
+    private List<Choice> randoms;
+    private ImageObject image;
+    private List<Goal> goals;
+
     /**
      * Symbolic reduction artificial intelligence.
      * i.e. redirect to another {@link Category}, using the srai as input text.
      */
     @XmlElement(name="srai")
-    private String srai;
-    @XmlElement(name="sr")
-    private Sr sr;
-    /**
-     * May contain "get", e.g.
-     *
-     * Hi there. I was just wanting to talk to &lt;get name="name"/>.
-     */
-    @XmlMixed
-    @XmlElementRef(name = "get", type = Get.class)
-    private List<Serializable> contents;
-    @XmlElementWrapper(name = "random") @XmlElement(name="li")
-    private List<Choice> randoms;
-    @XmlElement(name="image")
-    private ImageObject image;
-
-    @XmlTransient
     public String getSrai() {
         return srai;
     }
@@ -45,7 +36,13 @@ public class Template implements Serializable {
         return contents != null && !contents.isEmpty();
     }
 
-    @XmlTransient
+    /**
+     * May contain "get", e.g.
+     *
+     * Hi there. I was just wanting to talk to &lt;get name="name"/>.
+     */
+    @XmlMixed
+    @XmlElementRef(name = "get", type = Get.class)
     public List<Serializable> getContents() {
         return contents;
     }
@@ -55,11 +52,12 @@ public class Template implements Serializable {
         return contents != null ? contents.stream().map(Object::toString).collect(Collectors.joining(" ")).trim() : "";
     }
 
+    @XmlElement(name="sr")
     public Sr getSr() {
         return sr;
     }
 
-    @XmlTransient
+    @XmlElementWrapper(name = "random") @XmlElement(name="li")
     public List<Choice> getRandoms() {
         return randoms;
     }
@@ -68,13 +66,18 @@ public class Template implements Serializable {
 //        this.randoms = randoms;
 //    }
 
-    @XmlTransient
+    @XmlElement(name="image")
     public ImageObject getImage() {
         return image;
     }
 
     public void setImage(ImageObject image) {
         this.image = image;
+    }
+
+    @XmlElement(name = "goal")
+    public List<Goal> getGoals() {
+        return goals;
     }
 
     @Override
