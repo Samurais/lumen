@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -37,6 +38,7 @@ import java.util.Properties;
 /**
  * Created by ceefour on 29/10/2015.
  */
+@Profile("reasonerSocmedApp")
 @Configuration
 @Import(ImgurConfig.class)
 public class ReasonerTwitterConfig {

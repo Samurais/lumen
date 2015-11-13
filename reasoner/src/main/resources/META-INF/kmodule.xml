@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kmodule xmlns="http://jboss.org/kie/6.0.0/kmodule">
-    <!--<kbase name="rules" packages="org.lskk.lumen.reasoner">
-        <ksession name="ksession-rules"/>
-    </kbase>-->
+    <kbase name="rules" default="true">
+        <!--<ksession name="ksession-rules"/>-->
+        <ksession name="default" default="true" type="stateful">
+            <consoleLogger/>
+        </ksession>
+    </kbase>
 </kmodule>

@@ -11,4 +11,6 @@
     <logger name="org.hibernate.SQL" level="INFO"/>
     <logger name="org.springframework.web.servlet.mvc.method.annotation" level="DEBUG"/>
     <logger name="org.scribe" level="DEBUG"/>
+    <logger name="org.drools" level="DEBUG"/>
+    <logger name="org.kie" level="DEBUG"/>
 </configuration>

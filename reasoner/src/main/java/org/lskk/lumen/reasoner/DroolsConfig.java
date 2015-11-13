@@ -1,5 +1,10 @@
 package org.lskk.lumen.reasoner;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import org.drools.core.audit.WorkingMemoryConsoleLogger;
+import org.drools.core.event.DebugAgendaEventListener;
+import org.drools.core.event.DebugRuleRuntimeEventListener;
 import org.kie.api.KieBase;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.KieServices;
@@ -21,6 +26,7 @@ import org.springframework.core.env.Environment;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import java.util.concurrent.Executors;
 
 /**
  * Created by ceefour on 10/2/15.
@@ -50,17 +56,34 @@ public class DroolsConfig {
         start();
     }
 
+    @Bean(destroyMethod = "shutdown")
+    public ListeningExecutorService executor() {
+        return MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+    }
+
     @PostConstruct
     public void start() {
         // FIXME: exclude *.csv files from being treated as decision table
-        kieSession = kieContainer().newKieSession();
-        log.info("Starting {}", kieSession);
+        final KieSessionConfiguration config = kieServices().newKieSessionConfiguration();
+        config.setOption(ClockTypeOption.get("realtime"));
+        // FIXME: exclude *.csv files from being treated as decision table
+        kieSession = kieBase().newKieSession(config, null);
         kieSession.setGlobal("log", log);
+        kieSession.setGlobal("storyRepo", storyRepo);
+//        kieSession.addEventListener(new WorkingMemoryConsoleLogger(kieSession));
+//        kieSession.addEventListener(new DebugAgendaEventListener());
+//        kieSession.addEventListener(new DebugRuleRuntimeEventListener());
+        executor().submit(() -> {
+            log.info("Starting {}", kieSession);
+            kieSession.fireUntilHalt();
+            log.info("{} halted", kieSession);
+        });
     }
 
     @PreDestroy
     public void stop() {
         log.info("Stopping {}", kieSession);
+        kieSession.halt();
         kieSession.dispose();
         kieSession = null;
     }
@@ -81,12 +104,6 @@ public class DroolsConfig {
 
     @Bean(destroyMethod = "dispose") @Scope("prototype")
     public KieSession kieSession() {
-        final KieSessionConfiguration config = kieServices().newKieSessionConfiguration();
-        config.setOption(ClockTypeOption.get("realtime"));
-        // FIXME: exclude *.csv files from being treated as decision table
-        final KieSession kieSession = kieBase().newKieSession(config, null);
-        kieSession.setGlobal("log", log);
-        kieSession.setGlobal("storyRepo", storyRepo);
         return kieSession;
     }
 

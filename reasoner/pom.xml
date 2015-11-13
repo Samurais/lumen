@@ -56,8 +56,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.kie</groupId>
-			<artifactId>kie-api</artifactId>
+			<groupId>org.drools</groupId>
+			<artifactId>drools-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.drools</groupId>
