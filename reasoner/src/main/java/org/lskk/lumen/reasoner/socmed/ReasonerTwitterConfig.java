@@ -12,6 +12,7 @@ import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
+import org.lskk.lumen.reasoner.ux.LogChannel;
 import org.lskk.lumen.reasoner.visual.VisualCaptureRouter;
 import org.lskk.lumen.socmed.*;
 import org.slf4j.Logger;
@@ -57,6 +58,8 @@ public class ReasonerTwitterConfig {
     private ImgurConfig imgurConfig;
     @Inject
     private VisualCaptureRouter visualCaptureRouter;
+    @Inject
+    private LogChannel logChannel; // FIXME: replace with proper twitter channel
 
     @Bean
     public AgentRepository agentRepo() throws IOException {
@@ -118,7 +121,7 @@ public class ReasonerTwitterConfig {
         final Twitter twitter = twitterFactory().getInstance(new AccessToken(twitterAuthorization().getAccessToken(), twitterAuthorization().getAccessTokenSecret()));
         dmHandler.setOnDirectMessage(dm -> {
             try {
-                final AgentResponse resp = aimlService.process(Locale.US, dm.getText());
+                final AgentResponse resp = aimlService.process(Locale.US, dm.getText(), logChannel);
                 String replyDm;
                 if (resp.getCommunicateAction() instanceof CommunicateAction) {
                     final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
@@ -175,7 +178,7 @@ public class ReasonerTwitterConfig {
                 }
 
                 final String realMessage = StringUtils.removeStartIgnoreCase(status.getText(), "@" + twitterAuthorization().getScreenName()).trim();
-                final AgentResponse resp = aimlService.process(Locale.US, realMessage);
+                final AgentResponse resp = aimlService.process(Locale.US, realMessage, logChannel);
                 final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
                 final boolean replyHasImage = communicateAction.getImage() != null;
                 final int maxReplyLength = 140 - (status.getUser().getScreenName().length() + 2)

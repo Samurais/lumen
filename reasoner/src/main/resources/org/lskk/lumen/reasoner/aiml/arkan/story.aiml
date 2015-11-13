@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<aiml version="1.0">
+<aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML">
     <category>
-        <pattern>TELL ME A STORY</pattern>
+        <pattern>tell me a good story</pattern>
         <template>
             <goal kind="TellStory">
             </goal>

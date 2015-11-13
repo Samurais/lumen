@@ -6,8 +6,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.event.UnrecognizedInput;
+import org.lskk.lumen.reasoner.goal.Goal;
+import org.lskk.lumen.reasoner.ux.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -19,7 +22,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
-import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,7 +40,7 @@ public class AimlService {
             Get.class);
         final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
         final PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(AimlService.class.getClassLoader());
-        final Resource[] resources = resolver.getResources("classpath:org/lskk/lumen/reasoner/aiml/alice/*.aiml");
+        final Resource[] resources = resolver.getResources("classpath:org/lskk/lumen/reasoner/aiml/*/*.aiml");
         log.info("Loading {} AIML files: {}", resources.length, resources);
         this.aiml = new Aiml();
         for (final Resource res : resources) {
@@ -129,7 +131,7 @@ public class AimlService {
         return new MatchingCategory(null, new float[]{1f, 0f, 0f});
     }
 
-    public AgentResponse process(Locale locale, String origInput) {
+    public AgentResponse process(Locale locale, String origInput, Channel channel) {
         final CommunicateAction stimulus = new CommunicateAction(locale, origInput, null);
 
         MatchingCategory bestMatch = null;
@@ -158,7 +160,7 @@ public class AimlService {
                 if (bestMatch.category.getTemplate().getSrai() != null) {
                     // here we go again
                     currentInput = bestMatch.category.getTemplate().getSrai();
-                } else if (bestMatch.category.getTemplate().getRandoms() != null) {
+                } else if (bestMatch.category.getTemplate().getRandoms() != null && !bestMatch.category.getTemplate().getRandoms().isEmpty()) {
                     // pick one first
                     final Choice choice = bestMatch.category.getTemplate().getRandoms().get(
                             RANDOM.nextInt(bestMatch.category.getTemplate().getRandoms().size()) );
@@ -186,7 +188,19 @@ public class AimlService {
             if (bestMatch.category.getTemplate().getImage() != null) {
                 communicateAction.setImage(bestMatch.category.getTemplate().getImage());
             }
-            return  new AgentResponse(stimulus, communicateAction);
+            final AgentResponse agentResponse = new AgentResponse(stimulus, communicateAction);
+            for (final GoalElement goal : bestMatch.category.getTemplate().getGoals()) {
+                final Goal goalObj;
+                try {
+                    final Class<Goal> goalClass = (Class<Goal>) AimlService.class.getClassLoader().loadClass("org.lskk.lumen.reasoner.goal." + goal.getKind());
+                    goalObj = goalClass.newInstance();
+                    goalObj.setChannel(channel);
+                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                    throw new ReasonerException(e, "Cannot create goal %s", goal);
+                }
+                agentResponse.getInsertables().add(goalObj);
+            }
+            return agentResponse;
         } else {
             log.info("UNRECOGNIZED {}", stimulus);
             return new AgentResponse(stimulus, new UnrecognizedInput());

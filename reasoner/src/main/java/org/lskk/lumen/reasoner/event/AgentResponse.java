@@ -65,6 +65,7 @@ public class AgentResponse implements Serializable {
         return "AgentResponse{" +
                 "stimulus=" + stimulus +
                 ", response=" + communicateAction +
+                ", insertables=" + insertables +
                 '}';
     }
 }

@@ -1,9 +1,15 @@
 package org.lskk.lumen.reasoner;
 
+import org.kie.api.KieBase;
+import org.kie.api.KieBaseConfiguration;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieScanner;
+import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.KieSessionConfiguration;
+import org.kie.api.runtime.conf.ClockTypeOption;
+import org.lskk.lumen.reasoner.story.StoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +33,9 @@ public class DroolsConfig {
 
     @Inject
     private Environment env;
+    @Inject
+    private StoryRepository storyRepo;
+
     private KieContainer kieContainer;
     private KieSession kieSession;
 
@@ -62,8 +71,22 @@ public class DroolsConfig {
         return kieContainer;
     }
 
-    @Bean @Scope("prototype")
+    @Bean
+    public KieBase kieBase() {
+        final KieBaseConfiguration kieBaseConfig = kieServices().newKieBaseConfiguration();
+        kieBaseConfig.setOption(EventProcessingOption.STREAM);
+        final KieBase kieBase = kieContainer().newKieBase(kieBaseConfig);
+        return kieBase;
+    }
+
+    @Bean(destroyMethod = "dispose") @Scope("prototype")
     public KieSession kieSession() {
+        final KieSessionConfiguration config = kieServices().newKieSessionConfiguration();
+        config.setOption(ClockTypeOption.get("realtime"));
+        // FIXME: exclude *.csv files from being treated as decision table
+        final KieSession kieSession = kieBase().newKieSession(config, null);
+        kieSession.setGlobal("log", log);
+        kieSession.setGlobal("storyRepo", storyRepo);
         return kieSession;
     }
 

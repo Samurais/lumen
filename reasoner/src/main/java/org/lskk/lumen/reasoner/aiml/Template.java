@@ -5,6 +5,7 @@ import org.lskk.lumen.reasoner.goal.Goal;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,10 +15,10 @@ import java.util.stream.Collectors;
 public class Template implements Serializable {
     private String srai;
     private Sr sr;
-    private List<Serializable> contents;
-    private List<Choice> randoms;
+    private List<Serializable> contents = new ArrayList<>();
+    private List<Choice> randoms = new ArrayList<>();
     private ImageObject image;
-    private List<Goal> goals;
+    private List<GoalElement> goals = new ArrayList<>();
 
     /**
      * Symbolic reduction artificial intelligence.
@@ -76,7 +77,7 @@ public class Template implements Serializable {
     }
 
     @XmlElement(name = "goal")
-    public List<Goal> getGoals() {
+    public List<GoalElement> getGoals() {
         return goals;
     }
 

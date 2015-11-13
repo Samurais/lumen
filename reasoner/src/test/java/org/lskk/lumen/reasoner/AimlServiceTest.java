@@ -78,7 +78,7 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "hello, how are you??");
+        resp = aimlService.process(Locale.US, "hello, how are you??", null);
         assertThat(((CommunicateAction) resp.getCommunicateAction()).getObject(), equalTo("I am fine thank you how are you?"));
     }
 
@@ -88,7 +88,7 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "how are you");
+        resp = aimlService.process(Locale.US, "how are you", null);
         assertThat(((CommunicateAction) resp.getCommunicateAction()).getObject(), equalTo("I am fine thank you how are you?"));
     }
 
@@ -98,7 +98,7 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "cat");
+        resp = aimlService.process(Locale.US, "cat", null);
         final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
         assertThat(communicateAction.getObject(), containsString("funny cat"));
         assertThat(communicateAction.getImage(), notNullValue());

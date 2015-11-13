@@ -65,3 +65,9 @@ then
     }
 end
 
+rule "communicate proposition"
+when
+    $proposition : PropositionTold($tellStory : tellStory, $index : index)
+then
+    $tellStory.channel.express($tellStory.story.propositions[$index])
+end
