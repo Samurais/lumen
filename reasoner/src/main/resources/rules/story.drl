@@ -18,8 +18,9 @@ declare PropositionTold
 end
 
 rule "get random story"
+salience -1
 when
-    $goal : TellStory(story == null)
+    $goal : TellStory($id : id)
 then
     log.info("Setting story for goal {}", $goal);
     modify($goal) {
@@ -50,7 +51,7 @@ rule "tell next proposition until done"
 when
     $lastProposition : PropositionTold($tellStory : tellStory, $lastIndex : index,
         tellStory.done == false)
-    not( PropositionTold(this != $lastProposition, tellStory == $tellStory, this after[0s,10s] $lastProposition) )
+    not( PropositionTold(this != $lastProposition, tellStory == $tellStory, this after[0s,1s] $lastProposition) )
 then
     log.info("Telling proposition {} for {}", $lastIndex + 1, $tellStory);
     PropositionTold $propositionTold = new PropositionTold($tellStory, $lastIndex + 1);
