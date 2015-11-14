@@ -9,9 +9,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.core.ImageObject;
+import org.lskk.lumen.reasoner.DroolsService;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
+import org.lskk.lumen.reasoner.nlp.NaturalLanguage;
+import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
+import org.lskk.lumen.reasoner.util.ImageObjectResolver;
 import org.lskk.lumen.reasoner.ux.LogChannel;
 import org.lskk.lumen.reasoner.visual.VisualCaptureRouter;
 import org.lskk.lumen.socmed.*;
@@ -44,7 +48,6 @@ import java.util.Properties;
 public class ReasonerTwitterConfig {
 
     private static final Logger log = LoggerFactory.getLogger(ReasonerTwitterConfig.class);
-    private static final PathMatchingResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver(ReasonerTwitterConfig.class.getClassLoader());
     public static final String APP_ID = "lumen";
     public static final String AGENT_ID = "arkan";
 
@@ -59,9 +62,15 @@ public class ReasonerTwitterConfig {
     @Inject
     private ImgurConfig imgurConfig;
     @Inject
-    private VisualCaptureRouter visualCaptureRouter;
-    @Inject
     private LogChannel logChannel; // FIXME: replace with proper twitter channel
+    @Inject
+    private ImageObjectResolver imageObjectResolver;
+    @Inject @NaturalLanguage("en")
+    private SentenceGenerator sentenceGenerator_en;
+    @Inject @NaturalLanguage("id")
+    private SentenceGenerator sentenceGenerator_id;
+    @Inject
+    private DroolsService droolsService;
 
     @Bean
     public AgentRepository agentRepo() throws IOException {
@@ -96,26 +105,6 @@ public class ReasonerTwitterConfig {
         return new TwitterStreamFactory(twitterConf);
     }
 
-    protected void resolveImageObject(ImageObject imageObject) throws IOException {
-        Preconditions.checkArgument(imageObject.getUrl() != null,
-                "CommunicateAction.ImageObject.url is required");
-//                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
-//                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
-
-        if (imageObject.getUrl().startsWith("lumen:")) {
-            imageObject.setContent(visualCaptureRouter.getCameraMain());
-            imageObject.setContentType(visualCaptureRouter.getCameraMainType());
-        } else {
-            final Resource res = resourceResolver.getResource(imageObject.getUrl());
-            Preconditions.checkState(res.exists() && res.isReadable(), "%s does not exist or is not readable", res);
-            final byte[] media = IOUtils.toByteArray(res.getURL());
-            imageObject.setContent(media);
-            if (imageObject.getContentType() == null) {
-                imageObject.setContentType("image/jpeg");
-            }
-        }
-    }
-
     @Bean
     public DirectMessageHandler arkanDirectMessageHandler() throws IOException {
         final DirectMessageHandler dmHandler = new DirectMessageHandler();
@@ -123,7 +112,11 @@ public class ReasonerTwitterConfig {
         final Twitter twitter = twitterFactory().getInstance(new AccessToken(twitterAuthorization().getAccessToken(), twitterAuthorization().getAccessTokenSecret()));
         dmHandler.setOnDirectMessage(dm -> {
             try {
-                final AgentResponse resp = aimlService.process(Locale.US, dm.getText(), logChannel);
+                final TwitterDirectMessageChannel twitterDmChannel = new TwitterDirectMessageChannel(
+                        sentenceGenerator_en, sentenceGenerator_id,
+                        twitter, imageObjectResolver, imgurConfig, dm.getSenderScreenName());
+                final AgentResponse resp = aimlService.process(Locale.US, dm.getText(), twitterDmChannel);
+                droolsService.process(resp);
                 String replyDm;
                 if (resp.getCommunicateAction() instanceof CommunicateAction) {
                     final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
@@ -131,7 +124,7 @@ public class ReasonerTwitterConfig {
                     replyDm = StringUtils.abbreviate(communicateAction.getObject(), 10000 - 100);
 
                     if (communicateAction.getImage() != null) {
-                        resolveImageObject(communicateAction.getImage());
+                        imageObjectResolver.resolve(communicateAction.getImage());
                         if (communicateAction.getImage().getContent() != null) {
                             final String imageId = imgurConfig.upload(
                                     ContentType.create(communicateAction.getImage().getContentType()),
@@ -153,9 +146,13 @@ public class ReasonerTwitterConfig {
                             dm.getSenderScreenName(), dm.getSenderId(), dm.getText());
                     replyDm = "Sorry, I don't understand :(";
                 }
-                log.info("Replying DM to @{} {}: {}", dm.getSenderScreenName(), dm.getSenderId(), replyDm);
-                twitter.sendDirectMessage(dm.getSenderId(), replyDm);
-                return replyDm;
+                if (!replyDm.isEmpty()) {
+                    log.info("Replying DM to @{} {}: {}", dm.getSenderScreenName(), dm.getSenderId(), replyDm);
+                    twitter.sendDirectMessage(dm.getSenderId(), replyDm);
+                    return replyDm;
+                } else {
+                    return null;
+                }
             } catch (Exception e) {
                 log.error(String.format("Error DM @%s %s from: %s", dm.getSenderScreenName(), dm.getSenderId(), dm.getText()), e);
                 final String stackTraceAsString = Throwables.getStackTraceAsString(e);
@@ -180,25 +177,33 @@ public class ReasonerTwitterConfig {
                 }
 
                 final String realMessage = StringUtils.removeStartIgnoreCase(status.getText(), "@" + twitterAuthorization().getScreenName()).trim();
-                final AgentResponse resp = aimlService.process(Locale.US, realMessage, logChannel);
+                final TwitterMentionChannel twitterMentionChannel = new TwitterMentionChannel(
+                        sentenceGenerator_en, sentenceGenerator_id,
+                        twitter, imageObjectResolver, imgurConfig, status.getUser().getScreenName(), status.getId());
+                final AgentResponse resp = aimlService.process(Locale.US, realMessage, twitterMentionChannel);
+                droolsService.process(resp);
                 final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
                 final boolean replyHasImage = communicateAction.getImage() != null;
-                final int maxReplyLength = 140 - (status.getUser().getScreenName().length() + 2)
-                        - (replyHasImage ? 23 : 0);
-                final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(communicateAction.getObject(), maxReplyLength);
-                final StatusUpdate replyStatus = new StatusUpdate(replyTweet);
-                if (communicateAction.getImage() != null) {
-                    resolveImageObject(communicateAction.getImage());
-                    if (communicateAction.getImage().getContent() != null) {
-                        final String imageId = imgurConfig.upload(
-                                ContentType.create(communicateAction.getImage().getContentType()),
-                                communicateAction.getImage().getContent(), communicateAction.getObject());
-                        replyStatus.setMedia("image.jpg", new ByteArrayInputStream(communicateAction.getImage().getContent()));
+                if (!communicateAction.getObject().isEmpty() || replyHasImage) {
+                    final int maxReplyLength = 140 - (status.getUser().getScreenName().length() + 2)
+                            - (replyHasImage ? 23 : 0);
+                    final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(communicateAction.getObject(), maxReplyLength);
+                    final StatusUpdate replyStatus = new StatusUpdate(replyTweet);
+                    if (replyHasImage) {
+                        imageObjectResolver.resolve(communicateAction.getImage());
+                        if (communicateAction.getImage().getContent() != null) {
+                            final String imageId = imgurConfig.upload(
+                                    ContentType.create(communicateAction.getImage().getContentType()),
+                                    communicateAction.getImage().getContent(), communicateAction.getObject());
+                            replyStatus.setMedia("image.jpg", new ByteArrayInputStream(communicateAction.getImage().getContent()));
+                        }
                     }
+                    replyStatus.setInReplyToStatusId(status.getId());
+                    twitter.tweets().updateStatus(replyStatus);
+                    return replyTweet;
+                } else {
+                    return null;
                 }
-                replyStatus.setInReplyToStatusId(status.getId());
-                twitter.tweets().updateStatus(replyStatus);
-                return replyTweet;
             } catch (Exception e) {
                 log.error("Error replying @" + status.getUser().getScreenName()+ "'s mention: " + status.getText(), e);
                 final String stackTraceAsString = Throwables.getStackTraceAsString(e);

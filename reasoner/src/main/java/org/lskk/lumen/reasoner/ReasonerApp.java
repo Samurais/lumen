@@ -21,7 +21,7 @@ class ReasonerApp implements CommandLineRunner {
 
     public static void main(String[] args) {
         new SpringApplicationBuilder(ReasonerApp.class)
-                .profiles("reasonerApp", "rabbitmq")
+                .profiles("reasonerApp", "rabbitmq", "drools")
                 .run(args);
     }
 

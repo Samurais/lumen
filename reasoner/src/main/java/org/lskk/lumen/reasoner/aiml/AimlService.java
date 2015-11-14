@@ -2,6 +2,7 @@ package org.lskk.lumen.reasoner.aiml;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -66,8 +68,9 @@ public class AimlService {
      *      If contains, confidence == 0.6x.
      */
     public static MatchingCategory match(Locale locale, String preparedInput, String pattern) {
+        Preconditions.checkNotNull(locale, "locale is required");
         if (pattern.equalsIgnoreCase(preparedInput)) {
-            return new MatchingCategory(null, new float[] {1f, 1f, 0f});
+            return new MatchingCategory(null, locale, new float[] {1f, 1f, 0f});
         }
         // starts with
         if (pattern.endsWith(" _")) {
@@ -75,7 +78,7 @@ public class AimlService {
             if (preparedInput.startsWith(pattern2 + " ")) {
                 final String group0 = StringUtils.removeStartIgnoreCase(preparedInput, pattern2).trim();
                 if (!group0.contains(" ")) { // group[0] must be single word
-                    return new MatchingCategory(null, new float[]{1f, 0.92f, 0f}, ImmutableList.of(group0));
+                    return new MatchingCategory(null, locale, new float[]{1f, 0.92f, 0f}, ImmutableList.of(group0));
                 }
             }
         }
@@ -83,12 +86,12 @@ public class AimlService {
             final String pattern2 = StringUtils.removeEnd(pattern, " *");
             if (preparedInput.startsWith(pattern2 + " ")) {
                 final String group0 = StringUtils.removeStartIgnoreCase(preparedInput, pattern2).trim();
-                return new MatchingCategory(null, new float[] {1f, 0.91f, 0f}, ImmutableList.of(group0));
+                return new MatchingCategory(null, locale, new float[] {1f, 0.91f, 0f}, ImmutableList.of(group0));
             }
         }
         if (preparedInput.startsWith(pattern + " ")) {
             final String group0 = StringUtils.removeStartIgnoreCase(preparedInput, pattern).trim();
-            return new MatchingCategory(null, new float[] {1f, 0.90f, 0f}, ImmutableList.of(group0));
+            return new MatchingCategory(null, locale, new float[] {1f, 0.90f, 0f}, ImmutableList.of(group0));
         }
         // ends with
         if (pattern.startsWith("_ ")) {
@@ -96,7 +99,7 @@ public class AimlService {
             if (preparedInput.endsWith(" " + pattern2)) {
                 final String group0 = StringUtils.removeEndIgnoreCase(preparedInput, pattern2).trim();
                 if (!group0.contains(" ")) { // group[0] must be single word
-                    return new MatchingCategory(null, new float[]{1f, 0.82f, 0f}, ImmutableList.of(group0));
+                    return new MatchingCategory(null, locale, new float[]{1f, 0.82f, 0f}, ImmutableList.of(group0));
                 }
             }
         }
@@ -104,35 +107,35 @@ public class AimlService {
             final String pattern2 = StringUtils.removeStart(pattern, "* ");
             if (preparedInput.endsWith(" " + pattern2)) {
                 final String group0 = StringUtils.removeEndIgnoreCase(preparedInput, pattern2).trim();
-                return new MatchingCategory(null, new float[] {1f, 0.81f, 0f}, ImmutableList.of(group0));
+                return new MatchingCategory(null, locale, new float[] {1f, 0.81f, 0f}, ImmutableList.of(group0));
             }
         }
         if (preparedInput.endsWith(" " + pattern)) {
-            return new MatchingCategory(null, new float[]{1f, 0.80f, 0f});
+            return new MatchingCategory(null, locale, new float[]{1f, 0.80f, 0f});
         }
         // contains
         if (pattern.endsWith(" *")) {
             final String pattern2 = StringUtils.removeEnd(pattern, " *");
             if (StringUtils.containsIgnoreCase(preparedInput, " " + pattern2 + " ")) {
                 final String group0 = StringUtils.substringAfter(preparedInput, pattern2).trim();
-                return new MatchingCategory(null, new float[] {1f, 0.61f, 0f}, ImmutableList.of(group0));
+                return new MatchingCategory(null, locale, new float[] {1f, 0.61f, 0f}, ImmutableList.of(group0));
             }
         }
         if (pattern.startsWith("* ")) {
             final String pattern2 = StringUtils.removeStart(pattern, "* ");
             if (StringUtils.containsIgnoreCase(preparedInput, " " + pattern2 + " ")) {
                 final String group0 = StringUtils.substringBefore(preparedInput, pattern2).trim();
-                return new MatchingCategory(null, new float[] {1f, 0.61f, 0f}, ImmutableList.of(group0));
+                return new MatchingCategory(null, locale, new float[] {1f, 0.61f, 0f}, ImmutableList.of(group0));
             }
         }
         if (preparedInput.contains(" " + pattern + " ")) {
-            return new MatchingCategory(null, new float[]{1f, 0.60f, 0f});
+            return new MatchingCategory(null, locale, new float[]{1f, 0.60f, 0f});
         }
-        return new MatchingCategory(null, new float[]{1f, 0f, 0f});
+        return new MatchingCategory(null, locale, new float[]{1f, 0f, 0f});
     }
 
-    public AgentResponse process(Locale locale, String origInput, Channel channel) {
-        final CommunicateAction stimulus = new CommunicateAction(locale, origInput, null);
+    public AgentResponse process(@Deprecated Locale upLocale, String origInput, @Nullable Channel channel) {
+        final CommunicateAction stimulus = new CommunicateAction(upLocale, origInput, null);
 
         MatchingCategory bestMatch = null;
         String currentInput = origInput;
@@ -142,12 +145,18 @@ public class AimlService {
             final CharMatcher punct = CharMatcher.anyOf(",.!?:;()'\"");
             final String punctRemoved = punct.removeFrom(currentInput).trim();
             final String whitespaced = punctRemoved.replaceAll("\\s+", " ").trim();
-            final String upperCased = whitespaced.toUpperCase(locale);
+            final String upperCased = whitespaced.toUpperCase(upLocale);
             aiml.getCategories().forEach(cat -> {
-                final MatchingCategory match = match(locale, upperCased, cat.getPattern().toUpperCase());
-                if (match.truthValue[1] > 0f) {
-                    match.category = cat;
-                    matches.add(match);
+                for (final Pattern pattern : cat.getPatterns()) {
+                    final Locale matchingLocale = Optional.ofNullable(pattern.getInLanguage())
+                            .map(Locale::forLanguageTag).orElse(Locale.US);
+                    final MatchingCategory match = match(matchingLocale,
+                            upperCased, pattern.getContent().toUpperCase());
+                    if (match.truthValue[1] > 0f) {
+                        match.category = cat;
+                        matches.add(match);
+                        break;
+                    }
                 }
             });
             matches.sort((a, b) -> a.truthValue[1] == b.truthValue[1] ? 0 : (a.truthValue[1] > b.truthValue[1] ? -1 : 1));
@@ -183,8 +192,11 @@ public class AimlService {
 
         }
         if (bestMatch != null) {
-            log.info("{} -> {}", stimulus, bestReply);
-            final CommunicateAction communicateAction = new CommunicateAction(locale, bestReply, null);
+            log.info("Best for {} -{}-> {}", stimulus, bestMatch.inLanguage.toLanguageTag(), bestReply);
+            if (channel != null) {
+                channel.setInLanguage(bestMatch.inLanguage);
+            }
+            final CommunicateAction communicateAction = new CommunicateAction(upLocale, bestReply, null);
             if (bestMatch.category.getTemplate().getImage() != null) {
                 communicateAction.setImage(bestMatch.category.getTemplate().getImage());
             }
@@ -215,14 +227,17 @@ public class AimlService {
          */
         public float[] truthValue;
         public List<String> groups = new ArrayList<>();
+        public Locale inLanguage;
 
-        public MatchingCategory(Category category, float[] truthValue) {
+        public MatchingCategory(Category category, Locale inLanguage, float[] truthValue) {
             this.category = category;
+            this.inLanguage = inLanguage;
             this.truthValue = truthValue;
 
         }
-        public MatchingCategory(Category category, float[] truthValue, List<String> groups) {
+        public MatchingCategory(Category category, Locale inLanguage, float[] truthValue, List<String> groups) {
             this.category = category;
+            this.inLanguage = inLanguage;
             this.truthValue = truthValue;
             this.groups = groups;
         }
@@ -230,7 +245,7 @@ public class AimlService {
         @Override
         public String toString() {
             return "MatchingCategory{" +
-                    "pattern='" + pattern + '\'' +
+                    inLanguage.toLanguageTag() + ":'" + pattern + '\'' +
                     ", category=" + category +
                     ", truthValue=" + Arrays.toString(truthValue) +
                     ", groups=" + groups +

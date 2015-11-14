@@ -50,7 +50,7 @@ rule "tell next proposition until done"
 when
     $lastProposition : PropositionTold($tellStory : tellStory, $lastIndex : index,
         tellStory.done == false)
-    not( PropositionTold(this != $lastProposition, tellStory == $tellStory, this after[0s,5s] $lastProposition) )
+    not( PropositionTold(this != $lastProposition, tellStory == $tellStory, this after[0s,10s] $lastProposition) )
 then
     log.info("Telling proposition {} for {}", $lastIndex + 1, $tellStory);
     PropositionTold $propositionTold = new PropositionTold($tellStory, $lastIndex + 1);

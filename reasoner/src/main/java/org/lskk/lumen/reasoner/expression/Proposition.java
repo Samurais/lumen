@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.lskk.lumen.core.ImageObject;
 
 import java.io.Serializable;
 
@@ -22,4 +23,14 @@ import java.io.Serializable;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Proposition implements Serializable {
+
+    private ImageObject image;
+
+    public ImageObject getImage() {
+        return image;
+    }
+
+    public void setImage(ImageObject image) {
+        this.image = image;
+    }
 }

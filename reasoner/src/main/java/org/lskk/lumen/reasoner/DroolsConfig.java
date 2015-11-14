@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
  * Created by ceefour on 10/2/15.
  */
 @Configuration
-@Profile("reasonerApp")
+@Profile("drools")
 public class DroolsConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DroolsConfig.class);
@@ -71,8 +71,8 @@ public class DroolsConfig {
         kieSession.setGlobal("log", log);
         kieSession.setGlobal("storyRepo", storyRepo);
 //        kieSession.addEventListener(new WorkingMemoryConsoleLogger(kieSession));
-//        kieSession.addEventListener(new DebugAgendaEventListener());
-//        kieSession.addEventListener(new DebugRuleRuntimeEventListener());
+        kieSession.addEventListener(new DebugAgendaEventListener());
+        kieSession.addEventListener(new DebugRuleRuntimeEventListener());
         executor().submit(() -> {
             log.info("Starting {}", kieSession);
             kieSession.fireUntilHalt();

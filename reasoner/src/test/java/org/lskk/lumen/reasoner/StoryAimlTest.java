@@ -114,19 +114,50 @@ public class StoryAimlTest {
         kieSession.fireAllRules();
         assertThat(tellStory.getStoryId(), Matchers.equalTo("soon_see"));
         log.info("Waiting...");
-        clock.advanceTime(4, TimeUnit.SECONDS);
+        clock.advanceTime(9, TimeUnit.SECONDS);
         kieSession.fireAllRules();
         log.info("Waiting...");
         clock.advanceTime(1, TimeUnit.SECONDS);
         kieSession.fireAllRules();
         log.info("Waiting...");
-        clock.advanceTime(5, TimeUnit.SECONDS);
+        clock.advanceTime(10, TimeUnit.SECONDS);
         kieSession.fireAllRules();
         log.info("Waiting...");
-        clock.advanceTime(5, TimeUnit.SECONDS);
+        clock.advanceTime(10, TimeUnit.SECONDS);
         kieSession.fireAllRules();
         log.info("Waiting...");
-        clock.advanceTime(5, TimeUnit.SECONDS);
+        clock.advanceTime(10, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+    }
+
+    @Test
+    public void storyAiml1CanRepeatAndNotConflict() throws IOException {
+        AgentResponse resp;
+        resp = aimlService.process(Locale.US, "tell me a good story", logChannel);
+        assertThat(resp.getInsertables(), not(empty()));
+        assertThat(resp.getInsertables(), contains(instanceOf(TellStory.class)));
+
+        droolsService.process(resp);
+        final TellStory tellStory = (TellStory) resp.getInsertables().get(0);
+        assertThat(kieSession.getFactHandle(tellStory), notNullValue());
+
+        final SessionPseudoClock clock = kieSession.getSessionClock();
+        kieSession.fireAllRules();
+        assertThat(tellStory.getStoryId(), Matchers.equalTo("soon_see"));
+        log.info("Waiting...");
+        clock.advanceTime(9, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(1, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(10, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(10, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(10, TimeUnit.SECONDS);
         kieSession.fireAllRules();
     }
 

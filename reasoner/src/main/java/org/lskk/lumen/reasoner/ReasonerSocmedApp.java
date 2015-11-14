@@ -22,7 +22,7 @@ class ReasonerSocmedApp implements CommandLineRunner {
 
     public static void main(String[] args) {
         new SpringApplicationBuilder(ReasonerSocmedApp.class)
-                .profiles("reasonerSocmedApp", "twitter", "rabbitmq")
+                .profiles("reasonerSocmedApp", "twitter", "rabbitmq", "drools")
                 .run(args);
     }
 

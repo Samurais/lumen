@@ -17,6 +17,7 @@ import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
 import org.lskk.lumen.reasoner.nlp.id.IndonesianSentenceGenerator;
 import org.lskk.lumen.reasoner.story.Story;
 import org.lskk.lumen.reasoner.story.StoryRepository;
+import org.lskk.lumen.reasoner.ux.LogChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -74,6 +75,9 @@ public class StoryTest {
 
         @Bean
         public StoryRepository storyRepo() { return new StoryRepository(); }
+
+        @Bean
+        public LogChannel logChannel() { return new LogChannel(); }
     }
 
     @Inject @NaturalLanguage("en")
@@ -84,28 +88,56 @@ public class StoryTest {
     private ObjectMapper mapper;
     @Inject
     private KieSession kieSession;
+    @Inject
+    private LogChannel logChannel;
 
     @Test
     public void story1() throws IOException {
         final SessionPseudoClock clock = kieSession.getSessionClock();
         final TellStory tellStory = new TellStory();
+        tellStory.setChannel(logChannel);
         kieSession.insert(tellStory);
         kieSession.fireAllRules();
         assertThat(tellStory.getStoryId(), Matchers.equalTo("soon_see"));
         log.info("Waiting...");
-        clock.advanceTime(4, TimeUnit.SECONDS);
+        clock.advanceTime(9, TimeUnit.SECONDS);
         kieSession.fireAllRules();
         log.info("Waiting...");
         clock.advanceTime(1, TimeUnit.SECONDS);
         kieSession.fireAllRules();
         log.info("Waiting...");
-        clock.advanceTime(5, TimeUnit.SECONDS);
+        clock.advanceTime(10, TimeUnit.SECONDS);
         kieSession.fireAllRules();
         log.info("Waiting...");
-        clock.advanceTime(5, TimeUnit.SECONDS);
+        clock.advanceTime(10, TimeUnit.SECONDS);
         kieSession.fireAllRules();
         log.info("Waiting...");
-        clock.advanceTime(5, TimeUnit.SECONDS);
+        clock.advanceTime(10, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+    }
+
+    @Test
+    public void story1CanRepeatAndNotConflict() throws IOException {
+        final SessionPseudoClock clock = kieSession.getSessionClock();
+        final TellStory tellStory = new TellStory();
+        tellStory.setChannel(logChannel);
+        kieSession.insert(tellStory);
+        kieSession.fireAllRules();
+        assertThat(tellStory.getStoryId(), Matchers.equalTo("soon_see"));
+        log.info("Waiting...");
+        clock.advanceTime(9, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(1, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(10, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(10, TimeUnit.SECONDS);
+        kieSession.fireAllRules();
+        log.info("Waiting...");
+        clock.advanceTime(10, TimeUnit.SECONDS);
         kieSession.fireAllRules();
     }
 

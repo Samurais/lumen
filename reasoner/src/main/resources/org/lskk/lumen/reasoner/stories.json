@@ -19,6 +19,10 @@
           "@type": "NounClause",
           "href": "yago:wordnet_menagerie_103745146",
           "article": "THE"
+        },
+        "image": {
+          "@type": "ImageObject",
+          "url": "file:image/story/soon_see/zoo.jpg"
         }
       },
       {
@@ -38,7 +42,11 @@
           "article": "A",
           "category": "ANIMAL"
         },
-        "time": "SOON"
+        "time": "SOON",
+        "image": {
+          "@type": "ImageObject",
+          "url": "file:image/story/soon_see/lion.jpg"
+        }
       },
       {
         "@type": "SpoNoun",
@@ -57,7 +65,11 @@
           "article": "A",
           "category": "ANIMAL"
         },
-        "time": "SOON"
+        "time": "SOON",
+        "image": {
+          "@type": "ImageObject",
+          "url": "file:image/story/soon_see/giraffe.jpg"
+        }
       },
       {
         "@type": "SpoNoun",
@@ -76,7 +88,11 @@
           "article": "A",
           "category": "ANIMAL"
         },
-        "time": "SOON"
+        "time": "SOON",
+        "image": {
+          "@type": "ImageObject",
+          "url": "file:image/story/soon_see/alligator.jpg"
+        }
       },
       {
         "@type": "SpoNoun",
@@ -95,7 +111,11 @@
           "article": "A",
           "category": "ANIMAL"
         },
-        "time": "SOON"
+        "time": "SOON",
+        "image": {
+          "@type": "ImageObject",
+          "url": "file:image/story/soon_see/elephant.jpg"
+        }
       }
     ]
   }

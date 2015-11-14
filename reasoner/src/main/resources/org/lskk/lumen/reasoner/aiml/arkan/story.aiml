@@ -2,6 +2,7 @@
 <aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML">
     <category>
         <pattern>tell me a good story</pattern>
+        <pattern lang="id-ID">cerita dong</pattern>
         <template>
             <goal kind="TellStory">
             </goal>
