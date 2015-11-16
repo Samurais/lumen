@@ -3,8 +3,10 @@ package org.lskk.lumen.reasoner.aiml;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.ReasonerException;
@@ -12,6 +14,7 @@ import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.event.UnrecognizedInput;
 import org.lskk.lumen.reasoner.goal.Goal;
 import org.lskk.lumen.reasoner.ux.Channel;
+import org.mvel2.templates.TemplateRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -24,7 +27,9 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 /**
@@ -60,8 +65,8 @@ public class AimlService {
 
     /**
      *
-     * @param preparedInput Punctuation removed, trimmed, whitespace normalization, uppercased.
-     * @param pattern Must be uppercase
+     * @param preparedInput Punctuation removed, trimmed, whitespace normalization, lowercased.
+     * @param pattern Must be lowercase
      * @return If exact match, confidence == 1.0. If not match, confidence == 0.0.
      *      If starts with, confidence == 0.9x.
      *      If ends with, confidence == 0.8x.
@@ -72,6 +77,40 @@ public class AimlService {
         if (pattern.equalsIgnoreCase(preparedInput)) {
             return new MatchingCategory(null, locale, new float[] {1f, 1f, 0f});
         }
+
+        // regex match
+        final List<String> patternSplit = Splitter.on(' ').trimResults().omitEmptyStrings().splitToList(pattern);
+        final float truthValueMultiplier = 1f + (pattern.contains("_") ? -0.1f : -0.0f) + (pattern.contains("*") ? -0.2f : -0.0f)
+                - (float)Math.exp(-pattern.length());
+        final String regex = patternSplit.stream().map(it -> {
+            if ("*".equals(it)) {
+                return "(.+?)";
+            } else if ("_".equals(it)) {
+                return "(\\S+)";
+            } else {
+                return java.util.regex.Pattern.quote(it);
+            }
+        }).collect(Collectors.joining("\\s+"));
+        final java.util.regex.Pattern patternRegex = java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE);
+        final Matcher matcher = patternRegex.matcher(preparedInput);
+        if (matcher.find()) {
+            final float[] truthValue;
+            if (preparedInput.equals(matcher.group())) {
+                truthValue = new float[]{1f, 1f * truthValueMultiplier, 0f};
+            } else if (preparedInput.startsWith(matcher.group())) {
+                truthValue = new float[]{1f, 0.8f * truthValueMultiplier, 0f};
+            } else if (preparedInput.endsWith(matcher.group())) {
+                truthValue = new float[]{1f, 0.7f * truthValueMultiplier, 0f};
+            } else {
+                truthValue = new float[]{1f, 0.6f * truthValueMultiplier, 0f};
+            }
+            final ImmutableList.Builder<String> groub = ImmutableList.builder();
+            for (int i = 0; i <= matcher.groupCount(); i++) {
+                groub.add(matcher.group(i));
+            }
+            return new MatchingCategory(null, locale, truthValue, groub.build());
+        }
+
         // starts with
         if (pattern.endsWith(" _")) {
             final String pattern2 = StringUtils.removeEnd(pattern, " _");
@@ -145,13 +184,13 @@ public class AimlService {
             final CharMatcher punct = CharMatcher.anyOf(",.!?:;()'\"");
             final String punctRemoved = punct.removeFrom(currentInput).trim();
             final String whitespaced = punctRemoved.replaceAll("\\s+", " ").trim();
-            final String upperCased = whitespaced.toUpperCase(upLocale);
+            final String lowerCased = whitespaced.toLowerCase(upLocale);
             aiml.getCategories().forEach(cat -> {
                 for (final Pattern pattern : cat.getPatterns()) {
                     final Locale matchingLocale = Optional.ofNullable(pattern.getInLanguage())
                             .map(Locale::forLanguageTag).orElse(Locale.US);
                     final MatchingCategory match = match(matchingLocale,
-                            upperCased, pattern.getContent().toUpperCase());
+                            lowerCased, pattern.getContent().toLowerCase());
                     if (match.truthValue[1] > 0f) {
                         match.category = cat;
                         matches.add(match);
@@ -160,7 +199,7 @@ public class AimlService {
                 }
             });
             matches.sort((a, b) -> a.truthValue[1] == b.truthValue[1] ? 0 : (a.truthValue[1] > b.truthValue[1] ? -1 : 1));
-            log.info("{} matched for '{}' ordered by confidence:\n{}", matches.size(), upperCased, Joiner.on("\n").join(matches));
+            log.info("{} matched for '{}' ordered by confidence:\n{}", matches.size(), lowerCased, Joiner.on("\n").join(matches));
             bestMatch = Iterables.getFirst(matches, null);
             if (bestMatch == null) {
                 // oh no!
@@ -201,15 +240,28 @@ public class AimlService {
                 communicateAction.setImage(bestMatch.category.getTemplate().getImage());
             }
             final AgentResponse agentResponse = new AgentResponse(stimulus, communicateAction);
-            for (final GoalElement goal : bestMatch.category.getTemplate().getGoals()) {
+            final HashMap<String, Object> goalVars = new HashMap<>();
+            goalVars.put("groups", bestMatch.groups);
+            for (final GoalElement goalEl : bestMatch.category.getTemplate().getGoals()) {
                 final Goal goalObj;
                 try {
-                    final Class<Goal> goalClass = (Class<Goal>) AimlService.class.getClassLoader().loadClass("org.lskk.lumen.reasoner.goal." + goal.getKind());
+                    final Class<Goal> goalClass = (Class<Goal>) AimlService.class.getClassLoader().loadClass(goalEl.getClazz());
                     goalObj = goalClass.newInstance();
                     goalObj.setChannel(channel);
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-                    throw new ReasonerException(e, "Cannot create goal %s", goal);
+                    throw new ReasonerException(e, "Cannot create goal %s", goalEl);
                 }
+
+                for (final GoalElement.GoalProperty propDef : goalEl.getProperties()) {
+                    final Object value = TemplateRuntime.eval(propDef.getValue(), goalVars);
+                    try {
+                        PropertyUtils.setProperty(goalObj, propDef.getName(), value);
+                    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                        throw new ReasonerException(e, "Cannot set %s.%s <- %s (from: %s)",
+                                goalObj.getClass().getSimpleName(), propDef.getName(), value, propDef.getValue());
+                    }
+                }
+
                 agentResponse.getInsertables().add(goalObj);
             }
             return agentResponse;

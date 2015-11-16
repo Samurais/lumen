@@ -6,6 +6,7 @@ import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
+import org.lskk.lumen.reasoner.quran.ReciteQuran;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -17,6 +18,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
+import java.io.Serializable;
 import java.util.Locale;
 
 import static org.hamcrest.Matchers.*;
@@ -54,22 +56,32 @@ public class AimlServiceTest {
     @Test
     public void match() {
         AimlService.MatchingCategory matching;
-        matching = AimlService.match(Locale.US, "GOOD MORNING", "GOOD MORNING");
+        matching = AimlService.match(Locale.US, "good morning", "good morning");
         assertThat(matching.truthValue[1], equalTo(1f));
-        matching = AimlService.match(Locale.US, "GOOD MORNING ARKAN", "GOOD MORNING *");
+        matching = AimlService.match(Locale.US, "good morning arkan", "good morning *");
         assertThat(matching.truthValue[1], equalTo(0.91f));
-        assertThat(matching.groups, contains("ARKAN"));
-        matching = AimlService.match(Locale.US, "ARKAN BYE", "* BYE");
+        assertThat(matching.groups, contains("arkan"));
+        matching = AimlService.match(Locale.US, "arkan bye", "* bye");
         assertThat(matching.truthValue[1], equalTo(0.81f));
-        assertThat(matching.groups, contains("ARKAN"));
-        matching = AimlService.match(Locale.US, "ARKAN BYE", "_ BYE");
+        assertThat(matching.groups, contains("arkan"));
+        matching = AimlService.match(Locale.US, "arkan bye", "_ bye");
         assertThat(matching.truthValue[1], equalTo(0.82f));
-        assertThat(matching.groups, contains("ARKAN"));
-        matching = AimlService.match(Locale.US, "I LOVE ALLAH", "I LOVE _");
+        assertThat(matching.groups, contains("arkan"));
+        matching = AimlService.match(Locale.US, "i love allah", "i love _");
         assertThat(matching.truthValue[1], equalTo(0.92f));
-        assertThat(matching.groups, contains("ALLAH"));
-        matching = AimlService.match(Locale.US, "I LOVE ALLAH SO MUCH", "I LOVE _");
+        assertThat(matching.groups, contains("allah"));
+        matching = AimlService.match(Locale.US, "i love allah so much", "i love _");
         assertThat(matching.truthValue[1], equalTo(0f));
+    }
+
+    @Test
+    public void matchTwoGroups() {
+        AimlService.MatchingCategory matching;
+        matching = AimlService.match(Locale.US, "read al kahfi ayat 42", "read _ _ ayat _");
+        log.info("Matching: {}", matching);
+        assertThat(matching.truthValue[1], greaterThanOrEqualTo(0.9f));
+        assertThat(matching.groups, hasSize(4));
+        assertThat(matching.groups, contains("read al kahfi ayat 42", "al", "kahfi", "42"));
     }
 
     @Test
@@ -102,6 +114,22 @@ public class AimlServiceTest {
         final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
         assertThat(communicateAction.getObject(), containsString("funny cat"));
         assertThat(communicateAction.getImage(), notNullValue());
+    }
+
+    @Test
+    public void processGroups() {
+        AgentResponse resp;
+        // SRAI to "hi", but salutations.aiml has no rule for "hi"
+//        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
+//        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
+        resp = aimlService.process(Locale.US, "read al-kahfi ayat 104", null);
+        log.info("Response: {}", resp);
+        assertThat(resp.getInsertables(), hasSize(1));
+        assertThat(resp.getInsertables().get(0), instanceOf(ReciteQuran.class));
+        final ReciteQuran reciteQuran = (ReciteQuran) resp.getInsertables().get(0);
+        log.info("ReciteQuran: {}", reciteQuran);
+        assertThat(reciteQuran.getUpChapter(), equalTo("al-kahfi"));
+        assertThat(reciteQuran.getUpVerses(), equalTo("104"));
     }
 
 }

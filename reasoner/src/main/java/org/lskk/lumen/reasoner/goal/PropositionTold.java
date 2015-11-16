@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.goal;
 
+import org.lskk.lumen.reasoner.story.TellStory;
+
 import java.io.Serializable;
 
 /**

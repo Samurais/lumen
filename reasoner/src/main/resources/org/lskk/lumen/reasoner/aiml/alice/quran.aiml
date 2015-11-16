@@ -7,4 +7,13 @@
             1. Segala puji bagi Allah yang telah menurunkan kepada hamba-Nya Al-Kitab (Al-Qur’an) dan dia tidak mengadakan kebengkokan di dalamnya; (QS. 18:1)
         </template>
     </category>
+    <category>
+        <pattern>Read _ ayat _</pattern>
+        <template>
+            <goal class="org.lskk.lumen.reasoner.quran.ReciteQuran">
+                <property name="upChapter" value="@{groups[1]}"/>
+                <property name="upVerses" value="@{groups[2]}"/>
+            </goal>
+        </template>
+    </category>
 </aiml>

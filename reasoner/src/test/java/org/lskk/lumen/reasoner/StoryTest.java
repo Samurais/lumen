@@ -1,21 +1,15 @@
 package org.lskk.lumen.reasoner;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import org.drools.core.time.SessionPseudoClock;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.api.runtime.KieSession;
-import org.lskk.lumen.core.CommunicateAction;
-import org.lskk.lumen.reasoner.expression.Proposition;
-import org.lskk.lumen.reasoner.expression.SpoNoun;
-import org.lskk.lumen.reasoner.goal.TellStory;
+import org.lskk.lumen.reasoner.story.TellStory;
 import org.lskk.lumen.reasoner.nlp.*;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
 import org.lskk.lumen.reasoner.nlp.id.IndonesianSentenceGenerator;
-import org.lskk.lumen.reasoner.story.Story;
 import org.lskk.lumen.reasoner.story.StoryRepository;
 import org.lskk.lumen.reasoner.ux.LogChannel;
 import org.slf4j.Logger;
@@ -31,7 +25,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 

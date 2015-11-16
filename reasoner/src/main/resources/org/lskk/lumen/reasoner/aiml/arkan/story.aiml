@@ -4,7 +4,7 @@
         <pattern>tell me a good story</pattern>
         <pattern lang="id-ID">cerita dong</pattern>
         <template>
-            <goal kind="TellStory">
+            <goal class="org.lskk.lumen.reasoner.story.TellStory">
             </goal>
         </template>
     </category>

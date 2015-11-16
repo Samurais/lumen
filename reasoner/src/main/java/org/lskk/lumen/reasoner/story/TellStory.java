@@ -1,6 +1,6 @@
-package org.lskk.lumen.reasoner.goal;
+package org.lskk.lumen.reasoner.story;
 
-import org.lskk.lumen.reasoner.story.Story;
+import org.lskk.lumen.reasoner.goal.Goal;
 
 import java.util.UUID;
 

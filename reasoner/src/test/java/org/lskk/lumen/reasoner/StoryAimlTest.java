@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.kie.api.runtime.KieSession;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
-import org.lskk.lumen.reasoner.goal.TellStory;
+import org.lskk.lumen.reasoner.story.TellStory;
 import org.lskk.lumen.reasoner.nlp.NaturalLanguage;
 import org.lskk.lumen.reasoner.nlp.PreferredMapper;
 import org.lskk.lumen.reasoner.nlp.PronounMapper;
