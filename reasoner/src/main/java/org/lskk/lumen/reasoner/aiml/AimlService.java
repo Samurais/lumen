@@ -253,12 +253,12 @@ public class AimlService {
                 }
 
                 for (final GoalElement.GoalProperty propDef : goalEl.getProperties()) {
-                    final Object value = TemplateRuntime.eval(propDef.getValue(), goalVars);
+                    final Object value = TemplateRuntime.eval(propDef.getValueExpression(), goalVars);
                     try {
                         PropertyUtils.setProperty(goalObj, propDef.getName(), value);
                     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                         throw new ReasonerException(e, "Cannot set %s.%s <- %s (from: %s)",
-                                goalObj.getClass().getSimpleName(), propDef.getName(), value, propDef.getValue());
+                                goalObj.getClass().getSimpleName(), propDef.getName(), value, propDef.getValueExpression());
                     }
                 }
 

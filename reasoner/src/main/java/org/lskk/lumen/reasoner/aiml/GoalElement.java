@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ceefour on 07/11/2015.
@@ -27,10 +28,17 @@ public class GoalElement implements Serializable {
         return properties;
     }
 
+    /**
+     * Set a JavaBean property inside a {@link org.lskk.lumen.reasoner.goal.Goal} object.
+     */
     public static class GoalProperty {
         private String name;
-        private String value;
+        private String valueExpression;
 
+        /**
+         * JavaBean property name.
+         * @return
+         */
         @XmlAttribute
         public String getName() {
             return name;
@@ -40,13 +48,23 @@ public class GoalElement implements Serializable {
             this.name = name;
         }
 
-        @XmlAttribute
-        public String getValue() {
-            return value;
+        /**
+         * JavaBean property MVEL expression, which will be evaluated using
+         * {@link org.mvel2.templates.TemplateRuntime#eval(String, Map)}.
+         *
+         * <p>Available variables:</p>
+         * <ol>
+         *     <li>{@code groups}: Captured groups from AIML pattern</li>
+         * </ol>
+         * @return
+         */
+        @XmlAttribute(name = "value")
+        public String getValueExpression() {
+            return valueExpression;
         }
 
-        public void setValue(String value) {
-            this.value = value;
+        public void setValueExpression(String valueExpression) {
+            this.valueExpression = valueExpression;
         }
     }
 }
