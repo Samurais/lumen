@@ -71,9 +71,8 @@ public class DroolsConfig {
         kieSession = kieBase().newKieSession(config, null);
         kieSession.setGlobal("log", log);
         kieSession.setGlobal("storyRepo", storyRepo);
-//        kieSession.addEventListener(new WorkingMemoryConsoleLogger(kieSession));
-        kieSession.addEventListener(new DebugAgendaEventListener());
-        kieSession.addEventListener(new DebugRuleRuntimeEventListener());
+//        kieSession.addEventListener(new DebugAgendaEventListener());
+//        kieSession.addEventListener(new DebugRuleRuntimeEventListener());
         executor().submit(() -> {
             log.info("Starting {}", kieSession);
             kieSession.fireUntilHalt();
@@ -99,7 +98,6 @@ public class DroolsConfig {
     public KieBase kieBase() {
         final KieBaseConfiguration kieBaseConfig = kieServices().newKieBaseConfiguration();
         kieBaseConfig.setOption(EventProcessingOption.STREAM);
-//        kieBaseConfig.setOption(RuleEngineOption.RETEOO); // not-working workaround for https://groups.google.com/forum/#!topic/drools-usage/NXZY1YjsTqA
         final KieBase kieBase = kieContainer().newKieBase(kieBaseConfig);
         return kieBase;
     }
