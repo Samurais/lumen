@@ -8,7 +8,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.codec.binary.*;
 import org.apache.commons.lang3.StringUtils;
+import org.lskk.lumen.core.AudioObject;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.ReasonerException;
@@ -31,6 +33,7 @@ import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -82,8 +85,8 @@ public class AimlService {
 
         // regex match
         final List<String> patternSplit = Splitter.on(' ').trimResults().omitEmptyStrings().splitToList(pattern);
-        final float truthValueMultiplier = 1f + (pattern.contains("_") ? -0.1f : -0.0f) + (pattern.contains("*") ? -0.2f : -0.0f)
-                - (float)Math.exp(-pattern.length());
+        final float truthValueMultiplier = 1f + (pattern.contains("_") ? -0.02f : -0.0f) + (pattern.contains("*") ? -0.03f : -0.0f)
+                - (2f * (float)Math.exp(-pattern.length()));
         final String regex = patternSplit.stream().map(it -> {
             if ("*".equals(it)) {
                 return "(.+?)";
@@ -178,6 +181,8 @@ public class AimlService {
     public AgentResponse process(@Deprecated Locale upLocale, String origInput, @Nullable Channel channel) {
         final CommunicateAction stimulus = new CommunicateAction(upLocale, origInput, null);
 
+        final int MAX_SRAI_DEPTH = 32;
+        int sraiDepth = 0;
         MatchingCategory bestMatch = null;
         String currentInput = origInput;
         String bestReply = null;
@@ -208,8 +213,14 @@ public class AimlService {
                 break;
             } else {
                 if (bestMatch.category.getTemplate().getSrai() != null) {
-                    // here we go again
-                    currentInput = bestMatch.category.getTemplate().getSrai();
+                    if (sraiDepth < MAX_SRAI_DEPTH) {
+                        // here we go again
+                        currentInput = bestMatch.category.getTemplate().getSrai();
+                        sraiDepth++;
+                    } else {
+                        throw new ReasonerException(String.format("Maximum SRAI depth (%s) exceeded for '%s'. Latest match: %s",
+                                MAX_SRAI_DEPTH, origInput, bestMatch));
+                    }
                 } else if (bestMatch.category.getTemplate().getRandoms() != null && !bestMatch.category.getTemplate().getRandoms().isEmpty()) {
                     // pick one first
                     final Choice choice = bestMatch.category.getTemplate().getRandoms().get(
@@ -232,7 +243,8 @@ public class AimlService {
             }
 
         }
-        if (bestMatch != null) {
+        final double BEST_MATCH_TRUTH_VALUE_THRESHOLD = 0.6;
+        if (bestMatch != null && bestMatch.truthValue[1] >= BEST_MATCH_TRUTH_VALUE_THRESHOLD) {
             log.info("Best for {} -{}-> {}", stimulus, bestMatch.inLanguage.toLanguageTag(), bestReply);
             if (channel != null) {
                 channel.setInLanguage(bestMatch.inLanguage);
@@ -245,6 +257,14 @@ public class AimlService {
                     throw new ReasonerException(e, "Cannot clone %s", bestMatch.category.getTemplate().getImage());
                 }
             }
+            if (bestMatch.category.getTemplate().getAudio() != null) {
+                try {
+                    communicateAction.setAudio((AudioObject) BeanUtils.cloneBean(bestMatch.category.getTemplate().getAudio()));
+                } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+                    throw new ReasonerException(e, "Cannot clone %s", bestMatch.category.getTemplate().getAudio());
+                }
+            }
+
             final AgentResponse agentResponse = new AgentResponse(stimulus, communicateAction);
             final HashMap<String, Object> goalVars = new HashMap<>();
             goalVars.put("groups", bestMatch.groups);

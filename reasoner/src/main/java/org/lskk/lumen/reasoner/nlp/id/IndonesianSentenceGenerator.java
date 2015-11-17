@@ -58,6 +58,9 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
             final SpoNoun spo = (SpoNoun) expression;
             msg = toText(locale, spo.getSubject(), PronounCase.SUBJECT) + " ";
             final Pronoun pronoun = Optional.ofNullable(spo.getSubject().getPronoun()).orElse(Pronoun.IT);
+            if (Polarity.NEGATIVE == spo.getPolarity()) {
+                msg += "tidak ";
+            }
             msg += toText(locale, spo.getPredicate(), pronoun.getPerson(), pronoun.getNumber()) + " ";
             msg += toText(locale, spo.getObject(), PronounCase.OBJECT);
             if (spo.getTime() != null) {
@@ -67,12 +70,18 @@ public class IndonesianSentenceGenerator extends SentenceGenerator {
             final SpoAdj spo = (SpoAdj) expression;
             msg = toText(locale, spo.getSubject(), PronounCase.SUBJECT) + " ";
             final Pronoun pronoun = Optional.ofNullable(spo.getSubject().getPronoun()).orElse(Pronoun.IT);
+            if (Polarity.NEGATIVE == spo.getPolarity()) {
+                msg += "tidak ";
+            }
             msg += toText(locale, spo.getPredicate(), pronoun.getPerson(), pronoun.getNumber()) + " ";
             msg += toText(locale, spo.getObject());
         } else if (expression instanceof SpInfinite) {
             final SpInfinite spi = (SpInfinite) expression;
             msg = toText(locale, spi.getSubject(), PronounCase.SUBJECT) + " ";
             final Pronoun pronoun = Optional.ofNullable(spi.getSubject().getPronoun()).orElse(Pronoun.IT);
+            if (Polarity.NEGATIVE == spi.getPolarity()) {
+                msg += "tidak ";
+            }
             msg += toText(locale, spi.getPredicate(), pronoun.getPerson(), pronoun.getNumber());
             if (spi.getToPlace() != null) {
                 msg += " ke ";

@@ -9,7 +9,7 @@ import java.io.Serializable;
 public class Say implements Serializable {
     private SpeechFunction speechFunction = SpeechFunction.STATEMENT;
     private Tense tense = Tense.SIMPLE_PRESENT;
-    private Polarity polarity = Polarity.POSITIVE;
+    private Polarity polarity = Polarity.AFFIRMATIVE;
     private Modality modality = Modality.NONE;
     private Speaker speaker;
     private Speaker hearer;

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML">
+    <category>
+        <pattern>aslkm</pattern>
+        <pattern>askm</pattern>
+        <pattern>askum</pattern>
+        <pattern>asslkm</pattern>
+        <pattern>asskm</pattern>
+        <pattern>asskum</pattern>
+        <pattern>ass wr wb</pattern>
+        <pattern>asswrwb</pattern>
+        <pattern>asalamualaikum</pattern>
+        <pattern>asalaamualaikum</pattern>
+        <pattern>assalamualaikum</pattern>
+        <pattern>assalaamualaikum</pattern>
+        <pattern>asalamu alaikum</pattern>
+        <pattern>asalaamu alaikum</pattern>
+        <pattern>assalamu alaikum</pattern>
+        <pattern>assalaamu alaikum</pattern>
+        <template>
+            Wa'alaikumussalaam wa rahmatullahi wa barokatuh.
+            <audio url="file:audio/islam/waalaikumussalam_warahmatullahi_wabarakatuh.ogg" />
+        </template>
+    </category>
+    <category>
+        <pattern>kaifalhaal</pattern>
+        <pattern>kaifal haal</pattern>
+        <pattern>kaif alhaal</pattern>
+        <pattern>kaif al haal</pattern>
+        <pattern>kaifalhal</pattern>
+        <pattern>kaifal hal</pattern>
+        <pattern>kaif alhal</pattern>
+        <pattern>kaif al hal</pattern>
+        <pattern>kayfalhaal</pattern>
+        <pattern>kayfal haal</pattern>
+        <pattern>kayf alhaal</pattern>
+        <pattern>kayf al haal</pattern>
+        <pattern>kayfalhal</pattern>
+        <pattern>kayfal hal</pattern>
+        <pattern>kayf alhal</pattern>
+        <pattern>kayf al hal</pattern>
+        <pattern>kaifhalak</pattern>
+        <pattern>kaif halak</pattern>
+        <pattern>kayfhalak</pattern>
+        <pattern>kayf halak</pattern>
+        <pattern>kaifhaluka</pattern>
+        <pattern>kaif haluka</pattern>
+        <pattern>kayfhaluka</pattern>
+        <pattern>kayf haluka</pattern>
+        <template>
+            Alhamdulillah, I am fine.
+            <audio url="file:audio/islam/alhamdulillah.ogg" />
+        </template>
+    </category>
+</aiml>

@@ -71,6 +71,13 @@ public class SentenceGenerator {
             final SpoNoun spo = (SpoNoun) expression;
             msg = toText(locale, spo.getSubject(), PronounCase.SUBJECT) + " ";
             final Pronoun pronoun = Optional.ofNullable(spo.getSubject().getPronoun()).orElse(Pronoun.IT);
+            if (Polarity.NEGATIVE == spo.getPolarity()) {
+                if (pronoun.getNumber() == PronounNumber.SINGULAR && pronoun.getPerson() == PronounPerson.THIRD) {
+                    msg += "doesn't ";
+                } else {
+                    msg += "don't ";
+                }
+            }
             msg += toText(locale, spo.getPredicate(), pronoun.getPerson(), pronoun.getNumber()) + " ";
             msg += toText(locale, spo.getObject(), PronounCase.OBJECT);
             if (spo.getTime() != null) {
@@ -80,12 +87,26 @@ public class SentenceGenerator {
             final SpoAdj spo = (SpoAdj) expression;
             msg = toText(locale, spo.getSubject(), PronounCase.SUBJECT) + " ";
             final Pronoun pronoun = Optional.ofNullable(spo.getSubject().getPronoun()).orElse(Pronoun.IT);
+            if (Polarity.NEGATIVE == spo.getPolarity()) {
+                if (pronoun.getNumber() == PronounNumber.SINGULAR && pronoun.getPerson() == PronounPerson.THIRD) {
+                    msg += "doesn't ";
+                } else {
+                    msg += "don't ";
+                }
+            }
             msg += toText(locale, spo.getPredicate(), pronoun.getPerson(), pronoun.getNumber()) + " ";
             msg += toText(locale, spo.getObject());
         } else if (expression instanceof SpInfinite) {
             final SpInfinite spi = (SpInfinite) expression;
             msg = toText(locale, spi.getSubject(), PronounCase.SUBJECT) + " ";
             final Pronoun pronoun = Optional.ofNullable(spi.getSubject().getPronoun()).orElse(Pronoun.IT);
+            if (Polarity.NEGATIVE == spi.getPolarity()) {
+                if (pronoun.getNumber() == PronounNumber.SINGULAR && pronoun.getPerson() == PronounPerson.THIRD) {
+                    msg += "doesn't ";
+                } else {
+                    msg += "don't ";
+                }
+            }
             msg += toText(locale, spi.getPredicate(), pronoun.getPerson(), pronoun.getNumber());
             if (spi.getToPlace() != null) {
                 msg += " to ";

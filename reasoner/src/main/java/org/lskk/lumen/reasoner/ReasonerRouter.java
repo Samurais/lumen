@@ -8,6 +8,7 @@ import org.lskk.lumen.core.util.AsError;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.event.GreetingReceived;
+import org.lskk.lumen.reasoner.expression.Proposition;
 import org.lskk.lumen.reasoner.ux.ChatChannel;
 import org.lskk.lumen.reasoner.ux.LogChannel;
 import org.slf4j.Logger;
@@ -66,6 +67,9 @@ public class ReasonerRouter extends RouteBuilder {
                             chatChannel);
                     if (agentResponse.getCommunicateAction() != null) {
                         chatChannel.express(agentResponse.getCommunicateAction());
+                    }
+                    if (agentResponse.getUnrecognizedInput() != null) {
+                        chatChannel.express(Proposition.I_DONT_UNDERSTAND);
                     }
                     droolsService.process(agentResponse);
                 });

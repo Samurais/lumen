@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.aiml;
 
+import org.lskk.lumen.core.AudioObject;
 import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.goal.Goal;
 
@@ -18,6 +19,7 @@ public class Template implements Serializable {
     private List<Serializable> contents = new ArrayList<>();
     private List<Choice> randoms = new ArrayList<>();
     private ImageObject image;
+    private AudioObject audio;
     private List<GoalElement> goals = new ArrayList<>();
 
     /**
@@ -74,6 +76,15 @@ public class Template implements Serializable {
 
     public void setImage(ImageObject image) {
         this.image = image;
+    }
+
+    @XmlElement(name="audio")
+    public AudioObject getAudio() {
+        return audio;
+    }
+
+    public void setAudio(AudioObject audio) {
+        this.audio = audio;
     }
 
     @XmlElement(name = "goal")

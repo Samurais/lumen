@@ -22,9 +22,9 @@ public enum Pronoun {
     ANYTHING("lumen:pronoun_anything", PronounPerson.THIRD, PronounNumber.SINGULAR),
     EVERYTHING("lumen:pronoun_everything", PronounPerson.THIRD, PronounNumber.SINGULAR);
 
-    private String href;
-    private PronounPerson person;
-    private PronounNumber number;
+    private final String href;
+    private final PronounPerson person;
+    private final PronounNumber number;
 
     Pronoun(String href, PronounPerson person, PronounNumber number) {
         this.href = href;
@@ -43,4 +43,5 @@ public enum Pronoun {
     public PronounNumber getNumber() {
         return number;
     }
+
 }
