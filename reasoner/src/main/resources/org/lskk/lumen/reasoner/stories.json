@@ -23,6 +23,10 @@
         "image": {
           "@type": "ImageObject",
           "url": "file:image/story/soon_see/zoo.jpg"
+        },
+        "audio": {
+          "@type": "AudioObject",
+          "url": "file:audio/animal/Jungle_Birds_And_Monkeys-SoundBible.com-354971311.ogg"
         }
       },
       {
@@ -46,6 +50,10 @@
         "image": {
           "@type": "ImageObject",
           "url": "file:image/story/soon_see/lion.jpg"
+        },
+        "audio": {
+          "@type": "AudioObject",
+          "url": "file:audio/animal/Lion_Roar-SoundBible.com-718441804.ogg"
         }
       },
       {
@@ -69,6 +77,10 @@
         "image": {
           "@type": "ImageObject",
           "url": "file:image/story/soon_see/giraffe.jpg"
+        },
+        "audio": {
+          "@type": "AudioObject",
+          "url": "file:audio/animal/giraffe.ogg"
         }
       },
       {
@@ -92,6 +104,10 @@
         "image": {
           "@type": "ImageObject",
           "url": "file:image/story/soon_see/alligator.jpg"
+        },
+        "audio": {
+          "@type": "AudioObject",
+          "url": "file:audio/animal/Alligator_Crocodile_Growl-SoundBible.com-723655949.ogg"
         }
       },
       {
@@ -115,6 +131,10 @@
         "image": {
           "@type": "ImageObject",
           "url": "file:image/story/soon_see/elephant.jpg"
+        },
+        "audio": {
+          "@type": "AudioObject",
+          "url": "file:audio/animal/elephant.ogg"
         }
       }
     ]
