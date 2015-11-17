@@ -34,4 +34,13 @@ public class Story implements Serializable {
     public List<Proposition> getPropositions() {
         return propositions;
     }
+
+    @Override
+    public String toString() {
+        return "Story{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", propositions=" + propositions.size() +
+                '}';
+    }
 }

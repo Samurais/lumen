@@ -6,9 +6,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.event.UnrecognizedInput;
@@ -237,7 +239,11 @@ public class AimlService {
             }
             final CommunicateAction communicateAction = new CommunicateAction(upLocale, bestReply, null);
             if (bestMatch.category.getTemplate().getImage() != null) {
-                communicateAction.setImage(bestMatch.category.getTemplate().getImage());
+                try {
+                    communicateAction.setImage((ImageObject) BeanUtils.cloneBean(bestMatch.category.getTemplate().getImage()));
+                } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+                    throw new ReasonerException(e, "Cannot clone %s", bestMatch.category.getTemplate().getImage());
+                }
             }
             final AgentResponse agentResponse = new AgentResponse(stimulus, communicateAction);
             final HashMap<String, Object> goalVars = new HashMap<>();

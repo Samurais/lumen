@@ -14,6 +14,7 @@ import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.api.runtime.conf.ClockTypeOption;
+import org.kie.internal.builder.conf.RuleEngineOption;
 import org.lskk.lumen.reasoner.story.StoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +99,7 @@ public class DroolsConfig {
     public KieBase kieBase() {
         final KieBaseConfiguration kieBaseConfig = kieServices().newKieBaseConfiguration();
         kieBaseConfig.setOption(EventProcessingOption.STREAM);
+//        kieBaseConfig.setOption(RuleEngineOption.RETEOO); // not-working workaround for https://groups.google.com/forum/#!topic/drools-usage/NXZY1YjsTqA
         final KieBase kieBase = kieContainer().newKieBase(kieBaseConfig);
         return kieBase;
     }

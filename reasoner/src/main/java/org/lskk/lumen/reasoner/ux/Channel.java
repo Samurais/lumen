@@ -1,6 +1,8 @@
 package org.lskk.lumen.reasoner.ux;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.expression.Proposition;
 import org.lskk.lumen.reasoner.nlp.NaturalLanguage;
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import twitter4j.TwitterException;
 
 import javax.inject.Inject;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
 /**
@@ -61,7 +64,11 @@ public abstract class Channel {
             default:
                 throw new ReasonerException("Unhandled locale: " + inLanguage.toLanguageTag());
         }
-        action.setImage(proposition.getImage());
+        try {
+            action.setImage((ImageObject) BeanUtils.cloneBean(proposition.getImage()));
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+            throw new ReasonerException(e, "Cannot clone %s", proposition.getImage());
+        }
         express(action);
     }
 

@@ -27,7 +27,7 @@ public class ImageObjectResolver {
 
     public void resolve(ImageObject imageObject) throws IOException {
         Preconditions.checkArgument(imageObject.getUrl() != null,
-                "CommunicateAction.ImageObject.url is required");
+                "CommunicateAction.ImageObject.url is required for %s", imageObject);
 //                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
 //                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
 

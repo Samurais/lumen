@@ -40,7 +40,7 @@ public class AgentResponse implements Serializable {
         return stimulus;
     }
 
-    public Object getCommunicateAction() {
+    public CommunicateAction getCommunicateAction() {
         return communicateAction;
     }
 

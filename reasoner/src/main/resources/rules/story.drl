@@ -18,9 +18,8 @@ declare PropositionTold
 end
 
 rule "get random story"
-salience -1
 when
-    $goal : TellStory($id : id)
+    $goal : TellStory(story == null, $id : id)
 then
     log.info("Setting story for goal {}", $goal);
     modify($goal) {
@@ -51,9 +50,9 @@ rule "tell next proposition until done"
 when
     $lastProposition : PropositionTold($tellStory : tellStory, $lastIndex : index,
         tellStory.done == false)
-    not( PropositionTold(this != $lastProposition, tellStory == $tellStory, this after[0s,1s] $lastProposition) )
+    not( PropositionTold(tellStory == $tellStory, index == $lastIndex + 1, this after[0s,5s] $lastProposition) )
 then
-    log.info("Telling proposition {} for {}", $lastIndex + 1, $tellStory);
+    log.debug("Telling proposition {} for {}", $lastIndex + 1, $tellStory);
     PropositionTold $propositionTold = new PropositionTold($tellStory, $lastIndex + 1);
     insert($propositionTold);
     boolean done = $propositionTold.index >= $tellStory.story.propositions.size - 1;
@@ -70,5 +69,6 @@ rule "communicate proposition"
 when
     $proposition : PropositionTold($tellStory : tellStory, $index : index)
 then
-    $tellStory.channel.express($tellStory.story.propositions[$index])
+    log.debug("Expressing proposition {} for {}", $index, $tellStory);
+    $tellStory.channel.express($tellStory.story.propositions[$index]);
 end
