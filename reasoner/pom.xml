@@ -216,6 +216,11 @@
 			<artifactId>postgresql</artifactId>
 			<version>9.4-1205-jdbc42</version>
 		</dependency>
+		<dependency>
+            <groupId>org.jadira.usertype</groupId>
+            <artifactId>usertype.extended</artifactId>
+            <version>4.0.0.GA</version>
+        </dependency>
 	</dependencies>
 
 	<build>
