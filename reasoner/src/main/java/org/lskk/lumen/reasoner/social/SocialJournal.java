@@ -25,6 +25,7 @@ public class SocialJournal implements Serializable {
     private String socialChannelId;
     @Column(columnDefinition = "text")
     private String receivedText;
+    @Embedded
     private SimpleTruthValue truthValue;
     @Column(columnDefinition = "text")
     private String responseText;
@@ -139,7 +140,7 @@ public class SocialJournal implements Serializable {
     }
 
     /**
-     * Processing time between NLP matching and immediate response.
+     * Processing time between NLP matching and immediate response, in seconds.
      * @return
      */
     public Float getProcessingTime() {

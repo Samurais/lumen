@@ -1,0 +1,102 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: ceefour
+      preConditions:
+        onFail: MARK_RAN
+        not:
+          tableExists:
+            schemaName: sanad
+            tableName: quranchapter
+      changes:
+        - sqlFile:
+            path: db/changelog/sanad.schema.sql
+  - changeSet:
+      id: 2
+      author: ceefour
+      preConditions:
+        onFail: MARK_RAN
+        not:
+          tableExists:
+            schemaName: lumen
+            tableName: socialjournal
+      changes:
+        - sql:
+            "CREATE SCHEMA lumen"
+  - changeSet:
+      id: 3
+      author: ceefour
+      changes:
+        - createTable:
+            schemaName: lumen
+            tableName: socialjournal
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: creationtime
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: agentid
+                  type: varchar(255)
+              - column:
+                  name: avatarid
+                  type: varchar(255)
+              - column:
+                  name: socialchannelid
+                  type: varchar(255)
+              - column:
+                  name: receivedtext
+                  type: text
+              - column:
+                  name: truthvalue_strength
+                  type: float(24)
+              - column:
+                  name: truthvalue_confidence
+                  type: float(24)
+              - column:
+                  name: truthvalue_count
+                  type: integer
+              - column:
+                  name: responsetext
+                  type: text
+              - column:
+                  name: responsekind
+                  type: varchar(255)
+              - column:
+                  name: responseinsertables
+                  type: text
+              - column:
+                  name: processingtime
+                  type: float(24)
+        - createIndex:
+            indexName: ik_socialjournal_creationtime
+            schemaName: lumen
+            tableName: socialjournal
+            columns:
+              - name: creationtime
+        - createIndex:
+            indexName: ik_socialjournal_agentid
+            schemaName: lumen
+            tableName: socialjournal
+            columns:
+              - name: agentid
+        - createIndex:
+            indexName: ik_socialjournal_avatarid
+            schemaName: lumen
+            tableName: socialjournal
+            columns:
+              - name: avatarid
+        - createIndex:
+            indexName: ik_socialjournal_socialchannelid
+            schemaName: lumen
+            tableName: socialjournal
+            columns:
+              - name: socialchannelid
