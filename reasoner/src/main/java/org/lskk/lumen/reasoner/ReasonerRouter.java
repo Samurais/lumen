@@ -83,7 +83,6 @@ public class ReasonerRouter extends RouteBuilder {
                     socialJournal.setTruthValue(new SimpleTruthValue(agentResponse.getMatchingTruthValue()));
 
                     if (agentResponse.getCommunicateAction() != null) {
-                        agentResponse.getCommunicateAction().setAvatarId(inCommunicate.getAvatarId());
                         chatChannel.express(inCommunicate.getAvatarId(), agentResponse.getCommunicateAction(), null);
                         socialJournal.setResponseKind(agentResponse.getCommunicateAction().getClass().getName());
                         socialJournal.setResponseLanguage(agentResponse.getCommunicateAction().getInLanguage());

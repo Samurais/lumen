@@ -6,12 +6,16 @@ import com.google.common.base.Throwables;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.core.SimpleTruthValue;
+import org.lskk.lumen.core.SocialChannel;
 import org.lskk.lumen.reasoner.DroolsService;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.nlp.NaturalLanguage;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
+import org.lskk.lumen.reasoner.social.SocialJournal;
+import org.lskk.lumen.reasoner.social.SocialJournalRepository;
 import org.lskk.lumen.reasoner.util.ImageObjectResolver;
 import org.lskk.lumen.reasoner.ux.LogChannel;
 import org.lskk.lumen.socmed.*;
@@ -31,7 +35,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 29/10/2015.
@@ -65,6 +71,8 @@ public class ReasonerTwitterConfig {
     private SentenceGenerator sentenceGenerator_id;
     @Inject
     private DroolsService droolsService;
+    @Inject
+    private SocialJournalRepository socialJournalRepo;
 
     @Bean
     public AgentRepository agentRepo() throws IOException {
@@ -101,10 +109,12 @@ public class ReasonerTwitterConfig {
 
     @Bean
     public DirectMessageHandler arkanDirectMessageHandler() throws IOException {
+        final String avatarId = "anime1";
         final DirectMessageHandler dmHandler = new DirectMessageHandler();
         dmHandler.setAuthorization(twitterAuthorization());
         final Twitter twitter = twitterFactory().getInstance(new AccessToken(twitterAuthorization().getAccessToken(), twitterAuthorization().getAccessTokenSecret()));
         dmHandler.setOnDirectMessage(dm -> {
+            final long startTime = System.currentTimeMillis();
             try {
                 final TwitterDirectMessageChannel twitterDmChannel = new TwitterDirectMessageChannel(
                         sentenceGenerator_en, sentenceGenerator_id,
@@ -113,7 +123,7 @@ public class ReasonerTwitterConfig {
                 droolsService.process(resp);
                 String replyDm;
                 if (resp.getCommunicateAction() instanceof CommunicateAction) {
-                    final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
+                    final CommunicateAction communicateAction = resp.getCommunicateAction();
                     // allow some characters for imgur URI
                     replyDm = StringUtils.abbreviate(communicateAction.getObject(), 10000 - 100);
 
@@ -140,13 +150,32 @@ public class ReasonerTwitterConfig {
                             dm.getSenderScreenName(), dm.getSenderId(), dm.getText());
                     replyDm = "Sorry, I don't understand :(";
                 }
+                final String ret;
                 if (!replyDm.isEmpty()) {
                     log.info("Replying DM to @{} {}: {}", dm.getSenderScreenName(), dm.getSenderId(), replyDm);
                     twitter.sendDirectMessage(dm.getSenderId(), replyDm);
-                    return replyDm;
+                    ret = replyDm;
                 } else {
-                    return null;
+                    ret = null;
                 }
+
+                final SocialJournal socialJournal = new SocialJournal();
+                socialJournal.setAvatarId(avatarId);
+                socialJournal.setAgentId("arkan");
+                socialJournal.setSocialChannelId(SocialChannel.TWITTER.getThingId());
+                socialJournal.setReceivedLanguage(resp.getStimuliLanguage());
+                socialJournal.setReceivedText(dm.getText());
+                socialJournal.setResponseInsertables(
+                        resp.getInsertables().stream()
+                                .map(it -> it.getClass().getName()).collect(Collectors.joining(", ")));
+                socialJournal.setTruthValue(new SimpleTruthValue(resp.getMatchingTruthValue()));
+                socialJournal.setResponseKind(resp.getCommunicateAction().getClass().getName());
+                socialJournal.setResponseLanguage(resp.getCommunicateAction().getInLanguage());
+                socialJournal.setResponseText(resp.getCommunicateAction().getObject());
+                socialJournal.setProcessingTime((System.currentTimeMillis() - startTime) / 1000f);
+                socialJournalRepo.save(socialJournal);
+
+                return ret;
             } catch (Exception e) {
                 log.error(String.format("Error DM @%s %s from: %s", dm.getSenderScreenName(), dm.getSenderId(), dm.getText()), e);
                 final String stackTraceAsString = Throwables.getStackTraceAsString(e);
@@ -161,6 +190,7 @@ public class ReasonerTwitterConfig {
             }
         });
         dmHandler.setOnMention(status -> {
+            final long startTime = System.currentTimeMillis();
             try {
                 try {
                     twitter.friendsFollowers().createFriendship(status.getUser().getId());
@@ -176,8 +206,9 @@ public class ReasonerTwitterConfig {
                         twitter, imageObjectResolver, imgurConfig, status.getUser().getScreenName(), status.getId());
                 final AgentResponse resp = aimlService.process(Locale.US, realMessage, twitterMentionChannel, null);
                 droolsService.process(resp);
-                final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
+                final CommunicateAction communicateAction = resp.getCommunicateAction();
                 final boolean replyHasImage = communicateAction.getImage() != null;
+                final String ret;
                 if (!communicateAction.getObject().isEmpty() || replyHasImage) {
                     final int maxReplyLength = 140 - (status.getUser().getScreenName().length() + 2)
                             - (replyHasImage ? 23 : 0);
@@ -194,10 +225,28 @@ public class ReasonerTwitterConfig {
                     }
                     replyStatus.setInReplyToStatusId(status.getId());
                     twitter.tweets().updateStatus(replyStatus);
-                    return replyTweet;
+                    ret = replyTweet;
                 } else {
-                    return null;
+                    ret = null;
                 }
+
+                final SocialJournal socialJournal = new SocialJournal();
+                socialJournal.setAvatarId(avatarId);
+                socialJournal.setAgentId("arkan");
+                socialJournal.setSocialChannelId(SocialChannel.TWITTER.getThingId());
+                socialJournal.setReceivedLanguage(resp.getStimuliLanguage());
+                socialJournal.setReceivedText(realMessage);
+                socialJournal.setResponseInsertables(
+                        resp.getInsertables().stream()
+                                .map(it -> it.getClass().getName()).collect(Collectors.joining(", ")));
+                socialJournal.setTruthValue(new SimpleTruthValue(resp.getMatchingTruthValue()));
+                socialJournal.setResponseKind(resp.getCommunicateAction().getClass().getName());
+                socialJournal.setResponseLanguage(resp.getCommunicateAction().getInLanguage());
+                socialJournal.setResponseText(resp.getCommunicateAction().getObject());
+                socialJournal.setProcessingTime((System.currentTimeMillis() - startTime) / 1000f);
+                socialJournalRepo.save(socialJournal);
+
+                return ret;
             } catch (Exception e) {
                 log.error("Error replying @" + status.getUser().getScreenName()+ "'s mention: " + status.getText(), e);
                 final String stackTraceAsString = Throwables.getStackTraceAsString(e);
