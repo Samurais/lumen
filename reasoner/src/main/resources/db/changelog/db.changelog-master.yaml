@@ -100,3 +100,17 @@ databaseChangeLog:
             tableName: socialjournal
             columns:
               - name: socialchannelid
+  - changeSet:
+      id: 4
+      author: ceefour
+      changes:
+        - addColumn:
+            schemaName: lumen
+            tableName: socialjournal
+            columns:
+              - column:
+                  name: receivedlanguage
+                  type: varchar(255)
+              - column:
+                  name: responselanguage
+                  type: varchar(255)

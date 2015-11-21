@@ -70,5 +70,5 @@ when
     $proposition : PropositionTold($tellStory : tellStory, $index : index)
 then
     log.debug("Expressing proposition {} for {}", $index, $tellStory);
-    $tellStory.channel.express($tellStory.story.propositions[$index]);
+    $tellStory.channel.express($tellStory.avatarId, $tellStory.story.propositions[$index], null);
 end

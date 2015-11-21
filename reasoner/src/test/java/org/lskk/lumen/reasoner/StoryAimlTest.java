@@ -102,7 +102,7 @@ public class StoryAimlTest {
     @Test
     public void storyAiml1() throws IOException {
         AgentResponse resp;
-        resp = aimlService.process(Locale.US, "tell me a good story", logChannel);
+        resp = aimlService.process(Locale.US, "tell me a good story", logChannel, null);
         assertThat(resp.getInsertables(), not(empty()));
         assertThat(resp.getInsertables(), contains(instanceOf(TellStory.class)));
 
@@ -133,7 +133,7 @@ public class StoryAimlTest {
     @Test
     public void storyAiml1CanRepeatAndNotConflict() throws IOException {
         AgentResponse resp;
-        resp = aimlService.process(Locale.US, "tell me a good story", logChannel);
+        resp = aimlService.process(Locale.US, "tell me a good story", logChannel, null);
         assertThat(resp.getInsertables(), not(empty()));
         assertThat(resp.getInsertables(), contains(instanceOf(TellStory.class)));
 

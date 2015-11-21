@@ -7,6 +7,8 @@ import org.lskk.lumen.reasoner.event.AgentResponse;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Created by ceefour on 19/11/2015.
@@ -23,10 +25,12 @@ public class SocialJournal implements Serializable {
     private String agentId;
     private String avatarId;
     private String socialChannelId;
+    private String receivedLanguage;
     @Column(columnDefinition = "text")
     private String receivedText;
     @Embedded
     private SimpleTruthValue truthValue;
+    private String responseLanguage;
     @Column(columnDefinition = "text")
     private String responseText;
     @Column
@@ -149,5 +153,28 @@ public class SocialJournal implements Serializable {
 
     public void setProcessingTime(Float processingTime) {
         this.processingTime = processingTime;
+    }
+
+    public Locale getReceivedLanguage() {
+        return Optional.ofNullable(receivedLanguage).map(Locale::forLanguageTag).orElse(null);
+    }
+
+    public void setReceivedLanguage(Locale receivedLanguage) {
+        this.receivedLanguage = Optional.ofNullable(receivedLanguage).map(Locale::toLanguageTag).orElse(null);
+    }
+
+    public Locale getResponseLanguage() {
+        return Optional.ofNullable(responseLanguage).map(Locale::forLanguageTag).orElse(null);
+    }
+
+    public void setResponseLanguage(Locale responseLanguage) {
+        this.responseLanguage = Optional.ofNullable(responseLanguage).map(Locale::toLanguageTag).orElse(null);
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (getCreationTime() == null) {
+            setCreationTime(new DateTime());
+        }
     }
 }

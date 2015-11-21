@@ -2,13 +2,10 @@ package org.lskk.lumen.reasoner.socmed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.imgur.ImgUr;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.lskk.lumen.core.CommunicateAction;
-import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.DroolsService;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.aiml.AimlService;
@@ -17,7 +14,6 @@ import org.lskk.lumen.reasoner.nlp.NaturalLanguage;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
 import org.lskk.lumen.reasoner.util.ImageObjectResolver;
 import org.lskk.lumen.reasoner.ux.LogChannel;
-import org.lskk.lumen.reasoner.visual.VisualCaptureRouter;
 import org.lskk.lumen.socmed.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +22,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.PropertyConfiguration;
@@ -115,7 +109,7 @@ public class ReasonerTwitterConfig {
                 final TwitterDirectMessageChannel twitterDmChannel = new TwitterDirectMessageChannel(
                         sentenceGenerator_en, sentenceGenerator_id,
                         twitter, imageObjectResolver, imgurConfig, dm.getSenderScreenName());
-                final AgentResponse resp = aimlService.process(Locale.US, dm.getText(), twitterDmChannel);
+                final AgentResponse resp = aimlService.process(Locale.US, dm.getText(), twitterDmChannel, null);
                 droolsService.process(resp);
                 String replyDm;
                 if (resp.getCommunicateAction() instanceof CommunicateAction) {
@@ -180,7 +174,7 @@ public class ReasonerTwitterConfig {
                 final TwitterMentionChannel twitterMentionChannel = new TwitterMentionChannel(
                         sentenceGenerator_en, sentenceGenerator_id,
                         twitter, imageObjectResolver, imgurConfig, status.getUser().getScreenName(), status.getId());
-                final AgentResponse resp = aimlService.process(Locale.US, realMessage, twitterMentionChannel);
+                final AgentResponse resp = aimlService.process(Locale.US, realMessage, twitterMentionChannel, null);
                 droolsService.process(resp);
                 final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
                 final boolean replyHasImage = communicateAction.getImage() != null;

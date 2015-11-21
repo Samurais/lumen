@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.codec.binary.*;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.core.AudioObject;
 import org.lskk.lumen.core.CommunicateAction;
@@ -33,7 +32,6 @@ import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -178,7 +176,7 @@ public class AimlService {
         return new MatchingCategory(null, locale, new float[]{1f, 0f, 0f});
     }
 
-    public AgentResponse process(@Deprecated Locale upLocale, String origInput, @Nullable Channel channel) {
+    public AgentResponse process(@Deprecated Locale upLocale, String origInput, @Nullable Channel channel, String avatarId) {
         final CommunicateAction stimulus = new CommunicateAction(upLocale, origInput, null);
 
         final int MAX_SRAI_DEPTH = 32;
@@ -249,7 +247,8 @@ public class AimlService {
             if (channel != null) {
                 channel.setInLanguage(bestMatch.inLanguage);
             }
-            final CommunicateAction communicateAction = new CommunicateAction(upLocale, bestReply, null);
+            final CommunicateAction communicateAction = new CommunicateAction(bestMatch.inLanguage, bestReply, null);
+            communicateAction.setAvatarId(avatarId);
             if (bestMatch.category.getTemplate().getImage() != null) {
                 try {
                     communicateAction.setImage((ImageObject) BeanUtils.cloneBean(bestMatch.category.getTemplate().getImage()));
@@ -266,6 +265,8 @@ public class AimlService {
             }
 
             final AgentResponse agentResponse = new AgentResponse(stimulus, communicateAction);
+            agentResponse.setStimuliLanguage(bestMatch.inLanguage);
+            agentResponse.setMatchingTruthValue(bestMatch.truthValue);
             final HashMap<String, Object> goalVars = new HashMap<>();
             goalVars.put("groups", bestMatch.groups);
             for (final GoalElement goalEl : bestMatch.category.getTemplate().getGoals()) {
@@ -274,6 +275,7 @@ public class AimlService {
                     final Class<Goal> goalClass = (Class<Goal>) AimlService.class.getClassLoader().loadClass(goalEl.getClazz());
                     goalObj = goalClass.newInstance();
                     goalObj.setChannel(channel);
+                    goalObj.setAvatarId(avatarId);
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
                     throw new ReasonerException(e, "Cannot create goal %s", goalEl);
                 }
@@ -293,7 +295,9 @@ public class AimlService {
             return agentResponse;
         } else {
             log.info("UNRECOGNIZED {}", stimulus);
-            return new AgentResponse(stimulus, new UnrecognizedInput());
+            final AgentResponse agentResponse = new AgentResponse(stimulus, new UnrecognizedInput());
+            agentResponse.setMatchingTruthValue(new float[] { 0f, 0f, 0f });
+            return agentResponse;
         }
     }
 

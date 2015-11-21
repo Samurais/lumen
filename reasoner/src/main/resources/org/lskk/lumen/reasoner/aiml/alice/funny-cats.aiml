@@ -5,7 +5,7 @@
     <template>
         Here's a funny cat! :)
         <image url="file:image/funny-animal/funny-cat01.jpg"/>
-        <audio url="file:audio/animal/Kitten_Meow-SoundBible.com-1295572573.ogg"/>
+        <audio mediaLayer="EFFECT" url="file:audio/animal/Kitten_Meow-SoundBible.com-1295572573.ogg"/>
     </template>
 </category>
 </aiml>

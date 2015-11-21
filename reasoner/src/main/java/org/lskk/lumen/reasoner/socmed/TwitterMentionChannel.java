@@ -40,7 +40,7 @@ public class TwitterMentionChannel extends Channel {
     }
 
     @Override
-    public void express(CommunicateAction communicateAction) {
+    public void express(String avatarId, CommunicateAction communicateAction, Object params) {
         try {
             final boolean replyHasImage = communicateAction.getImage() != null;
             if (!communicateAction.getObject().isEmpty() || replyHasImage) {

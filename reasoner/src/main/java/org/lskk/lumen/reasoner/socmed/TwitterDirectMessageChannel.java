@@ -36,7 +36,7 @@ public class TwitterDirectMessageChannel extends Channel {
     }
 
     @Override
-    public void express(CommunicateAction communicateAction) {
+    public void express(String avatarId, CommunicateAction communicateAction, Object params) {
         // allow some characters for imgur URI
         String replyDm = StringUtils.abbreviate(communicateAction.getObject(), 10000 - 100);
         try {

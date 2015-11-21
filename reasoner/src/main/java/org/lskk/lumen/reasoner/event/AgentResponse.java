@@ -1,43 +1,82 @@
 package org.lskk.lumen.reasoner.event;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.reasoner.ux.Channel;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by ceefour on 26/10/2015.
  */
 public class AgentResponse implements Serializable {
 
-    private List<Object> stimulus = new ArrayList<>();
+    private List<Object> stimuli = new ArrayList<>();
+    private Locale stimuliLanguage;
+    private float[] matchingTruthValue;
     private CommunicateAction communicateAction;
     private UnrecognizedInput unrecognizedInput;
     private List<Serializable> insertables = new ArrayList<>();
 
-    public AgentResponse(Object stimulus, CommunicateAction communicateAction) {
-        this.stimulus.add(stimulus);
+    public AgentResponse(Object stimuli, CommunicateAction communicateAction) {
+        this.stimuli.add(stimuli);
         this.communicateAction = communicateAction;
     }
 
-    public AgentResponse(List<Object> stimulus, CommunicateAction communicateAction) {
-        this.stimulus.addAll(stimulus);
+    public AgentResponse(List<Object> stimuli, CommunicateAction communicateAction) {
+        this.stimuli.addAll(stimuli);
         this.communicateAction = communicateAction;
     }
 
-    public AgentResponse(List<Object> stimulus, UnrecognizedInput unrecognizedInput) {
-        this.stimulus.addAll(stimulus);
+    public AgentResponse(List<Object> stimuli, UnrecognizedInput unrecognizedInput) {
+        this.stimuli.addAll(stimuli);
         this.unrecognizedInput = unrecognizedInput;
     }
 
-    public AgentResponse(Object stimulus, UnrecognizedInput unrecognizedInput) {
-        this.stimulus.add(stimulus);
+    public AgentResponse(Object stimuli, UnrecognizedInput unrecognizedInput) {
+        this.stimuli.add(stimuli);
         this.unrecognizedInput = unrecognizedInput;
     }
 
-    public List<Object> getStimulus() {
-        return stimulus;
+    public List<Object> getStimuli() {
+        return stimuli;
+    }
+
+    /**
+     * Language of {@link #getStimuli()} as determined by {@link org.lskk.lumen.reasoner.aiml.AimlService#process(Locale, String, Channel, String)}.
+     * @return
+     */
+    public Locale getStimuliLanguage() {
+        return stimuliLanguage;
+    }
+
+    @JsonGetter("stimuliLanguage")
+    public String getStimuliLanguageAsString() {
+        return stimuliLanguage != null ? stimuliLanguage.toLanguageTag() : null;
+    }
+
+    public void setStimuliLanguage(Locale stimuliLanguage) {
+        this.stimuliLanguage = stimuliLanguage;
+    }
+
+    @JsonSetter
+    public void setStimuliLanguage(String stimuliLanguage) {
+        this.stimuliLanguage = stimuliLanguage != null ? Locale.forLanguageTag(stimuliLanguage) : null;
+    }
+    /**
+     * Truth value of the matching category given received input.
+     * @return
+     */
+    public float[] getMatchingTruthValue() {
+        return matchingTruthValue;
+    }
+
+    public void setMatchingTruthValue(float[] matchingTruthValue) {
+        this.matchingTruthValue = matchingTruthValue;
     }
 
     public CommunicateAction getCommunicateAction() {
@@ -63,7 +102,7 @@ public class AgentResponse implements Serializable {
     @Override
     public String toString() {
         return "AgentResponse{" +
-                "stimulus=" + stimulus +
+                "stimuli=" + stimuli +
                 ", response=" + communicateAction +
                 ", insertables=" + insertables +
                 '}';

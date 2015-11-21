@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.ux;
 
 import org.apache.camel.ProducerTemplate;
+import org.lskk.lumen.core.AvatarChannel;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.ToJson;
@@ -11,13 +12,15 @@ import org.springframework.stereotype.Service;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Sends outgoing messages to {@code lumen.arkan.social.chat.outbox}.
  * Created by ceefour on 14/11/2015.
  */
 @Service
-public class ChatChannel extends Channel {
+public class ChatChannel extends Channel<Void> {
 
     @Inject
     private ToJson toJson;
@@ -29,7 +32,7 @@ public class ChatChannel extends Channel {
     private AudioObjectResolver audioObjectResolver;
 
     @Override
-    public void express(CommunicateAction communicateAction) {
+    public void express(String upAvatarId, CommunicateAction communicateAction, Void params) {
         try {
             final boolean replyHasImage = communicateAction.getImage() != null;
             final boolean replyHasAudio = communicateAction.getAudio() != null;
@@ -52,8 +55,11 @@ public class ChatChannel extends Channel {
                         communicateAction.getAudio().setContentSize((long) communicateAction.getAudio().getContent().length);
                     }
                 }
-                log.info("Expressing: {}", communicateAction);
-                producer.sendBody("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=lumen.arkan.social.chat.outbox",
+                final String realAvatarId = Stream.of(communicateAction.getAvatarId(), upAvatarId)
+                        .filter(Objects::nonNull).findFirst().orElse("nao1");
+                final String topic = AvatarChannel.CHAT_OUTBOX.key(realAvatarId);
+                log.info("Expressing via {}: {}", topic, communicateAction);
+                producer.sendBody("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + topic,
                         toJson.apply(communicateAction));
             }
         } catch (IOException e) {
