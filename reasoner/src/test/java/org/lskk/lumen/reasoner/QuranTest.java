@@ -61,4 +61,9 @@ public class QuranTest {
         log.info("verse: {}", quranVerse);
     }
 
+    //@Test
+    //public void readAlKahfiAyat46Literal() {
+      //  final QuranVerse quranliteral = literalRepo.findOne("quran_18_verse_46");
+        // log.info("verse:{}", quranVerse);
+    //}
 }
