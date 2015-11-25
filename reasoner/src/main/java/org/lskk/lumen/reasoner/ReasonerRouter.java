@@ -2,15 +2,15 @@ package org.lskk.lumen.reasoner;
 
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.lskk.lumen.core.CommunicateAction;
-import org.lskk.lumen.core.LumenThing;
+import org.apache.camel.component.rabbitmq.RabbitMQConstants;
+import org.lskk.lumen.core.*;
 import org.lskk.lumen.core.util.AsError;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
-import org.lskk.lumen.reasoner.event.GreetingReceived;
 import org.lskk.lumen.reasoner.expression.Proposition;
+import org.lskk.lumen.reasoner.social.SocialJournal;
+import org.lskk.lumen.reasoner.social.SocialJournalRepository;
 import org.lskk.lumen.reasoner.ux.ChatChannel;
-import org.lskk.lumen.reasoner.ux.LogChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 10/2/15.
@@ -39,6 +40,8 @@ public class ReasonerRouter extends RouteBuilder {
     private ChatChannel chatChannel;
     @Inject
     private DroolsService droolsService;
+    @Inject
+    private SocialJournalRepository socialJournalRepo;
 
     @Override
     public void configure() throws Exception {
@@ -56,23 +59,46 @@ public class ReasonerRouter extends RouteBuilder {
 //                    droolsService.process(agentResponse);
 //                });
 
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=lumen.arkan.social.chat.inbox")
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.CHAT_INBOX.wildcard())
                 .process(exchange -> {
-                    final CommunicateAction communicateAction = toJson.getMapper().readValue(
+                    final long startTime = System.currentTimeMillis();
+                    final CommunicateAction inCommunicate = toJson.getMapper().readValue(
                             exchange.getIn().getBody(byte[].class), CommunicateAction.class);
-                    log.info("Received inbox: {}", communicateAction);
+                    inCommunicate.setAvatarId(AvatarChannel.getAvatarId((String) exchange.getIn().getHeader(RabbitMQConstants.ROUTING_KEY)));
+                    log.info("Chat inbox for {}: {}", inCommunicate.getAvatarId(), inCommunicate);
 
-                    final Locale locale = Optional.ofNullable(communicateAction.getInLanguage()).orElse(Locale.US);
-                    final AgentResponse agentResponse = aimlService.process(locale, communicateAction.getObject(),
-                            chatChannel);
+                    final Locale origLocale = Optional.ofNullable(inCommunicate.getInLanguage()).orElse(Locale.US);
+                    final AgentResponse agentResponse = aimlService.process(origLocale, inCommunicate.getObject(),
+                            chatChannel, inCommunicate.getAvatarId());
+
+                    final SocialJournal socialJournal = new SocialJournal();
+                    socialJournal.setAvatarId(inCommunicate.getAvatarId());
+                    socialJournal.setAgentId("arkan");
+                    socialJournal.setSocialChannelId(SocialChannel.DIRECT.getThingId());
+                    socialJournal.setReceivedLanguage(Optional.ofNullable(agentResponse.getStimuliLanguage()).orElse(origLocale));
+                    socialJournal.setReceivedText(inCommunicate.getObject());
+                    socialJournal.setResponseInsertables(
+                            agentResponse.getInsertables().stream()
+                                    .map(it -> it.getClass().getName()).collect(Collectors.joining(", ")));
+                    socialJournal.setTruthValue(new SimpleTruthValue(agentResponse.getMatchingTruthValue()));
+
                     if (agentResponse.getCommunicateAction() != null) {
-                        chatChannel.express(agentResponse.getCommunicateAction());
-                    }
-                    if (agentResponse.getUnrecognizedInput() != null) {
-                        chatChannel.express(Proposition.I_DONT_UNDERSTAND);
+                        chatChannel.express(inCommunicate.getAvatarId(), agentResponse.getCommunicateAction(), null);
+                        socialJournal.setResponseKind(agentResponse.getCommunicateAction().getClass().getName());
+                        socialJournal.setResponseLanguage(agentResponse.getCommunicateAction().getInLanguage());
+                        socialJournal.setResponseText(agentResponse.getCommunicateAction().getObject());
+                    } else if (agentResponse.getUnrecognizedInput() != null) {
+                        chatChannel.express(inCommunicate.getAvatarId(), Proposition.I_DONT_UNDERSTAND, null);
+                        socialJournal.setResponseKind(agentResponse.getUnrecognizedInput().getClass().getName());
                     }
                     droolsService.process(agentResponse);
-                });
+                    socialJournal.setProcessingTime((System.currentTimeMillis() - startTime) / 1000f);
+
+                    socialJournalRepo.save(socialJournal);
+
+                    exchange.getIn().setBody(new Status());
+                })
+                .bean(toJson);
     }
 
 }

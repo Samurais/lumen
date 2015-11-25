@@ -18,7 +18,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
-import java.io.Serializable;
 import java.util.Locale;
 
 import static org.hamcrest.Matchers.*;
@@ -90,7 +89,7 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "hello, how are you??", null);
+        resp = aimlService.process(Locale.US, "hello, how are you??", null, null);
         assertThat(((CommunicateAction) resp.getCommunicateAction()).getObject(), equalTo("I am fine thank you how are you?"));
     }
 
@@ -100,7 +99,7 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "how are you", null);
+        resp = aimlService.process(Locale.US, "how are you", null, null);
         assertThat(((CommunicateAction) resp.getCommunicateAction()).getObject(), equalTo("I am fine thank you how are you?"));
     }
 
@@ -110,7 +109,7 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "cat", null);
+        resp = aimlService.process(Locale.US, "cat", null, null);
         final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
         assertThat(communicateAction.getObject(), containsString("funny cat"));
         assertThat(communicateAction.getImage(), notNullValue());
@@ -122,7 +121,7 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "read al-kahfi ayat 104", null);
+        resp = aimlService.process(Locale.US, "read al-kahfi ayat 104", null, null);
         log.info("Response: {}", resp);
         assertThat(resp.getInsertables(), hasSize(1));
         assertThat(resp.getInsertables().get(0), instanceOf(ReciteQuran.class));

@@ -59,6 +59,7 @@ public class SentenceGenerator {
     public CommunicateAction generate(Locale locale, Proposition expression) {
         Preconditions.checkNotNull(expression, "expression not null");
         final CommunicateAction action = new CommunicateAction();
+        action.setInLanguage(locale);
         String msg = null;
         if (expression instanceof Greeting) {
             Greeting greeting = (Greeting) expression;

@@ -1,11 +1,20 @@
 package org.lskk.lumen.socmed;
 
-import groovy.transform.CompileStatic;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import java.io.Serializable;
 
 /**
  * Created by ceefour on 1/17/15.
  */
-public class AgentSocialConfig {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, property="@type")
+@JsonSubTypes(@JsonSubTypes.Type(name="AgentSocialConfig", value=AgentSocialConfig.class))
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class AgentSocialConfig implements Serializable {
     public String getId() {
         return id;
     }
@@ -54,10 +63,12 @@ public class AgentSocialConfig {
         this.twitter = twitter;
     }
 
+    @Deprecated
     public TwitterSysConfig getTwitterSys() {
         return twitterSys;
     }
 
+    @Deprecated
     public void setTwitterSys(TwitterSysConfig twitterSys) {
         this.twitterSys = twitterSys;
     }

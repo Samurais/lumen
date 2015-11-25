@@ -10,9 +10,9 @@ import org.lskk.lumen.reasoner.nlp.NaturalLanguage;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import twitter4j.TwitterException;
 
 import javax.inject.Inject;
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
@@ -21,7 +21,7 @@ import java.util.Locale;
  * A channel has a default {@link Locale}.
  * Created by ceefour on 14/11/2015.
  */
-public abstract class Channel {
+public abstract class Channel<P> {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
     protected Locale inLanguage = Locale.US;
@@ -51,9 +51,19 @@ public abstract class Channel {
         this.inLanguage = inLanguage;
     }
 
-    public abstract void express(CommunicateAction communicateAction);
+    /**
+     * @param avatarId Avatar that expresses this {@link CommunicateAction}.
+     * @param communicateAction
+     * @param params
+     */
+    public abstract void express(String avatarId, CommunicateAction communicateAction, P params);
 
-    public void express(Proposition proposition) {
+    /**
+     * @param avatarId Avatar that expresses this {@link Proposition}.
+     * @param proposition
+     * @param params
+     */
+    public void express(String avatarId, Proposition proposition, P params) {
         final CommunicateAction action;
         switch (inLanguage.getLanguage()) {
             case "en":
@@ -75,7 +85,7 @@ public abstract class Channel {
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
             throw new ReasonerException(e, "Cannot clone %s", proposition.getImage());
         }
-        express(action);
+        express(avatarId, action, params);
     }
 
 }

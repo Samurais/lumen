@@ -22,7 +22,7 @@ import java.util.Optional;
 /**
  * Created by ceefour on 29/10/2015.
  */
-@Component
+//@Component
 public class TwitterMentionsRouter extends RouteBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(TwitterMentionsRouter.class);

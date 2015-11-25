@@ -49,7 +49,7 @@ public class FacebookHomeRouter extends RouteBuilder {
                 .filter(it -> Optional.ofNullable(it.getFacebookSys()).map(FacebookSysConfig::getFacebookAppSecret).isPresent())
                 .forEach(ag -> {
 
-                    final String facebookHomeUri = UriComponentsBuilder.fromUriString("facebook://home?consumer.delay=15000&oAuthAppId={apiKey}&oAuthAppSecret={apiSecret}&oAuthAccessToken={accessToken}&reading.since=%s&reading.limit=20")
+                    final String facebookHomeUri = UriComponentsBuilder.fromUriString("facebook://home?consumer.delay=15000&oAuthAppId={apiKey}&oAuthAppSecret={apiSecret}&oAuthAccessToken={accessToken}&reading.since={readingSince}&reading.limit=20")
                             .buildAndExpand(ag.getFacebookSys().getFacebookAppId(), ag.getFacebookSys().getFacebookAppSecret(), ag.getFacebookSys().getFacebookAccessToken(), sometimeAgo).toUriString();
                     final FacebookEndpoint facebookHome = getContext().getEndpoint(facebookHomeUri, FacebookEndpoint.class);
 /*
