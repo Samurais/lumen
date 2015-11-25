@@ -4,7 +4,9 @@ import org.lskk.lumen.core.StatusUpdate;
 
 /**
  * Created by NADIA on 27/02/2015.
+ * @deprecated Just a test, do not use!
  */
+@Deprecated
 public class EchoProcessor {
     
     public void processStatus(StatusUpdate statusUpdate, StatusReplier replier) {

@@ -3,6 +3,7 @@ package org.lskk.lumen.socmed;
 /**
  * Created by ceefour on 1/17/15.
  */
+@Deprecated
 public class FacebookSocialConfig {
     public String getFacebookProfileId() {
         return facebookProfileId;

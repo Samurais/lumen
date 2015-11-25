@@ -1,10 +1,9 @@
 package org.lskk.lumen.socmed;
 
-import groovy.transform.CompileStatic;
-
 /**
  * Created by ceefour on 1/17/15.
  */
+@Deprecated
 public class FacebookSysConfig {
     public String getFacebookAppId() {
         return facebookAppId;

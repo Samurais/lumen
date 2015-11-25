@@ -5,6 +5,7 @@ import org.slf4j.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.social.TwitterAutoConfiguration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
@@ -20,6 +21,7 @@ import java.util.function.Function;
  * Created by ceefour on 29/10/2015.
  */
 @Service
+@Profile("reasonerSocmedApp")
 public class DirectMessageHandler {
     private static final Logger log = LoggerFactory.getLogger(DirectMessageHandler.class);
     private TwitterAuthorization authorization;

@@ -3,6 +3,7 @@ package org.lskk.lumen.socmed;
 /**
  * Created by ceefour on 1/17/15.
  */
+@Deprecated
 public class TwitterSocialConfig {
     public Long getTwitterUserId() {
         return twitterUserId;

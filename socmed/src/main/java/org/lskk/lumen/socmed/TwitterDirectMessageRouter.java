@@ -21,7 +21,7 @@ import java.util.Optional;
 /**
  * Created by ceefour on 29/10/2015.
  */
-@Component
+//@Component
 public class TwitterDirectMessageRouter extends RouteBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(TwitterDirectMessageRouter.class);
