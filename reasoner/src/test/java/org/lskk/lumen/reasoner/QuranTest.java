@@ -6,6 +6,8 @@ import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
 import org.lskk.lumen.reasoner.quran.QuranChapter;
 import org.lskk.lumen.reasoner.quran.QuranChapterRepository;
+import org.lskk.lumen.reasoner.quran.QuranVerse;
+import org.lskk.lumen.reasoner.quran.QuranVerseRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -43,6 +45,8 @@ public class QuranTest {
 
     @Inject
     private QuranChapterRepository quranChapterRepo;
+    @Inject
+    private QuranVerseRepository quranVerseRepo;
 
     @Test
     public void readAlKahfi() {
@@ -50,4 +54,11 @@ public class QuranTest {
         final QuranChapter quranChapter = quranChapterRepo.findOne("quran_18");
         log.info("chapter: {}", quranChapter);
     }
+
+    @Test
+    public void readAlKahfiAyat46() {
+        final QuranVerse quranVerse = quranVerseRepo.findOne("quran_18_verse_46");
+        log.info("verse: {}", quranVerse);
+    }
+
 }

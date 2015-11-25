@@ -1,17 +1,17 @@
 package org.lskk.lumen.reasoner.quran;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.Table;
 import java.io.Serializable;
 
 /**
- * Created by aina on 18/11/2015.
+ * Created by aina on 25/11/2015.
  */
 @Entity
 @Table(schema = "sanad")
-public class QuranChapter implements Serializable {
+public class QuranVerse implements Serializable {
 
     @Id
     private String id;
@@ -20,10 +20,12 @@ public class QuranChapter implements Serializable {
     private String slug;
     private String author;
     private String inLanguage;
-    private Integer chapterNum;
-    private String nameWithTashkeel;
-    private String nameTransliteration_id;
-//getter dan setter >> code > generate
+    private Integer verseNum;
+    private String chapter_id;
+    private String text_id;
+    private String textWithoutTashkeel_id;
+    private String transliteration_id;
+
     public String getId() {
         return id;
     }
@@ -72,42 +74,60 @@ public class QuranChapter implements Serializable {
         this.inLanguage = inLanguage;
     }
 
-    public Integer getChapterNum() {
-        return chapterNum;
+    public Integer getVerseNum() {
+        return verseNum;
     }
 
-    public void setChapterNum(Integer chapterNum) {
-        this.chapterNum = chapterNum;
+    public void setVerseNum(Integer verseNum) {
+        this.verseNum = verseNum;
     }
 
-    public String getNameWithTashkeel() {
-        return nameWithTashkeel;
+    public String getChapter_id() {
+        return chapter_id;
     }
 
-    public void setNameWithTashkeel(String nameWithTashkeel) {
-        this.nameWithTashkeel = nameWithTashkeel;
+    public void setChapter_id(String chapter_id) {
+        this.chapter_id = chapter_id;
     }
 
-    public String getNameTransliteration_id() {
-        return nameTransliteration_id;
+    public String getText_id() {
+        return text_id;
     }
 
-    public void setNameTransliteration_id(String nameTransliteration_id) {
-        this.nameTransliteration_id = nameTransliteration_id;
+    public void setText_id(String text_id) {
+        this.text_id = text_id;
+    }
+
+    public String getTextWithoutTashkeel_id() {
+        return textWithoutTashkeel_id;
+    }
+
+    public void setTextWithoutTashkeel_id(String textWithoutTashkeel_id) {
+        this.textWithoutTashkeel_id = textWithoutTashkeel_id;
+    }
+
+    public String getTransliteration_id() {
+        return transliteration_id;
+    }
+
+    public void setTransliteration_id(String transliteration_id) {
+        this.transliteration_id = transliteration_id;
     }
 
     @Override
     public String toString() {
-        return "QuranChapter{" +
+        return "QuranVerse{" +
                 "id='" + id + '\'' +
                 ", canonicalSlug='" + canonicalSlug + '\'' +
                 ", name='" + name + '\'' +
                 ", slug='" + slug + '\'' +
                 ", author='" + author + '\'' +
                 ", inLanguage='" + inLanguage + '\'' +
-                ", chapterNum=" + chapterNum +
-                ", nameWithTashkeel='" + nameWithTashkeel + '\'' +
-                ", nameTransliteration_id='" + nameTransliteration_id + '\'' +
+                ", verseNum=" + verseNum +
+                ", chapter_id='" + chapter_id + '\'' +
+                ", text_id='" + text_id + '\'' +
+                ", textWithoutTashkeel_id='" + textWithoutTashkeel_id + '\'' +
+                ", transliteration_id='" + transliteration_id + '\'' +
                 '}';
     }
 }
