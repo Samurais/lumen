@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.joda.time.DateTime;
+import org.lskk.lumen.core.AvatarChannel;
 import org.lskk.lumen.core.SonarState;
 import org.lskk.lumen.core.util.AsError;
 import org.neo4j.graphdb.Node;
@@ -49,8 +50,10 @@ public class JournalSonarRouter extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class).bean(asError).bean(toJson).handled(true);
         errorHandler(new LoggingErrorHandlerBuilder(log));
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.nao1.data.sonar")
-                .sample(1, TimeUnit.SECONDS).to("log:IN.avatar.nao1.data.sonar?showHeaders=true&showAll=true&multiline=true")
+        final String avatarId = "nao1";
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + AvatarChannel.DATA_SONAR.key(avatarId) + "&routingKey=" + AvatarChannel.DATA_SONAR.key(avatarId))
+                .sample(1, TimeUnit.SECONDS)
+                .to("log:IN." + AvatarChannel.DATA_SONAR.key(avatarId) + "?showHeaders=true&showAll=true&multiline=true")
                 .process(it -> {
                     final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
                     final SonarState sonarState = toJson.getMapper().convertValue(inBodyJson, SonarState.class);
@@ -68,7 +71,7 @@ public class JournalSonarRouter extends RouteBuilder {
 //                    it.out.headers['rabbitmq.EXCHANGE_NAME'] = ''
                 })
                 .bean(toJson)
-                .to("log:OUT.avatar.nao1.data.sonar?showAll=true&multiline=true");
+                .to("log:OUT." + AvatarChannel.DATA_SONAR.key(avatarId) + "?showAll=true&multiline=true");
     }
 
 }

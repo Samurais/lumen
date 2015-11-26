@@ -59,7 +59,7 @@ public class ChatChannel extends Channel<Void> {
                         .filter(Objects::nonNull).findFirst().orElse("nao1");
                 final String topic = AvatarChannel.CHAT_OUTBOX.key(realAvatarId);
                 log.info("Expressing via {}: {}", topic, communicateAction);
-                producer.sendBody("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + topic,
+                producer.sendBody("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&skipQueueDeclare=true&autoDelete=false&routingKey=" + topic,
                         toJson.apply(communicateAction));
             }
         } catch (IOException e) {

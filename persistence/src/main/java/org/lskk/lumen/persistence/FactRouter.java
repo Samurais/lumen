@@ -44,8 +44,9 @@ public class FactRouter extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class).bean(asError).bean(toJson).handled(true);
         errorHandler(new LoggingErrorHandlerBuilder(log));
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.PERSISTENCE_FACT.key("arkan"))
-                .to("log:IN.persistence-fact?showHeaders=true&showAll=true&multiline=true")
+        final String agentId = "arkan";
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + AvatarChannel.PERSISTENCE_FACT.key(agentId) + "&routingKey=" + AvatarChannel.PERSISTENCE_FACT.key(agentId))
+                .to("log:IN." + AvatarChannel.PERSISTENCE_FACT.key(agentId) + "?showHeaders=true&showAll=true&multiline=true")
                 .process(it -> {
                     final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
                     final String switchArg = inBodyJson.path("@type").asText();

@@ -4,6 +4,7 @@ import com.github.ooxi.jdatauri.DataUri;
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.kie.api.runtime.KieSession;
+import org.lskk.lumen.core.AvatarChannel;
 import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.core.LumenThing;
 import org.lskk.lumen.core.util.AsError;
@@ -37,7 +38,8 @@ public class VisualCaptureRouter extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class).bean(asError).bean(toJson).handled(true);
         errorHandler(new LoggingErrorHandlerBuilder(log));
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.nao1.camera.main")
+        final String avatarId = "nao1";
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + AvatarChannel.CAMERA_MAIN.key(avatarId) + "&routingKey=" + AvatarChannel.CAMERA_MAIN.key(avatarId))
                 .process(exchange -> {
                     final ImageObject imageObject = toJson.getMapper().readValue(
                             exchange.getIn().getBody(byte[].class), ImageObject.class);

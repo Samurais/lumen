@@ -10,6 +10,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.lskk.lumen.core.AvatarChannel;
 import org.lskk.lumen.core.ImageObjectLegacy;
 import org.lskk.lumen.core.Status;
 import org.lskk.lumen.core.util.AsError;
@@ -73,7 +74,9 @@ public class ImageRouter extends RouteBuilder {
         onException(Exception.class).bean(asError).bean(toJson).handled(true);
         errorHandler(new LoggingErrorHandlerBuilder(log));
         final String avatarId = "nao1";
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar." + avatarId + ".data.image").sample(1, TimeUnit.SECONDS).to("log:IN.avatar." + avatarId + ".data.image?showHeaders=true&showAll=true&multiline=true")
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + AvatarChannel.CAMERA_MAIN.key(avatarId) + "&routingKey=" + AvatarChannel.CAMERA_MAIN.key(avatarId))
+                .sample(1, TimeUnit.SECONDS)
+                .to("log:IN." + AvatarChannel.CAMERA_MAIN.key(avatarId) + "?showHeaders=true&showAll=true&multiline=true")
                 .process(it -> {
                     final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
                     final ImageObjectLegacy imageObject = toJson.getMapper().convertValue(inBodyJson, ImageObjectLegacy.class);
@@ -108,7 +111,7 @@ public class ImageRouter extends RouteBuilder {
                     it.getIn().setBody(new Status());
                 })
                 .bean(toJson)
-                .to("log:OUT.avatar." + avatarId + ".data.image?showAll=true&multiline=true");
+                .to("log:OUT." + AvatarChannel.CAMERA_MAIN.key(avatarId) + "?showAll=true&multiline=true");
     }
 
 }

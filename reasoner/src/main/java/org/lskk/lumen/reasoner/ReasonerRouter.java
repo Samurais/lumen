@@ -59,7 +59,8 @@ public class ReasonerRouter extends RouteBuilder {
 //                    droolsService.process(agentResponse);
 //                });
 
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.CHAT_INBOX.wildcard())
+        final String agentId = "arkan";
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + AvatarChannel.CHAT_INBOX.wildcard() + "&routingKey=" + AvatarChannel.CHAT_INBOX.wildcard())
                 .process(exchange -> {
                     final long startTime = System.currentTimeMillis();
                     final CommunicateAction inCommunicate = toJson.getMapper().readValue(
@@ -73,7 +74,7 @@ public class ReasonerRouter extends RouteBuilder {
 
                     final SocialJournal socialJournal = new SocialJournal();
                     socialJournal.setAvatarId(inCommunicate.getAvatarId());
-                    socialJournal.setAgentId("arkan");
+                    socialJournal.setAgentId(agentId);
                     socialJournal.setSocialChannelId(SocialChannel.DIRECT.getThingId());
                     socialJournal.setReceivedLanguage(Optional.ofNullable(agentResponse.getStimuliLanguage()).orElse(origLocale));
                     socialJournal.setReceivedText(inCommunicate.getObject());

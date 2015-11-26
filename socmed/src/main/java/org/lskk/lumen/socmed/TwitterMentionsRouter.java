@@ -68,7 +68,7 @@ public class TwitterMentionsRouter extends RouteBuilder {
                                 mention.getChannel().setName("Twitter");
                                 it.getIn().setBody(mention);
                             }).bean(toJson)
-                            .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()))
+                            .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&skipQueueDeclare=true&routingKey=" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()))
                             .to("log:" + AvatarChannel.SOCIAL_PERCEPTION.key(ag.getId()));
                 });
     }

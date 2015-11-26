@@ -41,7 +41,7 @@ public class FacebookTimelineRouter extends RouteBuilder {
                             .buildAndExpand(ag.getFacebookSys().getFacebookAppId(), ag.getFacebookSys().getFacebookAppSecret(), ag.getFacebookSys().getFacebookAccessToken()).toString();
                     final String twitterTimelineUser = UriComponentsBuilder.fromUriString("twitter://timeline/user?consumerKey={twitterApiKey}&consumerSecret={twitterApiSecret}&accessToken={twitterToken}&accessTokenSecret={twitterTokenSecret}")
                             .buildAndExpand(ag.getTwitterSys().getTwitterApiKey(), ag.getTwitterSys().getTwitterApiSecret(), ag.getTwitterSys().getTwitterToken(), ag.getTwitterSys().getTwitterTokenSecret()).toString();
-                    from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=" + LumenChannel.FACEBOOK_TIMELINE_OUT.key(ag.getId()))
+                    from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + LumenChannel.FACEBOOK_TIMELINE_OUT.key(ag.getId()) + "&routingKey=" + LumenChannel.FACEBOOK_TIMELINE_OUT.key(ag.getId()))
                             .to("log:" + LumenChannel.FACEBOOK_TIMELINE_OUT.key(ag.getId()))
                             .process((Exchange it) -> {
                                 final CommunicateAction communicateAction = toJson.mapper.readValue((byte[]) it.getIn().getBody(), CommunicateAction.class);

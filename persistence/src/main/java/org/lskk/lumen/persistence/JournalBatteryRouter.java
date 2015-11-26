@@ -6,6 +6,7 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.joda.time.DateTime;
+import org.lskk.lumen.core.AvatarChannel;
 import org.lskk.lumen.core.BatteryState;
 import org.lskk.lumen.core.util.AsError;
 import org.neo4j.graphdb.Node;
@@ -49,9 +50,10 @@ public class JournalBatteryRouter extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class).bean(asError).bean(toJson).handled(true);
         errorHandler(new LoggingErrorHandlerBuilder(log));
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.nao1.data.battery")
+        final String avatarId = "nao1";
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + AvatarChannel.DATA_BATTERY.key(avatarId) + "&routingKey=" + AvatarChannel.DATA_BATTERY.key(avatarId))
                 .sample(1, TimeUnit.SECONDS)
-                .to("log:IN.avatar.nao1.data.battery?showHeaders=true&showAll=true&multiline=true")
+                .to("log:IN." + AvatarChannel.DATA_BATTERY.key(avatarId) + "?showHeaders=true&showAll=true&multiline=true")
                 .process(it -> {
                     final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
                     final BatteryState batteryState = toJson.getMapper().convertValue(inBodyJson, BatteryState.class);
@@ -65,7 +67,7 @@ public class JournalBatteryRouter extends RouteBuilder {
                     it.getOut().setBody(nodeResult.getId());
                 })
                 .bean(toJson)
-                .to("log:OUT.avatar.nao1.data.battery?showAll=true&multiline=true");
+                .to("log:OUT." + AvatarChannel.DATA_BATTERY.key(avatarId) + "?showAll=true&multiline=true");
     }
 
 }
