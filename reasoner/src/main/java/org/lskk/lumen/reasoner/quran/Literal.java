@@ -27,7 +27,7 @@ public class Literal implements Serializable {
     private String translator;
     private String creativeWork_id;
     private String articleBodies_thing_id;
-    private String name_thing_id;
+    private String names_thing_id;
 
     public String getId() {
         return id;
@@ -117,12 +117,12 @@ public class Literal implements Serializable {
         this.articleBodies_thing_id = articleBodies_thing_id;
     }
 
-    public String getName_thing_id() {
-        return name_thing_id;
+    public String getNames_thing_id() {
+        return names_thing_id;
     }
 
-    public void setName_thing_id(String name_thing_id) {
-        this.name_thing_id = name_thing_id;
+    public void setNames_thing_id(String names_thing_id) {
+        this.names_thing_id = names_thing_id;
     }
 
     @Override
@@ -139,7 +139,7 @@ public class Literal implements Serializable {
                 ", translator='" + translator + '\'' +
                 ", creativeWork_id='" + creativeWork_id + '\'' +
                 ", articleBodies_thing_id='" + articleBodies_thing_id + '\'' +
-                ", name_thing_id='" + name_thing_id + '\'' +
+                ", names_thing_id='" + names_thing_id + '\'' +
                 '}';
     }
 }
