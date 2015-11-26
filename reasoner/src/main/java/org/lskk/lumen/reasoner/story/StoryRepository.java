@@ -51,41 +51,41 @@ public class StoryRepository extends AbstractCrudRepository<Story,String> {
 
     @Override
     public boolean exists(String s) {
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Iterable<Story> findAll() {
-        return null;
+        return stories;
     }
 
     @Override
     public Iterable<Story> findAll(Iterable<String> strings) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public long count() {
-        return 0;
+        return stories.size();
     }
 
     @Override
     public void delete(String s) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void delete(Story entity) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void delete(Iterable<? extends Story> entities) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void deleteAll() {
-
+        throw new UnsupportedOperationException();
     }
 }
