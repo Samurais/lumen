@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +35,57 @@ public class StoryRepository extends AbstractCrudRepository<Story,String> {
     }
 
     @Override
+    public <S extends Story> S save(S entity) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <S extends Story> Iterable<S> save(Iterable<S> entities) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Story findOne(String id) {
         return stories.stream().filter(it -> id.equals(it.getId())).findAny().get();
+    }
+
+    @Override
+    public boolean exists(String s) {
+        return false;
+    }
+
+    @Override
+    public Iterable<Story> findAll() {
+        return null;
+    }
+
+    @Override
+    public Iterable<Story> findAll(Iterable<String> strings) {
+        return null;
+    }
+
+    @Override
+    public long count() {
+        return 0;
+    }
+
+    @Override
+    public void delete(String s) {
+
+    }
+
+    @Override
+    public void delete(Story entity) {
+
+    }
+
+    @Override
+    public void delete(Iterable<? extends Story> entities) {
+
+    }
+
+    @Override
+    public void deleteAll() {
+
     }
 }
