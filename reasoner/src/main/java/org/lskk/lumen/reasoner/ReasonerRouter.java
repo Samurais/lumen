@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * Created by ceefour on 10/2/15.
  */
 @Component
-@Profile("reasonerApp")
+@Profile({"reasonerApp", "reasonerSocmedApp"})
 public class ReasonerRouter extends RouteBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(ReasonerRouter.class);
