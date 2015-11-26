@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.quran;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.http.annotation.Immutable;
 import org.lskk.lumen.reasoner.goal.Goal;
 
 import java.util.List;
@@ -74,4 +76,10 @@ public class ReciteQuran extends Goal {
                 ", verseNumbers=" + verseNumbers +
                 '}';
     }
+
+    public void resolve() {
+        setChapterNumber(Integer.parseInt(upChapter));
+        setVerseNumbers(ImmutableList.of(Integer.parseInt(upVerses)));
+    }
+
 }

@@ -21,5 +21,6 @@ when
     $goal : ReciteQuran()
 then
     log.info("I want to recite chapter {} verse {}", $goal.upChapter, $goal.upVerses);
-
+    $goal.resolve();
+    log.info("I want to see chapter {} verse {}", $goal.chapterNumber, $goal.verseNumbers);
 end
