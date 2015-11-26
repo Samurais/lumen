@@ -1,0 +1,25 @@
+dialect "mvel"
+
+import org.lskk.lumen.reasoner.*
+import org.lskk.lumen.reasoner.event.*
+import org.lskk.lumen.reasoner.expression.*
+import org.lskk.lumen.reasoner.goal.*
+import org.lskk.lumen.reasoner.story.*
+import org.lskk.lumen.reasoner.quran.*
+
+global org.slf4j.Logger log
+global LiteralRepository literalRepo
+global QuranChapterRepository quranChapterRepo
+global QuranVerseRepository quranVerseRepo
+
+declare ReciteQuran
+    @role( event )
+end
+
+rule "Request Recite Verse from Quran"
+when
+    $goal : ReciteQuran()
+then
+    log.info("I want to recite chapter {} verse {}", $goal.upChapter, $goal.upVerses);
+
+end
