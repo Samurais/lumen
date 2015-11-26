@@ -47,7 +47,7 @@ public class JointRouter extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class).bean(asError).bean(toJson).handled(true);
         errorHandler(new LoggingErrorHandlerBuilder(log));
-        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&routingKey=avatar.nao1.data.joint")
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&durable=false&autoDelete=true&routingKey=avatar.nao1.data.joint")
                 .sample(1, TimeUnit.SECONDS)
                 .to("log:IN.avatar.nao1.data.joint?showHeaders=true&showAll=true&multiline=true")
                 .process(it -> {
