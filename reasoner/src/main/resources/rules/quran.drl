@@ -42,6 +42,7 @@ then
     //communicateAction.setAvatarId($goal.avatarId);
     communicateAction.setInLanguage(Locale.forLanguageTag("id-ID"));
     communicateAction.setObject("Surat " + quranChapter.nameWithTashkeel + " Ayat " + quranVerse.verseNum + " : " + literal.adoc);
+    communicateAction.setUsedForSynthesis(true);
     $goal.channel.express($goal.avatarId, communicateAction, null);
 
 end
