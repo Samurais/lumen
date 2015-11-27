@@ -84,12 +84,13 @@ public class ReasonerRouter extends RouteBuilder {
                     socialJournal.setTruthValue(new SimpleTruthValue(agentResponse.getMatchingTruthValue()));
 
                     if (agentResponse.getCommunicateAction() != null) {
+                        agentResponse.getCommunicateAction().setUsedForSynthesis(true); // enable speech synthesis
                         chatChannel.express(inCommunicate.getAvatarId(), agentResponse.getCommunicateAction(), null);
                         socialJournal.setResponseKind(agentResponse.getCommunicateAction().getClass().getName());
                         socialJournal.setResponseLanguage(agentResponse.getCommunicateAction().getInLanguage());
                         socialJournal.setResponseText(agentResponse.getCommunicateAction().getObject());
                     } else if (agentResponse.getUnrecognizedInput() != null) {
-                        chatChannel.express(inCommunicate.getAvatarId(), Proposition.I_DONT_UNDERSTAND, null);
+                        chatChannel.express(inCommunicate.getAvatarId(), Proposition.I_DONT_UNDERSTAND, true, null);
                         socialJournal.setResponseKind(agentResponse.getUnrecognizedInput().getClass().getName());
                     }
                     droolsService.process(agentResponse);

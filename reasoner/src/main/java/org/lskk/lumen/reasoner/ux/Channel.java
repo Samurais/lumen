@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
@@ -61,9 +60,10 @@ public abstract class Channel<P> {
     /**
      * @param avatarId Avatar that expresses this {@link Proposition}.
      * @param proposition
+     * @param usedForSynthesis
      * @param params
      */
-    public void express(String avatarId, Proposition proposition, P params) {
+    public void express(String avatarId, Proposition proposition, boolean usedForSynthesis, P params) {
         final CommunicateAction action;
         switch (inLanguage.getLanguage()) {
             case "en":
@@ -75,6 +75,7 @@ public abstract class Channel<P> {
             default:
                 throw new ReasonerException("Unhandled locale: " + inLanguage.toLanguageTag());
         }
+        action.setUsedForSynthesis(usedForSynthesis);
         try {
             if (proposition.getImage() != null) {
                 action.setImage((ImageObject) BeanUtils.cloneBean(proposition.getImage()));
