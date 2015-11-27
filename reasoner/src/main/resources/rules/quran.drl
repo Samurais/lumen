@@ -1,0 +1,47 @@
+dialect "mvel"
+
+import java.util.*
+import org.lskk.lumen.core.*
+import org.lskk.lumen.reasoner.*
+import org.lskk.lumen.reasoner.event.*
+import org.lskk.lumen.reasoner.expression.*
+import org.lskk.lumen.reasoner.goal.*
+import org.lskk.lumen.reasoner.story.*
+import org.lskk.lumen.reasoner.quran.*
+
+global org.slf4j.Logger log
+global LiteralRepository literalRepo
+global QuranChapterRepository quranChapterRepo
+global QuranVerseRepository quranVerseRepo
+
+declare ReciteQuran
+    @role( event )
+end
+
+rule "Request Recite Verse from Quran"
+when
+    $goal : ReciteQuran()
+then
+    log.info("I want to recite chapter {} verse {}", $goal.upChapter, $goal.upVerses);
+    $goal.resolve();
+    log.info("I want to see chapter {} verse {}", $goal.chapterNumber, $goal.verseNumbers);
+    QuranChapter quranChapter = quranChapterRepo.findOne("quran_" + $goal.chapterNumber);
+    log.info("I want to see quran chapter {}", quranChapter);
+
+
+    String quranChapterAndVerseId = "quran_" + $goal.chapterNumber + "_verse_" + $goal.verseNumbers[0];
+    QuranVerse quranVerse = quranVerseRepo.findOne(quranChapterAndVerseId);
+
+    log.info("I want to see quran chapter and verse id {} quran verse {}", quranChapterAndVerseId, quranVerse);
+    String literalId = "quran_" + $goal.chapterNumber + "_verse_" + $goal.verseNumbers[0] + "_ind";
+
+    Literal literal = literalRepo.findOne(literalId);
+    log.info("I want to see literal id {} Literal{}", literalId, literal);
+
+    CommunicateAction communicateAction = new CommunicateAction();
+    //communicateAction.setAvatarId($goal.avatarId);
+    communicateAction.setInLanguage(Locale.forLanguageTag("id-ID"));
+    communicateAction.setObject("Surat " + quranChapter.nameWithTashkeel + " Ayat " + quranVerse.verseNum + " : " + literal.adoc);
+    $goal.channel.express($goal.avatarId, communicateAction, null);
+
+end

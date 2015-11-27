@@ -15,6 +15,9 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.api.runtime.conf.ClockTypeOption;
 import org.kie.internal.builder.conf.RuleEngineOption;
+import org.lskk.lumen.reasoner.quran.LiteralRepository;
+import org.lskk.lumen.reasoner.quran.QuranChapterRepository;
+import org.lskk.lumen.reasoner.quran.QuranVerseRepository;
 import org.lskk.lumen.reasoner.story.StoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +45,13 @@ public class DroolsConfig {
     private Environment env;
     @Inject
     private StoryRepository storyRepo;
+    @Inject
+    private LiteralRepository literalRepo;
+    @Inject
+    private QuranChapterRepository quranChapterRepo;
+    @Inject
+    private QuranVerseRepository quranVerseRepo;
+
 
     private KieContainer kieContainer;
     private KieSession kieSession;
@@ -71,6 +81,9 @@ public class DroolsConfig {
         kieSession = kieBase().newKieSession(config, null);
         kieSession.setGlobal("log", log);
         kieSession.setGlobal("storyRepo", storyRepo);
+        kieSession.setGlobal("literalRepo", literalRepo);
+        kieSession.setGlobal("quranChapterRepo", quranChapterRepo);
+        kieSession.setGlobal("quranVerseRepo", quranVerseRepo);
 //        kieSession.addEventListener(new DebugAgendaEventListener());
 //        kieSession.addEventListener(new DebugRuleRuntimeEventListener());
         executor().submit(() -> {

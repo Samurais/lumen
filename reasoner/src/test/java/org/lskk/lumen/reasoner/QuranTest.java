@@ -4,10 +4,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
-import org.lskk.lumen.reasoner.quran.QuranChapter;
-import org.lskk.lumen.reasoner.quran.QuranChapterRepository;
-import org.lskk.lumen.reasoner.quran.QuranVerse;
-import org.lskk.lumen.reasoner.quran.QuranVerseRepository;
+import org.lskk.lumen.reasoner.quran.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -32,14 +29,13 @@ public class QuranTest {
 
     @Configuration
     @Import({JacksonAutoConfiguration.class, DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
-    @EntityScan("org.lskk.lumen.reasoner.quran")
-    @EnableJpaRepositories
+    @EntityScan(basePackageClasses = QuranChapter.class)
+    @EnableJpaRepositories(basePackageClasses = QuranChapterRepository.class)
     @PropertySource(value = {"classpath:application.properties", "file:config/application.properties"},
             ignoreResourceNotFound = true)
     //@ComponentScan("org.lskk.lumen.reasoner.quran")
 //    @EnableConfigurationProperties
     public static class Config {
-
 
     }
 
@@ -47,6 +43,8 @@ public class QuranTest {
     private QuranChapterRepository quranChapterRepo;
     @Inject
     private QuranVerseRepository quranVerseRepo;
+    @Inject
+    private LiteralRepository literalRepo;
 
     @Test
     public void readAlKahfi() {
@@ -61,9 +59,9 @@ public class QuranTest {
         log.info("verse: {}", quranVerse);
     }
 
-    //@Test
-    //public void readAlKahfiAyat46Literal() {
-      //  final QuranVerse quranliteral = literalRepo.findOne("quran_18_verse_46");
-        // log.info("verse:{}", quranVerse);
-    //}
+    @Test
+    public void readAlKahfiAyat46Literal() {
+        final Literal quranLiteral = literalRepo.findOne("quran_18_verse_46_ind");
+        log.info("literal: {}", quranLiteral);
+    }
 }
