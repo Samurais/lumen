@@ -9,7 +9,16 @@
         </template>
     </category>
     <category>
-        <pattern>Read _ ayat _</pattern>
+        <pattern>read _ ayat _</pattern>
+        <pattern>read _ ayat _</pattern>
+        <pattern lang="id-ID">baca _ ayat _</pattern>
+        <pattern lang="id-ID">baca quran _ ayat _</pattern>
+        <pattern lang="id-ID">baca surat _ ayat _</pattern>
+        <pattern lang="id-ID">baca quran surat _ ayat _</pattern>
+        <pattern lang="id-ID">baca terjemahan _ ayat _</pattern>
+        <pattern lang="id-ID">baca terjemahan surat _ ayat _</pattern>
+        <pattern lang="id-ID">baca terjemahan quran _ ayat _</pattern>
+        <pattern lang="id-ID">baca terjemahan quran surat _ ayat _</pattern>
         <template>
             <goal class="org.lskk.lumen.reasoner.quran.ReciteQuran">
                 <property name="upChapter" value="@{groups[1]}"/>
