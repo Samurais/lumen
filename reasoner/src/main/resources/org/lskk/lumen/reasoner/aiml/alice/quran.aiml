@@ -17,7 +17,25 @@
     </category>
     <category>
         <pattern>read _ ayat _</pattern>
-        <pattern>read _ ayat _</pattern>
+        <pattern>read surah _ ayat _</pattern>
+        <pattern>read chapter _ ayat _</pattern>
+        <pattern>read quran _ ayat _</pattern>
+        <pattern>read koran _ ayat _</pattern>
+        <pattern>read _ verse _</pattern>
+        <pattern>read surah _ verse _</pattern>
+        <pattern>read chapter _ verse _</pattern>
+        <pattern>read quran _ verse _</pattern>
+        <pattern>read koran _ verse _</pattern>
+        <pattern>recite _ ayat _</pattern>
+        <pattern>recite surah _ ayat _</pattern>
+        <pattern>recite chapter _ ayat _</pattern>
+        <pattern>recite quran _ ayat _</pattern>
+        <pattern>recite koran _ ayat _</pattern>
+        <pattern>recite _ verse _</pattern>
+        <pattern>recite surah _ verse _</pattern>
+        <pattern>recite chapter _ verse _</pattern>
+        <pattern>recite quran _ verse _</pattern>
+        <pattern>recite koran _ verse _</pattern>
         <pattern lang="id-ID">baca _ ayat _</pattern>
         <pattern lang="id-ID">baca quran _ ayat _</pattern>
         <pattern lang="id-ID">baca surat _ ayat _</pattern>
@@ -33,4 +51,41 @@
             </goal>
         </template>
     </category>
+     <category>
+            <pattern>read _ _ ayat _</pattern>
+            <pattern>read surah _ _ ayat _</pattern>
+            <pattern>read chapter _ _ ayat _</pattern>
+            <pattern>read quran _ _ ayat _</pattern>
+            <pattern>read koran _ _ ayat _</pattern>
+            <pattern>read _ _ verse _</pattern>
+            <pattern>read surah _ _ verse _</pattern>
+            <pattern>read chapter _ _ verse _</pattern>
+            <pattern>read quran _ _ verse _</pattern>
+            <pattern>read koran _ _ verse _</pattern>
+            <pattern>recite _ _ ayat _</pattern>
+            <pattern>recite surah _ _ ayat _</pattern>
+            <pattern>recite chapter _ _ ayat _</pattern>
+            <pattern>recite quran _ _ ayat _</pattern>
+            <pattern>recite koran _ _ ayat _</pattern>
+            <pattern>recite _ _ verse _</pattern>
+            <pattern>recite surah _ _ verse _</pattern>
+            <pattern>recite chapter _ _ verse _</pattern>
+            <pattern>recite quran _ _ verse _</pattern>
+            <pattern>recite koran _ _ verse _</pattern>
+            <pattern lang="id-ID">baca _ _ ayat _</pattern>
+            <pattern lang="id-ID">baca quran _ _ ayat _</pattern>
+            <pattern lang="id-ID">baca surat _ _ ayat _</pattern>
+            <pattern lang="id-ID">baca quran surat _ _ ayat _</pattern>
+            <pattern lang="id-ID">baca terjemahan _ _ ayat _</pattern>
+            <pattern lang="id-ID">baca terjemahan surat _ _ ayat _</pattern>
+            <pattern lang="id-ID">baca terjemahan quran _ _ ayat _</pattern>
+            <pattern lang="id-ID">baca terjemahan quran surat _ _ ayat _</pattern>
+            <template>
+                <goal class="org.lskk.lumen.reasoner.quran.ReciteQuran">
+                    <property name="upChapter" value="@{groups[1]}@{groups[2]}"/>
+                    <property name="upVerses" value="@{groups[3]}"/>
+                </goal>
+            </template>
+        </category>
+
 </aiml>

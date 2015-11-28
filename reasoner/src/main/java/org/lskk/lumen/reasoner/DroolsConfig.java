@@ -80,6 +80,7 @@ public class DroolsConfig {
         // FIXME: exclude *.csv files from being treated as decision table
         kieSession = kieBase().newKieSession(config, null);
         kieSession.setGlobal("log", log);
+        kieSession.setGlobal("env", env);
         kieSession.setGlobal("storyRepo", storyRepo);
         kieSession.setGlobal("literalRepo", literalRepo);
         kieSession.setGlobal("quranChapterRepo", quranChapterRepo);

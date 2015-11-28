@@ -63,6 +63,7 @@ public class ChatChannel extends Channel<Void> {
                         toJson.apply(communicateAction));
             }
         } catch (IOException e) {
+            log.error("Cannot express " + communicateAction, e);
             throw new ReasonerException(e, "Cannot express %s", communicateAction);
         }
     }

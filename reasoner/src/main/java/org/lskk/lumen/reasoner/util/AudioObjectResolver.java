@@ -30,6 +30,7 @@ public class AudioObjectResolver {
 //                    Preconditions.checkArgument(url.startsWith("file:") || url.startsWith("classpath:"),
 //                            "CommunicateAction.ImageObject.url only supports file: and classpath: schemes");
 
+        log.debug("Resolving audio {} ...", audioObject.getUrl());
         final Resource res = resourceResolver.getResource(audioObject.getUrl());
         Preconditions.checkState(res.exists() && res.isReadable(), "%s does not exist or is not readable", res);
         final byte[] media = IOUtils.toByteArray(res.getURL());
@@ -49,6 +50,5 @@ public class AudioObjectResolver {
         log.debug("Resolved audio {} as {} bytes {}",
                 audioObject.getUrl(), audioObject.getContent().length, audioObject.getContentType());
     }
-
 
 }

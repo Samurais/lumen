@@ -10,6 +10,7 @@ import org.lskk.lumen.reasoner.story.*
 import org.lskk.lumen.reasoner.quran.*
 
 global org.slf4j.Logger log
+global org.springframework.core.env.Environment env
 global LiteralRepository literalRepo
 global QuranChapterRepository quranChapterRepo
 global QuranVerseRepository quranVerseRepo
@@ -22,26 +23,35 @@ rule "Request Recite Verse from Quran"
 when
     $goal : ReciteQuran()
 then
-    log.info("I want to recite chapter {} verse {}", $goal.upChapter, $goal.upVerses);
-    $goal.resolve();
-    log.info("I want to see chapter {} verse {}", $goal.chapterNumber, $goal.verseNumbers);
-    QuranChapter quranChapter = quranChapterRepo.findOne("quran_" + $goal.chapterNumber);
-    log.info("I want to see quran chapter {}", quranChapter);
+//    try {
+        log.info("I want to recite chapter {} verse {}", $goal.upChapter, $goal.upVerses);
+        $goal.resolve(quranChapterRepo);
+        log.info("I want to see chapter {} verse {}", $goal.chapterNumber, $goal.verseNumbers);
+        QuranChapter quranChapter = quranChapterRepo.findOne("quran_" + $goal.chapterNumber);
+        log.info("I want to see quran chapter {}", quranChapter);
 
-    String quranChapterAndVerseId = "quran_" + $goal.chapterNumber + "_verse_" + $goal.verseNumbers[0];
-    QuranVerse quranVerse = quranVerseRepo.findOne(quranChapterAndVerseId);
+        String quranChapterAndVerseId = "quran_" + $goal.chapterNumber + "_verse_" + $goal.verseNumbers[0];
+        QuranVerse quranVerse = quranVerseRepo.findOne(quranChapterAndVerseId);
 
-    log.info("I want to see quran chapter and verse id {} quran verse {}", quranChapterAndVerseId, quranVerse);
-    String literalId = "quran_" + $goal.chapterNumber + "_verse_" + $goal.verseNumbers[0] + "_ind";
+        log.info("I want to see quran chapter and verse id {} quran verse {}", quranChapterAndVerseId, quranVerse);
+        String literalId = "quran_" + $goal.chapterNumber + "_verse_" + $goal.verseNumbers[0] + "_ind";
 
-    Literal literal = literalRepo.findOne(literalId);
-    log.info("I want to see literal id {} Literal{}", literalId, literal);
+        Literal literal = literalRepo.findOne(literalId);
+        log.info("I want to see literal id {} Literal{}", literalId, literal);
 
-    CommunicateAction communicateAction = new CommunicateAction();
-    //communicateAction.setAvatarId($goal.avatarId);
-    communicateAction.setInLanguage(Locale.forLanguageTag("id-ID"));
-    communicateAction.setObject("Surat " + quranChapter.nameWithTashkeel + " Ayat " + quranVerse.verseNum + " : " + literal.adoc);
-    communicateAction.setUsedForSynthesis(true);
-    $goal.channel.express($goal.avatarId, communicateAction, null);
+        CommunicateAction communicateAction = new CommunicateAction();
+        //communicateAction.setAvatarId($goal.avatarId);
+        communicateAction.setInLanguage(Locale.forLanguageTag("id-ID"));
+        communicateAction.setObject("Surat " + quranChapter.nameWithTashkeel + " Ayat " +  quranVerse.verseNum + " : " + literal.adoc);
+        communicateAction.setUsedForSynthesis(true);
+        AudioObject audioObject = new AudioObject();
+        String audioUrl = new java.io.File(String.format("%s/%03d%03d.mp3", env.getRequiredProperty("quran.audio.folder"), $goal.chapterNumber, $goal.verseNumbers[0])).toURI().toString();
+        audioObject.setUrl(audioUrl);
+        log.info("audioUrl={}", audioUrl);
+        communicateAction.setAudio(audioObject);
+        $goal.channel.express($goal.avatarId, communicateAction, null);
 
+//    } catch (Exception e) {
+//        log.error("Cannot recite " + $goal, e);
+//    }
 end
