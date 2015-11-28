@@ -77,7 +77,7 @@ public class ReciteQuran extends Goal {
                 '}';
     }
 
-    public void resolve(QuranChapterRepository quranChapterRepo)  {
+    public void resolve(/*QuranChapterRepository quranChapterRepo*/)  {
         setChapterNumber(Integer.parseInt(upChapter));
         setVerseNumbers(ImmutableList.of(Integer.parseInt(upVerses)));
     }
