@@ -28,7 +28,6 @@ then
     QuranChapter quranChapter = quranChapterRepo.findOne("quran_" + $goal.chapterNumber);
     log.info("I want to see quran chapter {}", quranChapter);
 
-
     String quranChapterAndVerseId = "quran_" + $goal.chapterNumber + "_verse_" + $goal.verseNumbers[0];
     QuranVerse quranVerse = quranVerseRepo.findOne(quranChapterAndVerseId);
 

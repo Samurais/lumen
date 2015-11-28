@@ -9,6 +9,13 @@
         </template>
     </category>
     <category>
+        <pattern lang="id-ID">baca Al Kahfi saja</pattern>
+        <template>
+            Segala puji bagi Allah yang telah menurunkan kepada hamba-Nya Al-Kitab (Al-Qur’an) dan dia tidak mengadakan kebengkokan di dalamnya; (QS. 18:1)
+            <audio mediaLayer="SPEECH" url="file:audio/islam/018001.mp3"/>
+        </template>
+    </category>
+    <category>
         <pattern>read _ ayat _</pattern>
         <pattern>read _ ayat _</pattern>
         <pattern lang="id-ID">baca _ ayat _</pattern>
