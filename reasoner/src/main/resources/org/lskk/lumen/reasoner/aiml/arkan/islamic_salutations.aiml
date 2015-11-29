@@ -1,58 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML">
     <category>
-        <pattern>aslkm</pattern>
-        <pattern>askm</pattern>
-        <pattern>askum</pattern>
-        <pattern>asslkm</pattern>
-        <pattern>asskm</pattern>
-        <pattern>asskum</pattern>
-        <pattern>ass wr wb</pattern>
-        <pattern>asswrwb</pattern>
-        <pattern>asalamualaikum</pattern>
-        <pattern>asalaamualaikum</pattern>
-        <pattern>assalamualaikum</pattern>
-        <pattern>assalaamualaikum</pattern>
-        <pattern>asalamu alaikum</pattern>
-        <pattern>asalaamu alaikum</pattern>
-        <pattern>assalamu alaikum</pattern>
-        <pattern>assalaamu alaikum</pattern>
+        <pattern lang="id-ID">aslkm</pattern>
+        <pattern lang="id-ID">askm</pattern>
+        <pattern lang="id-ID">askum</pattern>
+        <pattern lang="id-ID">asslkm</pattern>
+        <pattern lang="id-ID">asskm</pattern>
+        <pattern lang="id-ID">asskum</pattern>
+        <pattern lang="id-ID">ass wr wb</pattern>
+        <pattern lang="id-ID">asswrwb</pattern>
+        <pattern lang="id-ID">asalamualaikum</pattern>
+        <pattern lang="id-ID">asalaamualaikum</pattern>
+        <pattern lang="id-ID">assalamualaikum</pattern>
+        <pattern lang="id-ID">assalaamualaikum</pattern>
+        <pattern lang="id-ID">asalamu alaikum</pattern>
+        <pattern lang="id-ID">asalaamu alaikum</pattern>
+        <pattern lang="id-ID">assalamu alaikum</pattern>
+        <pattern lang="id-ID">assalaamu alaikum</pattern>
         <template>
             Wa'alaikumussalaam wa rahmatullahi wa barokatuh.
             <audio mediaLayer="SPEECH" url="file:audio/islam/waalaikumussalam_warahmatullahi_wabarakatuh.ogg" />
         </template>
     </category>
     <category>
-        <pattern>kaifalhaal</pattern>
-        <pattern>kaifal haal</pattern>
-        <pattern>kaif alhaal</pattern>
-        <pattern>kaif al haal</pattern>
-        <pattern>kaifalhal</pattern>
-        <pattern>kaifal hal</pattern>
-        <pattern>kaif alhal</pattern>
-        <pattern>kaif al hal</pattern>
-        <pattern>kaifahal</pattern>
-        <pattern>kaifa hal</pattern>
-        <pattern>kaifahaal</pattern>
-        <pattern>kaifa haal</pattern>
-        <pattern>kayfalhaal</pattern>
-        <pattern>kayfal haal</pattern>
-        <pattern>kayf alhaal</pattern>
-        <pattern>kayf al haal</pattern>
-        <pattern>kayfalhal</pattern>
-        <pattern>kayfal hal</pattern>
-        <pattern>kayf alhal</pattern>
-        <pattern>kayf al hal</pattern>
-        <pattern>kaifhalak</pattern>
-        <pattern>kaif halak</pattern>
-        <pattern>kayfhalak</pattern>
-        <pattern>kayf halak</pattern>
-        <pattern>kaifhaluka</pattern>
-        <pattern>kaif haluka</pattern>
-        <pattern>kayfhaluka</pattern>
-        <pattern>kayf haluka</pattern>
+        <pattern lang="id-ID">kaifalhaal</pattern>
+        <pattern lang="id-ID">kaifal haal</pattern>
+        <pattern lang="id-ID">kaif alhaal</pattern>
+        <pattern lang="id-ID">kaif al haal</pattern>
+        <pattern lang="id-ID">kaifalhal</pattern>
+        <pattern lang="id-ID">kaifal hal</pattern>
+        <pattern lang="id-ID">kaif alhal</pattern>
+        <pattern lang="id-ID">kaif al hal</pattern>
+        <pattern lang="id-ID">kaifahal</pattern>
+        <pattern lang="id-ID">kaifa hal</pattern>
+        <pattern lang="id-ID">kaifahaal</pattern>
+        <pattern lang="id-ID">kaifa haal</pattern>
+        <pattern lang="id-ID">kayfalhaal</pattern>
+        <pattern lang="id-ID">kayfal haal</pattern>
+        <pattern lang="id-ID">kayf alhaal</pattern>
+        <pattern lang="id-ID">kayf al haal</pattern>
+        <pattern lang="id-ID">kayfalhal</pattern>
+        <pattern lang="id-ID">kayfal hal</pattern>
+        <pattern lang="id-ID">kayf alhal</pattern>
+        <pattern lang="id-ID">kayf al hal</pattern>
+        <pattern lang="id-ID">kaifhalak</pattern>
+        <pattern lang="id-ID">kaif halak</pattern>
+        <pattern lang="id-ID">kayfhalak</pattern>
+        <pattern lang="id-ID">kayf halak</pattern>
+        <pattern lang="id-ID">kaifhaluka</pattern>
+        <pattern lang="id-ID">kaif haluka</pattern>
+        <pattern lang="id-ID">kayfhaluka</pattern>
+        <pattern lang="id-ID">kayf haluka</pattern>
         <template>
-            Alhamdulillah, I am fine.
+            Alhamdulillah, aku baik koq.
             <audio mediaLayer="SPEECH" url="file:audio/islam/alhamdulillah.ogg" />
         </template>
     </category>
