@@ -22,8 +22,13 @@ public class DroolsService {
 
     public void process(AgentResponse resp) {
         for (final Serializable ins : resp.getInsertables()) {
-            log.info("Inserting event {}", ins);
-            kieSession.insert(ins);
+            try {
+                log.info("Inserting event {}", ins);
+                kieSession.insert(ins);
+            } catch (Exception e) {
+                log.error("Cannot insert " + ins, e);
+                throw e;
+            }
         }
     }
 }
