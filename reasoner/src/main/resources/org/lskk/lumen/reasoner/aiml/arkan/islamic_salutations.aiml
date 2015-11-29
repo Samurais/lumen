@@ -52,7 +52,7 @@
         <pattern lang="id-ID">kayfhaluka</pattern>
         <pattern lang="id-ID">kayf haluka</pattern>
         <template>
-            Alhamdulillah, aku baik koq.
+            Alhamdulillah, aku baik-baik saja.
             <audio mediaLayer="SPEECH" url="file:audio/islam/alhamdulillah.ogg" />
         </template>
     </category>
