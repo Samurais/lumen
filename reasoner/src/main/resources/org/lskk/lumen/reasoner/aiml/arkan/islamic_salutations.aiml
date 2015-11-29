@@ -23,6 +23,18 @@
         </template>
     </category>
     <category>
+        <pattern lang="id-ID">apa kabar</pattern>
+        <pattern lang="id-ID">apa kabarnya</pattern>
+        <pattern lang="id-ID">apa kabarmu</pattern>
+        <pattern lang="id-ID">kamu gimana</pattern>
+        <pattern lang="id-ID">kamu bagaimana</pattern>
+        <pattern lang="id-ID">kabarmu gimana</pattern>
+        <pattern lang="id-ID">kabarmu bagaimana</pattern>
+        <pattern lang="id-ID">piye kabare</pattern>
+        <pattern lang="id-ID">piye kabarmu</pattern>
+        <pattern lang="id-ID">kumaha damang</pattern>
+        <pattern lang="id-ID">kumaha kabarna</pattern>
+        <pattern lang="id-ID">kumaha kabar anjeun</pattern>
         <pattern lang="id-ID">kaifalhaal</pattern>
         <pattern lang="id-ID">kaifal haal</pattern>
         <pattern lang="id-ID">kaif alhaal</pattern>
@@ -47,8 +59,14 @@
         <pattern lang="id-ID">kaif halak</pattern>
         <pattern lang="id-ID">kayfhalak</pattern>
         <pattern lang="id-ID">kayf halak</pattern>
+        <pattern lang="id-ID">kaifhaluk</pattern>
+        <pattern lang="id-ID">kaif haluk</pattern>
+        <pattern lang="id-ID">kaifa haluk</pattern>
+        <pattern lang="id-ID">kayfhaluk</pattern>
+        <pattern lang="id-ID">kayf haluk</pattern>
         <pattern lang="id-ID">kaifhaluka</pattern>
         <pattern lang="id-ID">kaif haluka</pattern>
+        <pattern lang="id-ID">kaifa haluka</pattern>
         <pattern lang="id-ID">kayfhaluka</pattern>
         <pattern lang="id-ID">kayf haluka</pattern>
         <template>
