@@ -44,6 +44,13 @@ public class AimlService {
     public static final Locale INDONESIAN = Locale.forLanguageTag("id-ID");
     private static final Logger log = LoggerFactory.getLogger(AimlService.class);
     private static final Random RANDOM = new Random();
+    private static final Ordering<MatchingCategory> TRUTH_VALUE_ORDERING = new Ordering<MatchingCategory>() {
+        @Override
+        public int compare(@Nullable MatchingCategory a, @Nullable MatchingCategory b) {
+            return a.truthValue[1] == b.truthValue[1] ? 0 : (a.truthValue[1] > b.truthValue[1] ? -1 : 1);
+        }
+    };
+    protected static final double BEST_MATCH_TRUTH_VALUE_THRESHOLD = 0.4;
 
     private List<String> resourcePatterns = new ArrayList<>(ImmutableList.of("classpath*:org/lskk/lumen/reasoner/aiml/**/*.aiml"));
     private Aiml aiml;
@@ -99,7 +106,7 @@ public class AimlService {
         final List<String> patternSplit = Splitter.on(' ').trimResults().omitEmptyStrings().splitToList(pattern);
         final float truthValueMultiplier = localeMultiplier * (1f + (pattern.contains("_") ? -0.02f : -0.0f) + (pattern.contains("*") ? -0.03f : -0.0f)
                 - (2f * (float)Math.exp(-pattern.length())));
-        final String regex = patternSplit.stream().map(it -> {
+        String regex = patternSplit.stream().map(it -> {
             if ("*".equals(it)) {
                 return "(.+?)";
             } else if ("_".equals(it)) {
@@ -108,6 +115,7 @@ public class AimlService {
                 return java.util.regex.Pattern.quote(it);
             }
         }).collect(Collectors.joining("\\s+"));
+        regex = "(?<!\\w)" + regex + "(?!\\w)";
         final java.util.regex.Pattern patternRegex = java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE);
         final Matcher matcher = patternRegex.matcher(preparedInput);
         if (matcher.find()) {
@@ -190,13 +198,6 @@ public class AimlService {
         return new MatchingCategory(null, locale, pattern, new float[]{1f, 0f, 0f});
     }
 
-    private static final Ordering<MatchingCategory> TRUTH_VALUE_ORDERING = new Ordering<MatchingCategory>() {
-        @Override
-        public int compare(@Nullable MatchingCategory a, @Nullable MatchingCategory b) {
-            return a.truthValue[1] == b.truthValue[1] ? 0 : (a.truthValue[1] > b.truthValue[1] ? -1 : 1);
-        }
-    };
-
     /**
      *
      * @param upLocale
@@ -276,7 +277,6 @@ public class AimlService {
             }
 
         }
-        final double BEST_MATCH_TRUTH_VALUE_THRESHOLD = 0.6;
         if (bestMatch != null && bestMatch.truthValue[1] >= BEST_MATCH_TRUTH_VALUE_THRESHOLD) {
             log.info("Best for {} -{}-> {}", stimulus, bestMatch.inLanguage.toLanguageTag(), bestReply);
             if (channel != null) {
