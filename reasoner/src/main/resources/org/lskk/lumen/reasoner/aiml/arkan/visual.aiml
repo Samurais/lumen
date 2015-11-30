@@ -5,17 +5,17 @@
         <pattern>who is there</pattern>
         <pattern>what is there</pattern>
         <pattern>show me what you see</pattern>
-        <pattern>kamu lihat apa</pattern>
-        <pattern>lihat apa sih</pattern>
-        <pattern>apa yang kamu lihat</pattern>
-        <pattern>apa yang kaulihat</pattern>
-        <pattern>apa yang kau lihat</pattern>
-        <pattern>liatin apa</pattern>
-        <pattern>ngeliatin apa</pattern>
-        <pattern>lihatin apa</pattern>
-        <pattern>ngelihatin apa</pattern>
-        <pattern>kirim foto</pattern>
-        <pattern>kirimin foto</pattern>
+        <pattern lang="id-ID">kamu lihat apa</pattern>
+        <pattern lang="id-ID">lihat apa sih</pattern>
+        <pattern lang="id-ID">apa yang kamu lihat</pattern>
+        <pattern lang="id-ID">apa yang kaulihat</pattern>
+        <pattern lang="id-ID">apa yang kau lihat</pattern>
+        <pattern lang="id-ID">liatin apa</pattern>
+        <pattern lang="id-ID">ngeliatin apa</pattern>
+        <pattern lang="id-ID">lihatin apa</pattern>
+        <pattern lang="id-ID">ngelihatin apa</pattern>
+        <pattern lang="id-ID">kirim foto</pattern>
+        <pattern lang="id-ID">kirimin foto</pattern>
         <template>
             <say iflang="en-US">
                 This is what I see right now
