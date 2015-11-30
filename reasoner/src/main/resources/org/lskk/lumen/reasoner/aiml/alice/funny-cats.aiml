@@ -2,7 +2,9 @@
 <aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML">
     <category>
         <pattern lang="en-US">funny cat</pattern>
+        <pattern lang="en-US">funny cats</pattern>
         <pattern lang="id-ID">kucing lucu</pattern>
+        <pattern lang="id-ID">kucing kucing lucu</pattern>
         <template>
             <say iflang="en-US">
                 Here's a funny cat! &#x1f60a;
