@@ -13,6 +13,7 @@ import java.util.List;
 public class Category implements Serializable {
     private List<Pattern> patterns = new ArrayList<>();
     private Template template;
+//    private List<Template> templates = new ArrayList<>();
 
     @XmlElement(name = "pattern")
     public List<Pattern> getPatterns() {
@@ -28,10 +29,15 @@ public class Category implements Serializable {
         this.template = template;
     }
 
+//    @XmlElement(name = "template")
+//    public List<Template> getTemplates() {
+//        return templates;
+//    }
+
     @Override
     public String toString() {
         return "Category{" +
-                "patterns='" + patterns + '\'' +
+                "patterns=" + patterns +
                 ", template=" + template +
                 '}';
     }

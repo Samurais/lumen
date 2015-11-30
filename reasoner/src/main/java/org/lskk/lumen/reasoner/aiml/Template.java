@@ -1,6 +1,8 @@
 package org.lskk.lumen.reasoner.aiml;
 
+import com.google.common.collect.ImmutableList;
 import org.lskk.lumen.core.AudioObject;
+import org.lskk.lumen.core.EmotionKind;
 import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.goal.Goal;
 
@@ -8,6 +10,8 @@ import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -16,10 +20,16 @@ import java.util.stream.Collectors;
 public class Template implements Serializable {
     private String srai;
     private Sr sr;
-    private List<Serializable> contents = new ArrayList<>();
+    private Locale lang;
+    private Locale ifLang;
+    private Boolean synthesis;
+    private EmotionKind emotion;
+    //private SayElement defaultSay;
+//    private List<Serializable> contents = new ArrayList<>();
     private List<Choice> randoms = new ArrayList<>();
-    private ImageObject image;
-    private AudioObject audio;
+//    private ImageObject image;
+//    private AudioObject audio;
+    private List<SayElement> says = new ArrayList<>();
     private List<GoalElement> goals = new ArrayList<>();
 
     /**
@@ -36,23 +46,42 @@ public class Template implements Serializable {
     }
 
     public boolean hasBodies() {
-        return contents != null && !contents.isEmpty();
+        return says.stream().findFirst().map(it -> !it.getContents().isEmpty()).orElse(false);
     }
+//    public boolean hasBodies() {
+//        return contents.isEmpty();
+//    }
 
     /**
      * May contain "get", e.g.
      *
      * Hi there. I was just wanting to talk to &lt;get name="name"/>.
+     * @deprecated use {@link SayElement#getContents()}.
      */
-    @XmlMixed
-    @XmlElementRef(name = "get", type = Get.class)
+    @Deprecated
     public List<Serializable> getContents() {
-        return contents;
+        return says.stream().findFirst().map(SayElement::getContents).orElse(null);
+//        return contents;
     }
 
+    @XmlMixed
+    @XmlElementRef(name = "get", type = Get.class)
+    public void setContents(List<Serializable> contents) {
+        if (says.isEmpty()) {
+            says.add(new SayElement());
+        }
+        says.get(0).getContents().addAll(contents);
+    }
+
+    /**
+     * @deprecated Use {@link SayElement#getContentsString()}.
+     * @return
+     */
     @XmlTransient
+    @Deprecated
     public String getContentsString() {
-        return contents != null ? contents.stream().map(Object::toString).collect(Collectors.joining(" ")).trim() : "";
+//        return !contents.isEmpty() ? contents.stream().map(Object::toString).collect(Collectors.joining(" ")).trim() : "";
+        return says.stream().findFirst().map(SayElement::getContentsString).orElse("");
     }
 
     @XmlElement(name="sr")
@@ -69,22 +98,40 @@ public class Template implements Serializable {
 //        this.randoms = randoms;
 //    }
 
-    @XmlElement(name="image")
-    public ImageObject getImage() {
-        return image;
-    }
+//    @Deprecated
+//    @XmlElement
+//    public ImageObject getImage() {
+//        return says.stream().findFirst().map(SayElement::getImage).orElse(null);
+//    }
+//
+//    public void setImage(ImageObject image) {
+//        if (says.isEmpty()) {
+//            says.add(new SayElement());
+//        }
+//        says.get(0).setImage(image);
+//    }
+//
+//    @Deprecated
+//    @XmlElement
+//    public AudioObject getAudio() {
+//        return says.stream().findFirst().map(SayElement::getAudio).orElse(null);
+//    }
+//
+//    public void setAudio(AudioObject audio) {
+//        if (says.isEmpty()) {
+//            says.add(new SayElement());
+//        }
+//        says.get(0).setAudio(audio);
+//    }
 
-    public void setImage(ImageObject image) {
-        this.image = image;
-    }
-
-    @XmlElement(name="audio")
-    public AudioObject getAudio() {
-        return audio;
-    }
-
-    public void setAudio(AudioObject audio) {
-        this.audio = audio;
+    /**
+     * Warning: do not mix default Say (using {@link #getContents()}) with
+     * dedicated {@link SayElement}(s).
+     * @return
+     */
+    @XmlElement(name = "say")
+    public List<SayElement> getSays() {
+        return says;
     }
 
     @XmlElement(name = "goal")
@@ -98,7 +145,6 @@ public class Template implements Serializable {
                 "srai=" + srai +
                 ", contents=" + getContentsString() +
                 ", randoms=" + randoms +
-                ", image=" + image +
                 '}';
     }
 }

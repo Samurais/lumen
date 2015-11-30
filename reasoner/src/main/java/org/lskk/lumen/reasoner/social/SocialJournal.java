@@ -2,13 +2,19 @@ package org.lskk.lumen.reasoner.social;
 
 import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.core.SimpleTruthValue;
+import org.lskk.lumen.core.SocialChannel;
 import org.lskk.lumen.reasoner.event.AgentResponse;
+import org.lskk.lumen.reasoner.expression.Proposition;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 19/11/2015.
@@ -163,12 +169,48 @@ public class SocialJournal implements Serializable {
         this.receivedLanguage = Optional.ofNullable(receivedLanguage).map(Locale::toLanguageTag).orElse(null);
     }
 
-    public Locale getResponseLanguage() {
-        return Optional.ofNullable(responseLanguage).map(Locale::forLanguageTag).orElse(null);
+    public String getResponseLanguage() {
+        return responseLanguage;
     }
 
-    public void setResponseLanguage(Locale responseLanguage) {
-        this.responseLanguage = Optional.ofNullable(responseLanguage).map(Locale::toLanguageTag).orElse(null);
+    public void setResponseLanguage(String responseLanguage) {
+        this.responseLanguage = responseLanguage;
+    }
+
+    public void setFromResponse(Locale inputLocale, String avatarId,
+                                String receivedText,
+                                SocialChannel socialChannel,
+                                AgentResponse agentResponse,
+                                Duration processingTime) {
+        setAvatarId(avatarId);
+        setAgentId(agentId);
+        setSocialChannelId(socialChannel.getThingId());
+        setReceivedLanguage(Optional.ofNullable(agentResponse.getStimuliLanguage()).orElse(inputLocale));
+        setReceivedText(receivedText);
+        setResponseInsertables(
+                agentResponse.getInsertables().stream()
+                        .map(it -> it.getClass().getName()).collect(Collectors.joining(", ")));
+        setTruthValue(new SimpleTruthValue(agentResponse.getMatchingTruthValue()));
+
+        if (!agentResponse.getCommunicateActions().isEmpty()) {
+            for (final CommunicateAction communicateAction : agentResponse.getCommunicateActions()) {
+                if (getResponseKind() != null) {
+                    setResponseKind(getResponseKind() + ", ");
+                    setResponseLanguage(getResponseLanguage() + ", ");
+                    setResponseText(getResponseText() + "\n");
+                } else {
+                    setResponseKind("");
+                    setResponseLanguage("");
+                    setResponseText("");
+                }
+                setResponseKind(getResponseKind() + communicateAction.getClass().getName());
+                setResponseLanguage(getResponseLanguage() + communicateAction.getInLanguage().toLanguageTag());
+                setResponseText(getResponseText() + communicateAction.getObject());
+            }
+        } else if (agentResponse.getUnrecognizedInput() != null) {
+            setResponseKind(agentResponse.getUnrecognizedInput().getClass().getName());
+        }
+        setProcessingTime(processingTime.getMillis() / 1000f);
     }
 
     @PrePersist

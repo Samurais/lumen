@@ -3,6 +3,7 @@ package org.lskk.lumen.reasoner;
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.rabbitmq.RabbitMQConstants;
+import org.joda.time.Duration;
 import org.lskk.lumen.core.*;
 import org.lskk.lumen.core.util.AsError;
 import org.lskk.lumen.reasoner.aiml.AimlService;
@@ -69,33 +70,24 @@ public class ReasonerRouter extends RouteBuilder {
                     log.info("Chat inbox for {}: {}", inCommunicate.getAvatarId(), inCommunicate);
 
                     final Locale origLocale = Optional.ofNullable(inCommunicate.getInLanguage()).orElse(Locale.US);
+                    final float[] speechTruthValue = Optional.ofNullable(inCommunicate.getSpeechTruthValue()).orElse(new float[]{0f, 0f, 0f});
+                    final boolean speechInput = speechTruthValue.length >= 2 && speechTruthValue[1] > 0f;
                     final AgentResponse agentResponse = aimlService.process(origLocale, inCommunicate.getObject(),
-                            chatChannel, inCommunicate.getAvatarId());
+                            chatChannel, inCommunicate.getAvatarId(), speechInput);
 
-                    final SocialJournal socialJournal = new SocialJournal();
-                    socialJournal.setAvatarId(inCommunicate.getAvatarId());
-                    socialJournal.setAgentId(agentId);
-                    socialJournal.setSocialChannelId(SocialChannel.DIRECT.getThingId());
-                    socialJournal.setReceivedLanguage(Optional.ofNullable(agentResponse.getStimuliLanguage()).orElse(origLocale));
-                    socialJournal.setReceivedText(inCommunicate.getObject());
-                    socialJournal.setResponseInsertables(
-                            agentResponse.getInsertables().stream()
-                                    .map(it -> it.getClass().getName()).collect(Collectors.joining(", ")));
-                    socialJournal.setTruthValue(new SimpleTruthValue(agentResponse.getMatchingTruthValue()));
-
-                    if (agentResponse.getCommunicateAction() != null) {
-                        agentResponse.getCommunicateAction().setUsedForSynthesis(true); // enable speech synthesis
-                        chatChannel.express(inCommunicate.getAvatarId(), agentResponse.getCommunicateAction(), null);
-                        socialJournal.setResponseKind(agentResponse.getCommunicateAction().getClass().getName());
-                        socialJournal.setResponseLanguage(agentResponse.getCommunicateAction().getInLanguage());
-                        socialJournal.setResponseText(agentResponse.getCommunicateAction().getObject());
+                    if (!agentResponse.getCommunicateActions().isEmpty()) {
+                        for (final CommunicateAction communicateAction : agentResponse.getCommunicateActions()) {
+                            chatChannel.express(inCommunicate.getAvatarId(), communicateAction, null);
+                        }
                     } else if (agentResponse.getUnrecognizedInput() != null) {
                         chatChannel.express(inCommunicate.getAvatarId(), Proposition.I_DONT_UNDERSTAND, true, null);
-                        socialJournal.setResponseKind(agentResponse.getUnrecognizedInput().getClass().getName());
                     }
                     droolsService.process(agentResponse);
-                    socialJournal.setProcessingTime((System.currentTimeMillis() - startTime) / 1000f);
 
+                    final SocialJournal socialJournal = new SocialJournal();
+                    socialJournal.setFromResponse(origLocale, inCommunicate.getAvatarId(),
+                            inCommunicate.getObject(), SocialChannel.DIRECT,
+                            agentResponse, Duration.millis(System.currentTimeMillis() - startTime));
                     socialJournalRepo.save(socialJournal);
 
                     exchange.getIn().setBody(new Status());

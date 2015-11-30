@@ -2,10 +2,13 @@ package org.lskk.lumen.reasoner.socmed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.imgur.ImgUr;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
+import org.joda.time.Duration;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.core.SimpleTruthValue;
 import org.lskk.lumen.core.SocialChannel;
 import org.lskk.lumen.reasoner.DroolsService;
@@ -35,6 +38,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -113,26 +117,31 @@ public class ReasonerTwitterConfig {
         final DirectMessageHandler dmHandler = new DirectMessageHandler();
         dmHandler.setAuthorization(twitterAuthorization());
         final Twitter twitter = twitterFactory().getInstance(new AccessToken(twitterAuthorization().getAccessToken(), twitterAuthorization().getAccessTokenSecret()));
+        final Locale origLocale = Locale.US;
         dmHandler.setOnDirectMessage(dm -> {
             final long startTime = System.currentTimeMillis();
             try {
                 final TwitterDirectMessageChannel twitterDmChannel = new TwitterDirectMessageChannel(
                         sentenceGenerator_en, sentenceGenerator_id,
                         twitter, imageObjectResolver, imgurConfig, dm.getSenderScreenName());
-                final AgentResponse resp = aimlService.process(Locale.US, dm.getText(), twitterDmChannel, null);
+                final AgentResponse resp = aimlService.process(origLocale, dm.getText(), twitterDmChannel, null, false);
                 droolsService.process(resp);
                 String replyDm;
-                if (resp.getCommunicateAction() instanceof CommunicateAction) {
-                    final CommunicateAction communicateAction = resp.getCommunicateAction();
+                if (!resp.getCommunicateActions().isEmpty()) {
+                    //final CommunicateAction communicateAction = resp.getCommunicateActions();
+                    final String communicateActionsObject = resp.getCommunicateActions().stream()
+                            .map(CommunicateAction::getObject).collect(Collectors.joining(" ")).trim();
+                    final Optional<CommunicateAction> communicateImg = resp.getCommunicateActions().stream()
+                            .filter(it -> it.getImage() != null).findFirst();
                     // allow some characters for imgur URI
-                    replyDm = StringUtils.abbreviate(communicateAction.getObject(), 10000 - 100);
+                    replyDm = StringUtils.abbreviate(communicateActionsObject, 10000 - 100);
 
-                    if (communicateAction.getImage() != null) {
-                        imageObjectResolver.resolve(communicateAction.getImage());
-                        if (communicateAction.getImage().getContent() != null) {
+                    if (communicateImg.isPresent()) {
+                        imageObjectResolver.resolve(communicateImg.get().getImage());
+                        if (communicateImg.get().getImage().getContent() != null) {
                             final String imageId = imgurConfig.upload(
-                                    ContentType.create(communicateAction.getImage().getContentType()),
-                                    communicateAction.getImage().getContent(), communicateAction.getObject());
+                                    ContentType.create(communicateImg.get().getImage().getContentType()),
+                                    communicateImg.get().getImage().getContent(), communicateImg.get().getObject());
                             replyDm += " http://imgur.com/" + imageId;
                         }
 
@@ -160,19 +169,9 @@ public class ReasonerTwitterConfig {
                 }
 
                 final SocialJournal socialJournal = new SocialJournal();
-                socialJournal.setAvatarId(avatarId);
-                socialJournal.setAgentId("arkan");
-                socialJournal.setSocialChannelId(SocialChannel.TWITTER.getThingId());
-                socialJournal.setReceivedLanguage(resp.getStimuliLanguage());
-                socialJournal.setReceivedText(dm.getText());
-                socialJournal.setResponseInsertables(
-                        resp.getInsertables().stream()
-                                .map(it -> it.getClass().getName()).collect(Collectors.joining(", ")));
-                socialJournal.setTruthValue(new SimpleTruthValue(resp.getMatchingTruthValue()));
-                socialJournal.setResponseKind(resp.getCommunicateAction().getClass().getName());
-                socialJournal.setResponseLanguage(resp.getCommunicateAction().getInLanguage());
-                socialJournal.setResponseText(resp.getCommunicateAction().getObject());
-                socialJournal.setProcessingTime((System.currentTimeMillis() - startTime) / 1000f);
+                socialJournal.setFromResponse(origLocale, avatarId,
+                        dm.getText(), SocialChannel.TWITTER,
+                        resp, Duration.millis(System.currentTimeMillis() - startTime));
                 socialJournalRepo.save(socialJournal);
 
                 return ret;
@@ -204,23 +203,26 @@ public class ReasonerTwitterConfig {
                 final TwitterMentionChannel twitterMentionChannel = new TwitterMentionChannel(
                         sentenceGenerator_en, sentenceGenerator_id,
                         twitter, imageObjectResolver, imgurConfig, status.getUser().getScreenName(), status.getId());
-                final AgentResponse resp = aimlService.process(Locale.US, realMessage, twitterMentionChannel, null);
+                final AgentResponse resp = aimlService.process(origLocale, realMessage, twitterMentionChannel, null, false);
                 droolsService.process(resp);
-                final CommunicateAction communicateAction = resp.getCommunicateAction();
-                final boolean replyHasImage = communicateAction.getImage() != null;
+                //final CommunicateAction communicateAction = resp.getCommunicateAction();
+                final String communicateActionsObject = resp.getCommunicateActions().stream()
+                        .map(CommunicateAction::getObject).collect(Collectors.joining(" ")).trim();
+                final Optional<CommunicateAction> communicateImg = resp.getCommunicateActions().stream()
+                        .filter(it -> it.getImage() != null).findFirst();
                 final String ret;
-                if (!communicateAction.getObject().isEmpty() || replyHasImage) {
+                if (!Strings.isNullOrEmpty(communicateActionsObject) || communicateImg.isPresent()) {
                     final int maxReplyLength = 140 - (status.getUser().getScreenName().length() + 2)
-                            - (replyHasImage ? 23 : 0);
-                    final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(communicateAction.getObject(), maxReplyLength);
+                            - (communicateImg.isPresent() ? 23 : 0);
+                    final String replyTweet = "@" + status.getUser().getScreenName() + " " + StringUtils.abbreviate(communicateActionsObject, maxReplyLength);
                     final StatusUpdate replyStatus = new StatusUpdate(replyTweet);
-                    if (replyHasImage) {
-                        imageObjectResolver.resolve(communicateAction.getImage());
-                        if (communicateAction.getImage().getContent() != null) {
+                    if (communicateImg.isPresent()) {
+                        imageObjectResolver.resolve(communicateImg.get().getImage());
+                        if (communicateImg.get().getImage().getContent() != null) {
                             final String imageId = imgurConfig.upload(
-                                    ContentType.create(communicateAction.getImage().getContentType()),
-                                    communicateAction.getImage().getContent(), communicateAction.getObject());
-                            replyStatus.setMedia("image.jpg", new ByteArrayInputStream(communicateAction.getImage().getContent()));
+                                    ContentType.create(communicateImg.get().getImage().getContentType()),
+                                    communicateImg.get().getImage().getContent(), communicateImg.get().getObject());
+                            replyStatus.setMedia("image.jpg", new ByteArrayInputStream(communicateImg.get().getImage().getContent()));
                         }
                     }
                     replyStatus.setInReplyToStatusId(status.getId());
@@ -231,19 +233,9 @@ public class ReasonerTwitterConfig {
                 }
 
                 final SocialJournal socialJournal = new SocialJournal();
-                socialJournal.setAvatarId(avatarId);
-                socialJournal.setAgentId("arkan");
-                socialJournal.setSocialChannelId(SocialChannel.TWITTER.getThingId());
-                socialJournal.setReceivedLanguage(resp.getStimuliLanguage());
-                socialJournal.setReceivedText(realMessage);
-                socialJournal.setResponseInsertables(
-                        resp.getInsertables().stream()
-                                .map(it -> it.getClass().getName()).collect(Collectors.joining(", ")));
-                socialJournal.setTruthValue(new SimpleTruthValue(resp.getMatchingTruthValue()));
-                socialJournal.setResponseKind(resp.getCommunicateAction().getClass().getName());
-                socialJournal.setResponseLanguage(resp.getCommunicateAction().getInLanguage());
-                socialJournal.setResponseText(resp.getCommunicateAction().getObject());
-                socialJournal.setProcessingTime((System.currentTimeMillis() - startTime) / 1000f);
+                socialJournal.setFromResponse(origLocale, avatarId,
+                        realMessage, SocialChannel.TWITTER,
+                        resp, Duration.millis(System.currentTimeMillis() - startTime));
                 socialJournalRepo.save(socialJournal);
 
                 return ret;

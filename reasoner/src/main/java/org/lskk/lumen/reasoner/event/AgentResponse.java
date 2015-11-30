@@ -18,18 +18,22 @@ public class AgentResponse implements Serializable {
     private List<Object> stimuli = new ArrayList<>();
     private Locale stimuliLanguage;
     private float[] matchingTruthValue;
-    private CommunicateAction communicateAction;
+    private List<CommunicateAction> communicateActions = new ArrayList<>();
     private UnrecognizedInput unrecognizedInput;
     private List<Serializable> insertables = new ArrayList<>();
 
+    public AgentResponse(Object stimuli) {
+        this.stimuli.add(stimuli);
+    }
+
     public AgentResponse(Object stimuli, CommunicateAction communicateAction) {
         this.stimuli.add(stimuli);
-        this.communicateAction = communicateAction;
+        this.communicateActions.add(communicateAction);
     }
 
     public AgentResponse(List<Object> stimuli, CommunicateAction communicateAction) {
         this.stimuli.addAll(stimuli);
-        this.communicateAction = communicateAction;
+        this.communicateActions.add(communicateAction);
     }
 
     public AgentResponse(List<Object> stimuli, UnrecognizedInput unrecognizedInput) {
@@ -47,7 +51,7 @@ public class AgentResponse implements Serializable {
     }
 
     /**
-     * Language of {@link #getStimuli()} as determined by {@link org.lskk.lumen.reasoner.aiml.AimlService#process(Locale, String, Channel, String)}.
+     * Language of {@link #getStimuli()} as determined by {@link org.lskk.lumen.reasoner.aiml.AimlService#process(Locale, String, Channel, String, boolean)}.
      * @return
      */
     public Locale getStimuliLanguage() {
@@ -79,12 +83,8 @@ public class AgentResponse implements Serializable {
         this.matchingTruthValue = matchingTruthValue;
     }
 
-    public CommunicateAction getCommunicateAction() {
-        return communicateAction;
-    }
-
-    public void setCommunicateAction(CommunicateAction communicateAction) {
-        this.communicateAction = communicateAction;
+    public List<CommunicateAction> getCommunicateActions() {
+        return communicateActions;
     }
 
     /**
@@ -103,7 +103,7 @@ public class AgentResponse implements Serializable {
     public String toString() {
         return "AgentResponse{" +
                 "stimuli=" + stimuli +
-                ", response=" + communicateAction +
+                ", communicateActions=" + communicateActions +
                 ", insertables=" + insertables +
                 '}';
     }

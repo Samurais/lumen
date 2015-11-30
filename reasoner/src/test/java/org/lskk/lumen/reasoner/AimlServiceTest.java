@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
 import java.util.Locale;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -40,7 +41,10 @@ public class AimlServiceTest {
 //    @EnableConfigurationProperties
     public static class Config {
         @Bean
-        public AimlService aimlService() { return new AimlService(); }
+        public AimlService aimlService() {
+            final AimlService aimlService = new AimlService();
+            return aimlService;
+        }
 
     }
 
@@ -55,28 +59,28 @@ public class AimlServiceTest {
     @Test
     public void match() {
         AimlService.MatchingCategory matching;
-        matching = AimlService.match(Locale.US, "good morning", "good morning");
+        matching = AimlService.match(Optional.empty(), "good morning", "good morning");
         assertThat(matching.truthValue[1], equalTo(1f));
-        matching = AimlService.match(Locale.US, "good morning arkan", "good morning *");
+        matching = AimlService.match(Optional.empty(), "good morning arkan", "good morning *");
         assertThat(matching.truthValue[1], equalTo(0.91f));
         assertThat(matching.groups, contains("arkan"));
-        matching = AimlService.match(Locale.US, "arkan bye", "* bye");
+        matching = AimlService.match(Optional.empty(), "arkan bye", "* bye");
         assertThat(matching.truthValue[1], equalTo(0.81f));
         assertThat(matching.groups, contains("arkan"));
-        matching = AimlService.match(Locale.US, "arkan bye", "_ bye");
+        matching = AimlService.match(Optional.empty(), "arkan bye", "_ bye");
         assertThat(matching.truthValue[1], equalTo(0.82f));
         assertThat(matching.groups, contains("arkan"));
-        matching = AimlService.match(Locale.US, "i love allah", "i love _");
+        matching = AimlService.match(Optional.empty(), "i love allah", "i love _");
         assertThat(matching.truthValue[1], equalTo(0.92f));
         assertThat(matching.groups, contains("allah"));
-        matching = AimlService.match(Locale.US, "i love allah so much", "i love _");
+        matching = AimlService.match(Optional.empty(), "i love allah so much", "i love _");
         assertThat(matching.truthValue[1], equalTo(0f));
     }
 
     @Test
     public void matchTwoGroups() {
         AimlService.MatchingCategory matching;
-        matching = AimlService.match(Locale.US, "read al kahfi ayat 42", "read _ _ ayat _");
+        matching = AimlService.match(Optional.empty(), "read al kahfi ayat 42", "read _ _ ayat _");
         log.info("Matching: {}", matching);
         assertThat(matching.truthValue[1], greaterThanOrEqualTo(0.9f));
         assertThat(matching.groups, hasSize(4));
@@ -89,8 +93,9 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "hello, how are you??", null, null);
-        assertThat(((CommunicateAction) resp.getCommunicateAction()).getObject(), equalTo("I am fine thank you how are you?"));
+        resp = aimlService.process(Locale.US, "hello, how are you??", null, null, false);
+        assertThat(resp.getCommunicateActions().get(0).getObject(), startsWith("Alhamdulillah"));
+        assertThat(resp.getCommunicateActions().get(1).getObject(), startsWith("I am fine"));
     }
 
     @Test
@@ -99,8 +104,8 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "how are you", null, null);
-        assertThat(((CommunicateAction) resp.getCommunicateAction()).getObject(), equalTo("I am fine thank you how are you?"));
+        resp = aimlService.process(Locale.US, "how are you", null, null, false);
+        assertThat(resp.getCommunicateActions().get(0).getObject(), equalTo("I am fine thank you how are you?"));
     }
 
     @Test
@@ -109,8 +114,8 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "cat", null, null);
-        final CommunicateAction communicateAction = (CommunicateAction) resp.getCommunicateAction();
+        resp = aimlService.process(Locale.US, "cat", null, null, false);
+        final CommunicateAction communicateAction = resp.getCommunicateActions().get(0);
         assertThat(communicateAction.getObject(), containsString("funny cat"));
         assertThat(communicateAction.getImage(), notNullValue());
     }
@@ -121,7 +126,7 @@ public class AimlServiceTest {
         // SRAI to "hi", but salutations.aiml has no rule for "hi"
 //        resp = aimlService.process(Locale.US, "konnichiwa ... !!");
 //        assertThat(((CommunicateAction) resp.getResponse()).getObject(), equalTo("hello"));
-        resp = aimlService.process(Locale.US, "read al-kahfi ayat 104", null, null);
+        resp = aimlService.process(Locale.US, "read al-kahfi ayat 104", null, null, false);
         log.info("Response: {}", resp);
         assertThat(resp.getInsertables(), hasSize(1));
         assertThat(resp.getInsertables().get(0), instanceOf(ReciteQuran.class));

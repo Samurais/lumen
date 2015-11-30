@@ -18,11 +18,27 @@
         <pattern lang="id-ID">assalamu alaikum</pattern>
         <pattern lang="id-ID">assalaamu alaikum</pattern>
         <template>
-            Wa'alaikumussalaam wa rahmatullahi wa barokatuh.
-            <audio mediaLayer="SPEECH" url="file:audio/islam/waalaikumussalam_warahmatullahi_wabarakatuh.ogg" />
+            <say synthesis="false">
+                Wa'alaikumussalaam wa rahmatullahi wa barokatuh.
+                <audio mediaLayer="SPEECH" url="file:audio/islam/waalaikumussalam_warahmatullahi_wabarakatuh.ogg" />
+            </say>
         </template>
     </category>
     <category>
+        <pattern lang="en-US">how are you</pattern>
+        <pattern lang="en-US">hi how are you</pattern>
+        <pattern lang="en-US">hello how are you</pattern>
+        <pattern lang="en-US">aslkm how are you</pattern>
+        <pattern lang="en-US">asalamualaikum how are you</pattern>
+        <pattern lang="en-US">assalamualaikum how are you</pattern>
+        <pattern lang="en-US">asalaamualaikum how are you</pattern>
+        <pattern lang="en-US">assalaamualaikum how are you</pattern>
+        <pattern lang="en-US">how are you</pattern>
+        <pattern lang="en-US">how is it going</pattern>
+        <pattern lang="en-US">how r u</pattern>
+        <pattern lang="en-US">how are u</pattern>
+        <pattern lang="en-US">how r you</pattern>
+        <pattern lang="en-US">how do you do</pattern>
         <pattern lang="id-ID">apa kabar</pattern>
         <pattern lang="id-ID">apa kabarnya</pattern>
         <pattern lang="id-ID">apa kabarmu</pattern>
@@ -70,8 +86,16 @@
         <pattern lang="id-ID">kayfhaluka</pattern>
         <pattern lang="id-ID">kayf haluka</pattern>
         <template>
-            Alhamdulillah, aku baik-baik saja.
-            <audio mediaLayer="SPEECH" url="file:audio/islam/alhamdulillah.ogg" />
+            <say lang="id-ID" synthesis="false">
+                Alhamdulillah.
+                <audio mediaLayer="SPEECH" url="file:audio/islam/alhamdulillah.ogg" />
+            </say>
+            <say iflang="en-US">
+                I am fine.
+            </say>
+            <say iflang="id-ID">
+                Aku baik-baik saja.
+            </say>
         </template>
     </category>
 </aiml>
