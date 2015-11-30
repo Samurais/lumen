@@ -156,7 +156,7 @@
             <say iflang="en-US" emotion="JOY">
                 Very nice to meet you. See you again!
             </say>
-            <say iflang="id-ID" emotion="JOY">
+            <say iflang="id-ID" emotion="JOY" synthesis="false">
                 Senang banget bisa ketemu kamu. Sampai jumpa lagi ya!
                 <audio mediaLayer="SPEECH" url="file:audio/aina/aina_sampai_jumpa.ogg" />
             </say>

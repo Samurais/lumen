@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML">
+    <category>
+        <pattern>what do you see</pattern>
+        <pattern>who is there</pattern>
+        <pattern>what is there</pattern>
+        <pattern>show me what you see</pattern>
+        <pattern>kamu lihat apa</pattern>
+        <pattern>lihat apa sih</pattern>
+        <pattern>apa yang kamu lihat</pattern>
+        <pattern>apa yang kaulihat</pattern>
+        <pattern>apa yang kau lihat</pattern>
+        <pattern>liatin apa</pattern>
+        <pattern>ngeliatin apa</pattern>
+        <pattern>lihatin apa</pattern>
+        <pattern>ngelihatin apa</pattern>
+        <pattern>kirim foto</pattern>
+        <pattern>kirimin foto</pattern>
+        <template>
+            <say iflang="en-US">
+                This is what I see right now
+                <image url="lumen:avatar.nao1.camera.main" />
+            </say>
+            <say iflang="id-ID">
+                Ini lho yang aku lihat sekarang
+                <image url="lumen:avatar.nao1.camera.main" />
+            </say>
+        </template>
+    </category>
+</aiml>
