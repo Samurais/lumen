@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="1.0.1" xmlns="http://alicebot.org/2001/AIML">
+    <category>
+        <pattern lang="en-US">can you dance</pattern>
+        <pattern lang="en-US">dance</pattern>
+        <pattern lang="en-US">please dance</pattern>
+        <pattern lang="en-US">dancing</pattern>
+        <pattern lang="id-ID">nari dong</pattern>
+        <pattern lang="id-ID">nari atuh</pattern>
+        <pattern lang="id-ID">bisa nari nggak</pattern>
+        <pattern lang="id-ID">bisa menari nggak</pattern>
+        <pattern lang="id-ID">bisa nari ngga</pattern>
+        <pattern lang="id-ID">bisa menari ngga</pattern>
+        <pattern lang="id-ID">bisa nari ga</pattern>
+        <pattern lang="id-ID">bisa menari ga</pattern>
+        <pattern lang="id-ID">bisa nari gak</pattern>
+        <pattern lang="id-ID">bisa menari gak</pattern>
+        <pattern lang="id-ID">goyang dong</pattern>
+        <pattern lang="id-ID">goyang atuh</pattern>
+        <pattern lang="id-ID">bisa goyang</pattern>
+        <pattern lang="id-ID">bisa ngedance</pattern>
+        <pattern lang="id-ID">joget</pattern>
+        <pattern lang="id-ID">joget atuh</pattern>
+        <pattern lang="id-ID">bisa joget</pattern>
+        <pattern lang="id-ID">joget dong</pattern>
+        <pattern lang="id-ID">njoget</pattern>
+        <pattern lang="id-ID">njoget atuh</pattern>
+        <pattern lang="id-ID">bisa njoget</pattern>
+        <pattern lang="id-ID">njoget dong</pattern>
+        <pattern lang="id-ID">dansa</pattern>
+        <pattern lang="id-ID">dansa atuh</pattern>
+        <pattern lang="id-ID">bisa dansa</pattern>
+        <pattern lang="id-ID">dansa dong</pattern>
+        <template>
+            <say iflang="en-US" emotion="JOY">
+                Of course I can dance.
+            </say>
+            <say iflang="id-ID" emotion="JOY" synthesis="false">
+                Kalo cuma joget mah kecil. Gue gitu lhoh.
+                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_dance.ogg" />
+            </say>
+            <sendtoavatar channel="ACTING" delay="PT2S">
+                {
+                    "@type": "ActingPerformance",
+                    "script": "DANCE_GANGNAM",
+                    "restAfterPerformance": "true"
+                }
+            </sendtoavatar>
+        </template>
+    </category>
+    <category>
+        <pattern lang="en-US">sing a song</pattern>
+        <pattern lang="en-US">can you sing</pattern>
+        <pattern lang="en-US">please sing</pattern>
+        <pattern lang="en-US">sing please</pattern>
+        <pattern lang="en-US">sing something</pattern>
+        <pattern lang="en-US">singing</pattern>
+        <pattern lang="en-US">play some music</pattern>
+        <pattern lang="en-US">play a music</pattern>
+        <pattern lang="en-US">play music</pattern>
+        <pattern lang="en-US">play nice music</pattern>
+        <pattern lang="en-US">play good music</pattern>
+        <pattern lang="en-US">play song</pattern>
+        <pattern lang="en-US">play a song</pattern>
+        <pattern lang="en-US">play nice song</pattern>
+        <pattern lang="en-US">play a nice song</pattern>
+        <pattern lang="en-US">play good song</pattern>
+        <pattern lang="en-US">play a good song</pattern>
+        <pattern lang="id-ID">nyanyi dong</pattern>
+        <pattern lang="id-ID">nyanyi atuh</pattern>
+        <pattern lang="id-ID">bisa nyanyi</pattern>
+        <pattern lang="id-ID">menyanyi dong</pattern>
+        <pattern lang="id-ID">menyanyi atuh</pattern>
+        <pattern lang="id-ID">bisa menyanyi</pattern>
+        <pattern lang="id-ID">main musik</pattern>
+        <pattern lang="id-ID">denger musik</pattern>
+        <pattern lang="id-ID">dengerin musik</pattern>
+        <pattern lang="id-ID">punya lagu apa</pattern>
+        <pattern lang="id-ID">dengerin lagu</pattern>
+        <pattern lang="id-ID">denger lagu</pattern>
+        <pattern lang="id-ID">lagu bagus</pattern>
+        <pattern lang="id-ID">keroncong</pattern>
+        <pattern lang="id-ID">lagu sunda</pattern>
+        <pattern lang="id-ID">musik sunda</pattern>
+        <pattern lang="id-ID">nyanyi sunda</pattern>
+        <pattern lang="id-ID">menyanyi sunda</pattern>
+        <pattern lang="id-ID">tau lagu</pattern>
+        <pattern lang="id-ID">tahu lagu</pattern>
+        <pattern lang="id-ID">tau musik</pattern>
+        <pattern lang="id-ID">tahu musik</pattern>
+        <pattern lang="id-ID">manuk dadali</pattern>
+        <template>
+            <say iflang="en-US" emotion="JOY">
+                Okay let's sing together with me
+            </say>
+            <say iflang="id-ID" emotion="JOY" synthesis="false">
+                Oke dengerin suaraku yang merdu ya
+                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_menyanyi.ogg" />
+            </say>
+            <sendtoavatar channel="ACTING">
+                {
+                    "@type": "ActingPerformance",
+                    "script": "SING_MANUK",
+                    "restAfterPerformance": "true"
+                }
+            </sendtoavatar>
+        </template>
+    </category>
+    <category>
+        <pattern lang="en-US">take a picture</pattern>
+        <pattern lang="en-US">take photo</pattern>
+        <pattern lang="en-US">take a photo</pattern>
+        <pattern lang="en-US">selfie</pattern>
+        <pattern lang="id-ID">foto bareng</pattern>
+        <pattern lang="id-ID">foto bersama</pattern>
+        <pattern lang="id-ID">fotoin</pattern>
+        <pattern lang="id-ID">foto yuk</pattern>
+        <pattern lang="id-ID">foto dong</pattern>
+        <pattern lang="id-ID">foto atuh</pattern>
+        <pattern lang="id-ID">selfi</pattern>
+        <template>
+            <say iflang="en-US" emotion="JOY">
+                Let's take a picture together, come here near me and please smile
+            </say>
+            <say iflang="id-ID" emotion="JOY" synthesis="false">
+                Ayo kita foto bareng, sini dong deket aku, senyum ya!
+                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_foto_bareng.ogg" />
+            </say>
+            <sendtoavatar channel="ACTING" delay="PT2S">
+                {
+                    "@type": "ActingPerformance",
+                    "script": "PHOTO_POSE",
+                    "restAfterPerformance": "true"
+                }
+            </sendtoavatar>
+        </template>
+    </category>
+    <category>
+        <pattern lang="en-US">bye</pattern>
+        <pattern lang="en-US">bye bye</pattern>
+        <pattern lang="en-US">good bye</pattern>
+        <pattern lang="en-US">goodbye</pattern>
+        <pattern lang="en-US">byebye</pattern>
+        <pattern lang="en-US">ciao</pattern>
+        <pattern lang="id-ID">selamat tinggal</pattern>
+        <pattern lang="id-ID">sampai jumpa</pattern>
+        <pattern lang="id-ID">bai bai</pattern>
+        <pattern lang="id-ID">baibai</pattern>
+        <pattern lang="id-ID">pergi dulu</pattern>
+        <pattern lang="id-ID">pergi dulu ya</pattern>
+        <pattern lang="id-ID">kutinggal sebentar</pattern>
+        <pattern lang="id-ID">kutinggal bentar</pattern>
+        <pattern lang="id-ID">aku pergi sebentar</pattern>
+        <pattern lang="id-ID">aku pergi bentar</pattern>
+        <template>
+            <say iflang="en-US" emotion="JOY">
+                Very nice to meet you. See you again!
+            </say>
+            <say iflang="id-ID" emotion="JOY">
+                Senang banget bisa ketemu kamu. Sampai jumpa lagi ya!
+                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_sampai_jumpa.ogg" />
+            </say>
+            <sendtoavatar channel="ACTING" delay="PT1S">
+                {
+                    "@type": "ActingPerformance",
+                    "script": "GOOD_BYE",
+                    "restAfterPerformance": "true"
+                }
+            </sendtoavatar>
+        </template>
+    </category>
+</aiml>

@@ -15,6 +15,7 @@ import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.core.ImageObject;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.event.AgentResponse;
+import org.lskk.lumen.reasoner.event.SemanticMessage;
 import org.lskk.lumen.reasoner.event.UnrecognizedInput;
 import org.lskk.lumen.reasoner.goal.Goal;
 import org.lskk.lumen.reasoner.ux.Channel;
@@ -310,6 +311,8 @@ public class AimlService {
             }
             agentResponse.setStimuliLanguage(bestMatch.inLanguage);
             agentResponse.setMatchingTruthValue(bestMatch.truthValue);
+
+            // goal
             final HashMap<String, Object> goalVars = new HashMap<>();
             goalVars.put("groups", bestMatch.groups);
             for (final GoalElement goalEl : bestMatch.category.getTemplate().getGoals()) {
@@ -322,7 +325,6 @@ public class AimlService {
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
                     throw new ReasonerException(e, "Cannot create goal %s", goalEl);
                 }
-
                 for (final GoalElement.GoalProperty propDef : goalEl.getProperties()) {
                     final Object value = TemplateRuntime.eval(propDef.getValueExpression(), goalVars);
                     try {
@@ -332,9 +334,18 @@ public class AimlService {
                                 goalObj.getClass().getSimpleName(), propDef.getName(), value, propDef.getValueExpression());
                     }
                 }
-
                 agentResponse.getInsertables().add(goalObj);
             }
+
+            // sendToAvatar
+            for (final SendToAvatar sendToAvatar : bestMatch.category.getTemplate().getSendToAvatars()) {
+                final SemanticMessage semanticMessage = new SemanticMessage();
+                semanticMessage.setSendToAvatar(sendToAvatar);
+                semanticMessage.setTopic(sendToAvatar.getChannel().key(avatarId));
+                semanticMessage.setContent(sendToAvatar.getContent());
+                agentResponse.getSemanticMessages().add(semanticMessage);
+            }
+
             return agentResponse;
         } else {
             log.info("UNRECOGNIZED {}", stimulus);

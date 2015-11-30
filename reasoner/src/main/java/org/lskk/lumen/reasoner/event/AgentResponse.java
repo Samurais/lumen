@@ -21,6 +21,7 @@ public class AgentResponse implements Serializable {
     private List<CommunicateAction> communicateActions = new ArrayList<>();
     private UnrecognizedInput unrecognizedInput;
     private List<Serializable> insertables = new ArrayList<>();
+    private List<SemanticMessage> semanticMessages = new ArrayList<>();
 
     public AgentResponse(Object stimuli) {
         this.stimuli.add(stimuli);
@@ -97,6 +98,10 @@ public class AgentResponse implements Serializable {
 
     public UnrecognizedInput getUnrecognizedInput() {
         return unrecognizedInput;
+    }
+
+    public List<SemanticMessage> getSemanticMessages() {
+        return semanticMessages;
     }
 
     @Override

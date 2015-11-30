@@ -1,18 +1,12 @@
 package org.lskk.lumen.reasoner.aiml;
 
-import com.google.common.collect.ImmutableList;
-import org.lskk.lumen.core.AudioObject;
 import org.lskk.lumen.core.EmotionKind;
-import org.lskk.lumen.core.ImageObject;
-import org.lskk.lumen.reasoner.goal.Goal;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 10/28/15.
@@ -27,16 +21,17 @@ public class Template implements Serializable {
     //private SayElement defaultSay;
 //    private List<Serializable> contents = new ArrayList<>();
     private List<Choice> randoms = new ArrayList<>();
-//    private ImageObject image;
+    //    private ImageObject image;
 //    private AudioObject audio;
     private List<SayElement> says = new ArrayList<>();
     private List<GoalElement> goals = new ArrayList<>();
+    private List<SendToAvatar> sendToAvatars = new ArrayList<>();
 
     /**
      * Symbolic reduction artificial intelligence.
      * i.e. redirect to another {@link Category}, using the srai as input text.
      */
-    @XmlElement(name="srai")
+    @XmlElement(name = "srai")
     public String getSrai() {
         return srai;
     }
@@ -54,8 +49,9 @@ public class Template implements Serializable {
 
     /**
      * May contain "get", e.g.
-     *
+     * <p>
      * Hi there. I was just wanting to talk to &lt;get name="name"/>.
+     *
      * @deprecated use {@link SayElement#getContents()}.
      */
     @Deprecated
@@ -74,8 +70,8 @@ public class Template implements Serializable {
     }
 
     /**
-     * @deprecated Use {@link SayElement#getContentsString()}.
      * @return
+     * @deprecated Use {@link SayElement#getContentsString()}.
      */
     @XmlTransient
     @Deprecated
@@ -84,12 +80,13 @@ public class Template implements Serializable {
         return says.stream().findFirst().map(SayElement::getContentsString).orElse("");
     }
 
-    @XmlElement(name="sr")
+    @XmlElement(name = "sr")
     public Sr getSr() {
         return sr;
     }
 
-    @XmlElementWrapper(name = "random") @XmlElement(name="li")
+    @XmlElementWrapper(name = "random")
+    @XmlElement(name = "li")
     public List<Choice> getRandoms() {
         return randoms;
     }
@@ -127,6 +124,7 @@ public class Template implements Serializable {
     /**
      * Warning: do not mix default Say (using {@link #getContents()}) with
      * dedicated {@link SayElement}(s).
+     *
      * @return
      */
     @XmlElement(name = "say")
@@ -137,6 +135,11 @@ public class Template implements Serializable {
     @XmlElement(name = "goal")
     public List<GoalElement> getGoals() {
         return goals;
+    }
+
+    @XmlElement(name = "sendtoavatar")
+    public List<SendToAvatar> getSendToAvatars() {
+        return sendToAvatars;
     }
 
     @Override

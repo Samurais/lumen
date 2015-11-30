@@ -2,6 +2,7 @@ package org.lskk.lumen.reasoner;
 
 import org.kie.api.runtime.KieSession;
 import org.lskk.lumen.reasoner.event.AgentResponse;
+import org.lskk.lumen.reasoner.event.SemanticMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,12 +22,23 @@ public class DroolsService {
     private KieSession kieSession;
 
     public void process(AgentResponse resp) {
+        // insertables
         for (final Serializable ins : resp.getInsertables()) {
             try {
                 log.info("Inserting event {}", ins);
                 kieSession.insert(ins);
             } catch (Exception e) {
                 log.error("Cannot insert " + ins, e);
+                throw e;
+            }
+        }
+        // SemanticMessage
+        for (final SemanticMessage semanticMessage : resp.getSemanticMessages()) {
+            try {
+                log.info("Inserting {}", semanticMessage);
+                kieSession.insert(semanticMessage);
+            } catch (Exception e) {
+                log.error("Cannot insert " + semanticMessage, e);
                 throw e;
             }
         }

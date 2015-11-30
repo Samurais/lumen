@@ -20,7 +20,8 @@
         <template>
             <say synthesis="false">
                 Wa'alaikumussalaam wa rahmatullahi wa barokatuh.
-                <audio mediaLayer="SPEECH" url="file:audio/islam/waalaikumussalam_warahmatullahi_wabarakatuh.ogg" />
+                <!--<audio mediaLayer="SPEECH" url="file:audio/islam/waalaikumussalam_warahmatullahi_wabarakatuh.ogg" />-->
+                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_waalaikumussalaam.ogg" />
             </say>
         </template>
     </category>

@@ -2,6 +2,7 @@ package org.lskk.lumen.reasoner;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import org.apache.camel.ProducerTemplate;
 import org.drools.core.audit.WorkingMemoryConsoleLogger;
 import org.drools.core.event.DebugAgendaEventListener;
 import org.drools.core.event.DebugRuleRuntimeEventListener;
@@ -45,7 +46,11 @@ public class DroolsConfig {
     @Inject
     private Environment env;
     @Inject
+    private ProducerTemplate producer;
+
+    @Inject
     private StoryRepository storyRepo;
+
     @Inject
     private QuranService quranSvc;
     @Inject
@@ -54,7 +59,6 @@ public class DroolsConfig {
     private QuranChapterRepository quranChapterRepo;
     @Inject
     private QuranVerseRepository quranVerseRepo;
-
 
     private KieContainer kieContainer;
     private KieSession kieSession;
@@ -84,6 +88,7 @@ public class DroolsConfig {
         kieSession = kieBase().newKieSession(config, null);
         kieSession.setGlobal("log", log);
         kieSession.setGlobal("env", env);
+        kieSession.setGlobal("producer", producer);
         kieSession.setGlobal("storyRepo", storyRepo);
         kieSession.setGlobal("quranSvc", quranSvc);
         kieSession.setGlobal("literalRepo", literalRepo);

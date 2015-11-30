@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * based on condition.
  * Created by ceefour on 30/11/2015.
  */
-public class SayElement {
+public class SayElement implements Serializable {
     private Locale lang;
     private Locale ifLang;
     private Boolean synthesis;

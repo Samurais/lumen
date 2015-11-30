@@ -1,0 +1,29 @@
+dialect "mvel"
+
+import java.util.*
+import org.lskk.lumen.core.*
+import org.lskk.lumen.reasoner.*
+import org.lskk.lumen.reasoner.event.*
+import org.lskk.lumen.reasoner.expression.*
+import org.lskk.lumen.reasoner.goal.*
+import org.lskk.lumen.reasoner.story.*
+import org.lskk.lumen.reasoner.quran.*
+
+global org.slf4j.Logger log
+global org.springframework.core.env.Environment env
+global org.apache.camel.ProducerTemplate producer
+
+declare SemanticMessage
+    @role( event )
+end
+
+rule "Send SemanticMessage to RabbitMQ"
+//    timer(expr: $delayMillis) // FIXME: Unable to Analyse Expression $delayMillis:
+//                                           [Error: unable to resolve method using strict-mode: java.lang.Object.$delayMillis()]
+    timer(expr: 3000)
+when
+    $msg : SemanticMessage( $delayMillis : delayMillis )
+then
+    String destUri = "rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&skipQueueDeclare=true&routingKey=" + $msg.topic;
+    producer.sendBody(destUri, $msg.content);
+end
