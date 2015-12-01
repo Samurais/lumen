@@ -7,12 +7,12 @@
         <pattern lang="id-ID">kucing kucing lucu</pattern>
         <template>
             <say iflang="en-US">
-                Here's a funny cat! &#x1f60a;
+                Here's a funny cat! <!--&#x1f60a;-->
                 <image url="file:image/funny-animal/funny-cat01.jpg"/>
                 <audio mediaLayer="EFFECT" url="file:audio/animal/Kitten_Meow-SoundBible.com-1295572573.ogg"/>
             </say>
             <say iflang="id-ID">
-                Ini kucing yang sangat lucu! &#x1f60a;
+                Ini kucing yang sangat lucu! <!--&#x1f60a;-->
                 <image url="file:image/funny-animal/funny-cat01.jpg"/>
                 <audio mediaLayer="EFFECT" url="file:audio/animal/Kitten_Meow-SoundBible.com-1295572573.ogg"/>
             </say>
