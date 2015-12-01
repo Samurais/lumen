@@ -88,7 +88,7 @@
         <template>
             <say iflang="en-US" synthesis="false">
                 Alhamdulillah.
-                <audio mediaLayer="SPEECH" url="file:audio/aina/alhamdulillah.ogg" />
+                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_alhamdulillah.ogg" />
             </say>
             <say iflang="en-US">
                 I am fine.
