@@ -20,7 +20,6 @@
         <template>
             <say synthesis="false">
                 Wa'alaikumussalaam wa rahmatullahi wa barokatuh.
-                <!--<audio mediaLayer="SPEECH" url="file:audio/islam/waalaikumussalam_warahmatullahi_wabarakatuh.ogg" />-->
                 <audio mediaLayer="SPEECH" url="file:audio/aina/aina_waalaikumussalaam.ogg" />
             </say>
         </template>
@@ -89,7 +88,7 @@
         <template>
             <say lang="id-ID" synthesis="false">
                 Alhamdulillah.
-                <audio mediaLayer="SPEECH" url="file:audio/islam/alhamdulillah.ogg" />
+                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_alhamdulillah_aku_baik_baik_aja_gimana_dengan_kamu.ogg" />
             </say>
             <say iflang="en-US">
                 I am fine.
