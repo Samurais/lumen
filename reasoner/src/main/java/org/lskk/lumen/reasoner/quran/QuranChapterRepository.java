@@ -11,4 +11,8 @@ public interface QuranChapterRepository extends PagingAndSortingRepository<Quran
     @Query(value="SELECT chapternum FROM sanad.quranchapter WHERE regexp_replace(lower(namewithtashkeel), '[^a-z]', '', 'g') = regexp_replace(lower(:q), '[^a-z]', '', 'g');",
         nativeQuery = true)
     Integer getChapterNumByName(@Param("q") String q);
+
+    @Query(value="SELECT chapternum, levenshtein_less_equal(regexp_replace(lower(namewithtashkeel), '[^a-z]', '', 'g'), regexp_replace(lower(:q), '[^a-z]', '', 'g'), 3) lev FROM sanad.quranchapter ORDER BY lev LIMIT 1;",
+        nativeQuery = true)
+    Integer getChapterNumByFuzzy(@Param("q") String q);
 }

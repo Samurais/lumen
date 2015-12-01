@@ -114,3 +114,9 @@ databaseChangeLog:
               - column:
                   name: responselanguage
                   type: varchar(255)
+  - changeSet:
+      id: 5
+      author: ceefour
+      changes:
+        - sql:
+            "CREATE EXTENSION fuzzystrmatch"

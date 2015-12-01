@@ -32,7 +32,7 @@ public class QuranService {
         try {
             reciteQuran.setChapterNumber(Integer.parseInt(reciteQuran.getUpChapter()));
         } catch (NumberFormatException e) {
-            final Integer chapterNum = quranChapterRepo.getChapterNumByName(reciteQuran.getUpChapter());
+            final Integer chapterNum = quranChapterRepo.getChapterNumByFuzzy(reciteQuran.getUpChapter());
             reciteQuran.setChapterNumber(chapterNum);
         }
         reciteQuran.setVerseNumbers(ImmutableList.of(Integer.parseInt(reciteQuran.getUpVerses())));
