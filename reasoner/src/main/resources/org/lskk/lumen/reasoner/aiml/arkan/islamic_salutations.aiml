@@ -86,15 +86,16 @@
         <pattern lang="id-ID">kayfhaluka</pattern>
         <pattern lang="id-ID">kayf haluka</pattern>
         <template>
-            <say lang="id-ID" synthesis="false">
+            <say iflang="en-US" synthesis="false">
                 Alhamdulillah.
-                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_alhamdulillah_aku_baik_baik_aja_gimana_dengan_kamu.ogg" />
+                <audio mediaLayer="SPEECH" url="file:audio/aina/alhamdulillah.ogg" />
             </say>
             <say iflang="en-US">
                 I am fine.
             </say>
-            <say iflang="id-ID">
-                Aku baik-baik saja.
+            <say iflang="id-ID" synthesis="false">
+                Alhamdulillah. Aku baik-baik saja.
+                <audio mediaLayer="SPEECH" url="file:audio/aina/aina_alhamdulillah_aku_baik_baik_aja_gimana_dengan_kamu.ogg" />
             </say>
         </template>
     </category>
