@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.event;
 
+import org.joda.time.Duration;
 import org.lskk.lumen.reasoner.aiml.SendToAvatar;
 
 import java.io.Serializable;

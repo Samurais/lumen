@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner;
 
+import org.apache.camel.ProducerTemplate;
 import org.kie.api.runtime.KieSession;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.event.SemanticMessage;

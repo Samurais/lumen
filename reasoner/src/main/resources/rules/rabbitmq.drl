@@ -25,5 +25,6 @@ when
     $msg : SemanticMessage( $delayMillis : delayMillis )
 then
     String destUri = "rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&skipQueueDeclare=true&routingKey=" + $msg.topic;
-    producer.sendBody(destUri, $msg.content);
+    // expires after 1 minute (https://www.rabbitmq.com/ttl.html)
+    producer.sendBodyAndHeaders(destUri, $msg.content, ["rabbitmq.EXPIRATION": 60000]);
 end
