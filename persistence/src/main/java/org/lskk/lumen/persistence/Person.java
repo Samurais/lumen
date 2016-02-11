@@ -1,6 +1,5 @@
 package org.lskk.lumen.persistence;
 
-import groovy.transform.CompileStatic;
 import org.springframework.data.neo4j.annotation.GraphId;
 import org.springframework.data.neo4j.annotation.Indexed;
 import org.springframework.data.neo4j.annotation.NodeEntity;
@@ -8,7 +7,6 @@ import org.springframework.data.neo4j.annotation.NodeEntity;
 /**
  * Created by Budhi on 21/01/2015.
  */
-@CompileStatic
 @NodeEntity
 @Deprecated
 public class Person {

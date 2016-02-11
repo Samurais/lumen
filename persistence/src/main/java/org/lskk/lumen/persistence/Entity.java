@@ -1,6 +1,5 @@
 package org.lskk.lumen.persistence;
 
-import groovy.transform.CompileStatic;
 import org.springframework.data.neo4j.annotation.GraphId;
 import org.springframework.data.neo4j.annotation.Indexed;
 import org.springframework.data.neo4j.annotation.Labels;
@@ -11,7 +10,6 @@ import java.util.Set;
 /**
  * Created by Budhi on 21/01/2015.
  */
-@CompileStatic
 @NodeEntity
 public class Entity {
     @Override
