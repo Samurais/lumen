@@ -399,13 +399,29 @@ Your heap (`-Xmx`) should be large, i.e. 75% of RAM.
 
 For more info, see (Neo4j Linux Performance Guide](http://neo4j.com/docs/stable/linux-performance-guide.html).
 
-## Import from Yago3 (Lumen Persistence v1.0.0)
+## Yago3-based databases (Lumen Persistence v1.0.0)
 
 Now we have a different structure, where each Yago logical knowledge is contained in its own graph database,
 and using OpenCog-friendly schema as much as possible.
 
-1. `~/lumen_lumen_{tenantEnv}/lumen/taxonomy.neo4j`. Contains the entire `yagoTaxonomy.tsv`, plus the
+Ready database files is available from Hendy Irawan:
+`hendywl\project_passport\lumen\persistence` (see `README.md` there)
+
+1. `~/lumen_lumen_{tenantEnv}/lumen/taxonomy.neo4j`. (325 MB) Contains the entire `yagoTaxonomy.tsv`, plus the
     `rdfs:label`, `skos:prefLabel`, `isPreferredMeaningOf` from `yagoLabels.tsv` of those mentioned types.
+
+### How to Import
+
+1. Edit `persistence/config/application.properties`, ensure `workspaceDir` is on the fast data drive
+   (and if you dual-boot, shared), e.g.
+   
+        workspaceDir=D:/lumen_lumen_${tenantEnv}
+
+2. `ImportYagoTaxonomyApp YAGO3_FOLDER` using `-Xmx4g`
+    Required input files: `yagoTaxonomy.tsv, yagoLabels.tsv`
+    Sample YAGO3_FOLDER: `D:\databank\yago3_work`
+    ~3 minutes on i7-6700HQ+16GB+SSD
+
 
 ## Steps to Import from Yago2s (Lumen Persistence v0.0.1)
 
