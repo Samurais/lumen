@@ -126,7 +126,7 @@ public class LumenPersistenceImportLabelsApp implements CommandLineRunner {
     }
 
     protected static final Logger log = LoggerFactory.getLogger(LumenPersistenceImportLabelsApp.class);
-    private static final String LUMEN_NAMESPACE = "http://lumen.lskk.ee.itb.ac.id/resource/";
+    private static final String LUMEN_NAMESPACE = "http://lumen.lskk.org/resource/";
     protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.US);
     @Inject
     protected Environment env;
