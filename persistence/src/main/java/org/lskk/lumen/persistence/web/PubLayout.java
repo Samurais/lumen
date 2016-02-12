@@ -8,6 +8,7 @@ import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -37,7 +38,7 @@ public abstract class PubLayout extends WebPage {
         add(new HtmlTag("html", Locale.US));
         add(new Label("title", getTitleModel()));
         add(new MetaTag("metaDescription", new Model<>("description"), getMetaDescriptionModel()));
-//        add(new BookmarkablePageLink<>("histogramLink", HistogramPage.class));
+        add(new BookmarkablePageLink<>("taxonomyListLink", TaxonomyListPage.class));
         notificationPanel = new NotificationPanel("notificationPanel");
         notificationPanel.setOutputMarkupId(true);
         add(notificationPanel);
