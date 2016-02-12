@@ -9,9 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @SpringBootApplication
-@EnableTransactionManagement
 @Profile("daemon")
 public class LumenPersistenceApplication implements CommandLineRunner {
     @Override

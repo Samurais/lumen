@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Created by ceefour on 06/10/2015.
  */
-@Component
+//@Component // FIXME: re-enable this when refactoring complete
 @Profile("daemon")
 public class JournalRouter extends RouteBuilder {
     @Inject
@@ -63,7 +63,7 @@ public class JournalRouter extends RouteBuilder {
                             try {
                                 final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node) x.get("n")).toList();
                                 log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                return new Resources(rsList.stream().map(ix -> {
+                                return new Resources<>(rsList.stream().map(ix -> {
                                             final ImageObject imageObject = new ImageObject();
                                             imageObject.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
                                             imageObject.setDatePublished(Optional.ofNullable(it.getProperty("datePublished")).map(DateTime::new).orElse(null));
@@ -92,7 +92,7 @@ public class JournalRouter extends RouteBuilder {
                             try {
                                 final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node) x.get("n")).toList();
                                 log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                return new Resources(rsList.stream().map(ix -> {
+                                return new Resources<>(rsList.stream().map(ix -> {
                                     final JointState jointState = new JointState();
                                     jointState.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
                                     jointState.setName((String) ix.getProperty("name"));
@@ -115,7 +115,7 @@ public class JournalRouter extends RouteBuilder {
                             try {
                                 final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node) x.get("n")).toList();
                                 log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                return new Resources(rsList.stream().map(ix -> {
+                                return new Resources<>(rsList.stream().map(ix -> {
                                     final TactileState tactileState = new TactileState();
                                     tactileState.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
                                     tactileState.setName((String) ix.getProperty("name"));
@@ -137,7 +137,7 @@ public class JournalRouter extends RouteBuilder {
                             try {
                                 final List<Node> rsList = FluentIterable.from(rs).transform(x -> (Node) x.get("n")).toList();
                                 log.debug("{} rows in result set: {}", rsList.size(), rsList);
-                                return new Resources(rsList.stream().map(ix -> {
+                                return new Resources<>(rsList.stream().map(ix -> {
                                     final SonarState sonarState = new SonarState();
                                     sonarState.setDateCreated(Optional.ofNullable(ix.getProperty("dateCreated")).map(DateTime::new).orElse(null));
                                     sonarState.setLeftSensor((Double) ix.getProperty("leftSensor"));
