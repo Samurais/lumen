@@ -434,11 +434,15 @@ Ready database files is available from Hendy Irawan:
    It doesn't even have a primary key!
    We need to be selective and optimize (e.g. use `ENUM`).
 
-2. Things in Neo4j, label: `schema_Thing`, partition: `lumen_${tenantEnv}_var`.
+2. Things in Neo4j, label: `schema_Thing`, partition: `lumen_var`.
     Example:
     
-        MERGE (hendy:schema_Thing {nn: 'lumen:Hendy_Irawan', prefLabel: 'Hendy Irawan', _partition: 'lumen_dev_var'})
-        MERGE (hendy) -[:rdfs_subClassOf]-> (:schema_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_dev_yago'})
+        MATCH (y {_partition: 'lumen_dev_yago'}) DETACH DELETE y;
+        MATCH (v {_partition: 'lumen_dev_var'}) DETACH DELETE v;
+    
+        MERGE (hendy:schema_Thing {nn: 'lumen:Hendy_Irawan', prefLabel: 'Hendy Irawan', _partition: 'lumen_var'})
+        MERGE (person:schema_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_yago'})
+        MERGE (hendy) -[:rdf_type]-> (person);
 
 ### How to Import
 

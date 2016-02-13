@@ -26,6 +26,8 @@ public class Thing implements Serializable {
     private String prefLabel;
     @Property(name = "_partition")
     private String partition;
+    @Relationship(type = "rdf_type")
+    private Set<Thing> types = new HashSet<>();
     @Relationship(type = "rdfs_subClassOf")
     private Set<Thing> superClasses = new HashSet<>();
 
@@ -39,9 +41,10 @@ public class Thing implements Serializable {
 
     /**
      * For YAGO things, the partition is
-     * "lumen_${tenantEnv}_yago".
+     * "lumen_yago".
      * For user-modifiable things, the partition is
-     * "lumen_${tenantEnv}_var".
+     * "lumen_var".
+     * Why not with [tenantEnv]? To make it easy to import/export.
      * @return
      */
     public String getPartition() {
@@ -66,6 +69,10 @@ public class Thing implements Serializable {
 
     public void setPrefLabel(String prefLabel) {
         this.prefLabel = prefLabel;
+    }
+
+    public Set<Thing> getTypes() {
+        return types;
     }
 
     public Set<Thing> getSuperClasses() {
