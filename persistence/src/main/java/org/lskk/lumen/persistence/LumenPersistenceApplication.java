@@ -9,10 +9,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @SpringBootApplication
-@EnableTransactionManagement
-@Profile("daemon")
+@Profile("daemonApp")
 public class LumenPersistenceApplication implements CommandLineRunner {
     @Override
     @Transactional
@@ -26,7 +24,8 @@ public class LumenPersistenceApplication implements CommandLineRunner {
     }
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(LumenPersistenceApplication.class).profiles("daemon", "neo4j-dbs").run(args);
+        new SpringApplicationBuilder(LumenPersistenceApplication.class)
+                .profiles("daemonApp", "neo4j-dbs").run(args);
     }
 
     private static final Logger log = LoggerFactory.getLogger(LumenPersistenceApplication.class);

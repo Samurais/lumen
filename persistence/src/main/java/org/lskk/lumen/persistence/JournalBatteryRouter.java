@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by ceefour on 06/10/2015.
  */
-@Component
+//@Component // FIXME: re-enable this when refactoring complete
 @Profile("daemon")
 public class JournalBatteryRouter extends RouteBuilder {
     @Inject

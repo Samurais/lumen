@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Created by ceefour on 06/10/2015.
  */
-@Component
+//@Component // FIXME: re-enable this when refactoring complete
 @Profile("daemon")
 public class TactileRouter extends RouteBuilder {
     @Inject

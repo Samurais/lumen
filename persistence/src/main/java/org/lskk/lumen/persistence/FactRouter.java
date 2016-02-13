@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * Created by ceefour on 06/10/2015.
  */
-@Component
+//@Component // FIXME: re-enable this when refactoring complete
 @Profile("daemon")
 public class FactRouter extends RouteBuilder {
     @Inject
@@ -55,7 +55,7 @@ public class FactRouter extends RouteBuilder {
                         final String classAbbrevRef = Optional.ofNullable(RdfUtils.getPREFIX_MAP().abbreviate(findAllQuery.getClassRef())).orElse(findAllQuery.getClassRef());
                         final Resources<IndexedResource> resources = new TransactionTemplate(txMgr).execute(tx -> {
                             final String cypher = "MATCH (e:Resource) -[:rdf_type*]-> (:Resource {href: {classAbbrevRef}}) RETURN e LIMIT {itemsPerPage}";
-                            final Map<String, Object> params = new HashMap<String, Object>();
+                            final Map<String, Object> params = new HashMap<>();
                             log.debug("Querying using {}: {}", params, cypher);
                             final Result<Map<String, Object>> rs = neo4j.query(cypher, params);
                             try {
@@ -85,15 +85,15 @@ public class FactRouter extends RouteBuilder {
                                 final List<ResultRow> resultRowList = rsList.stream().map(row ->
                                         new ResultRow(row.entrySet().stream().map(entry -> {
                                                     if (entry.getValue() instanceof Node) {
-                                                        return new ResultCell((String) entry.getKey(), new Neo4jNode((Node) entry.getValue()));
+                                                        return new ResultCell(entry.getKey(), new Neo4jNode((Node) entry.getValue()));
                                                     } else if (entry.getValue() instanceof Relationship) {
-                                                        return new ResultCell((String) entry.getKey(), new Neo4jRelationship((Relationship) entry.getValue()));
+                                                        return new ResultCell(entry.getKey(), new Neo4jRelationship((Relationship) entry.getValue()));
                                                     } else {
-                                                        return new ResultCell((String) entry.getKey(), entry.getValue());
+                                                        return new ResultCell(entry.getKey(), entry.getValue());
                                                     }
                                                 }
                                         ).collect(Collectors.toList()))).collect(Collectors.toList());
-                                return new Resources(resultRowList);
+                                return new Resources<>(resultRowList);
                             } finally {
                                 rs.finish();
                             }
