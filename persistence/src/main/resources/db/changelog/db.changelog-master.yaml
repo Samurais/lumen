@@ -1,0 +1,109 @@
+databaseChangeLog:
+  - changeSet:
+      id: persistence_1
+      author: ceefour
+      changes:
+        - sql: "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch"
+        - createTable:
+            schemaName: lumen
+            tableName: yagoentity
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nn
+                  type: varchar(4000)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: preflabel
+                  type: varchar(4000)
+              - column:
+                  name: ispreferredmeaningof
+                  type: varchar(4000)
+              - column:
+                  name: hasgivenname
+                  type: varchar(255)
+              - column:
+                  name: hasfamilyname
+                  type: varchar(255)
+              - column:
+                  name: hasgloss
+                  type: text
+              - column:
+                  name: redirectedfrom
+                  type: varchar(4000)
+        - createIndex:
+            indexName: ik_yagoentity_preflabel
+            schemaName: lumen
+            tableName: yagoentity
+            columns:
+              - name: preflabel
+        - createIndex:
+            indexName: ik_yagoentity_redirectedfrom
+            schemaName: lumen
+            tableName: yagoentity
+            columns:
+              - name: redirectedfrom
+        - createTable:
+            schemaName: lumen
+            tableName: yagolabel
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: entity_id
+                  type: int
+                  constraints:
+                    nullable: false
+                    references: lumen.yagoentity(id)
+                    foreignKeyName: fk_yagolabel_yagoentity
+              - column:
+                  name: inlanguage
+                  type: varchar(255)
+              - column:
+                  name: value
+                  type: varchar(4000)
+        - createIndex:
+            indexName: ik_yagolabel_entity_id
+            schemaName: lumen
+            tableName: yagolabel
+            columns:
+              - name: entity_id
+        - createIndex:
+            indexName: ik_yagolabel_inlanguage
+            schemaName: lumen
+            tableName: yagolabel
+            columns:
+              - name: inlanguage
+        - createTable:
+            schemaName: lumen
+            tableName: yagoentity_superclasses
+            columns:
+              - column:
+                  name: yagoentity_id
+                  type: int
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    references: lumen.yagoentity(id)
+                    foreignKeyName: fk_yagoentity_superclasses_yagoentity_id
+              - column:
+                  name: superclass_yagoentity_id
+                  type: int
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    references: lumen.yagoentity(id)
+                    foreignKeyName: fk_yagoentity_superclasses_superclass_yagoentity_id

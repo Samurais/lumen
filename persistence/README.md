@@ -410,6 +410,19 @@ Now we have a different structure, knowledge is split between:
     b. `lumen`
     c. `sanad`
 
+    Note: Spring Data JPA is very slow for adding 100,000+ of relationships.
+    Without proper transaction management, `ImportYagoTaxonomy2App::linkSubclasses` still not finished after 1 hour!
+    Even after using native query but without transaction management, `ImportYagoTaxonomy2App::linkSubclasses` still hasn't
+    reached 10000 relationships after 6 minutes!
+    With proper transaction management, `ImportYagoTaxonomy2App::linkSubclasses` can do 5000 links/second.
+    (total is ~570K links)
+    With proper transaction management but Spring Data-style save, `ImportYagoTaxonomy2App::addLabels` (complete)
+    needs 40 seconds to do 10000 labels.
+    With proper transaction management and native query, `ImportYagoTaxonomy2App::addLabels` (complete)
+    needs 6 seconds per 10000 labels.
+    In total, PostgreSQL can do entirely (full labels) in ~6 minutes.
+    As comparison, Neo4j can do the entire `ImportYagoTaxonomyApp` (unpartitioned, simplified labels) in 3 minutes!
+
 2. a Neo4j database with multiple partitions (using TinkerPop PartitionStrategy)
    and using OpenCog-friendly schema as much as possible.
 

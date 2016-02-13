@@ -1,61 +1,63 @@
 package org.lskk.lumen.persistence;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVReader;
+import org.apache.camel.spring.boot.CamelAutoConfiguration;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.sparql.util.NodeFactoryExtra;
-import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.lskk.lumen.persistence.jpa.YagoEntity;
+import org.lskk.lumen.persistence.jpa.YagoEntityRepository;
+import org.lskk.lumen.persistence.jpa.YagoLabel;
+import org.lskk.lumen.persistence.jpa.YagoLabelRepository;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * -Xmx4g please
  */
 @SpringBootApplication(exclude={//CrshAutoConfiguration.class,
-        JmxAutoConfiguration.class,
-        LiquibaseAutoConfiguration.class})
-@Profile("importyagotaxonomy")
-public class ImportYagoTaxonomyApp implements CommandLineRunner {
+        JmxAutoConfiguration.class, CamelAutoConfiguration.class})
+@Profile("importYagoTaxonomy2App")
+public class ImportYagoTaxonomy2App implements CommandLineRunner {
 
-    protected static final Logger log = LoggerFactory.getLogger(ImportYagoTaxonomyApp.class);
+    protected static final Logger log = LoggerFactory.getLogger(ImportYagoTaxonomy2App.class);
     protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.US);
-    /**
-     * For tmpfs/SSD, set multithreaded to true
-     */
-    protected static final boolean multithreaded = true;
     /**
      * Number of import ops per batch. Should be 10-50.
      */
     protected static final int opRate = 20;
-    /**
-     * Number of ops per transaction commit.
-     */
-    protected static final int commitRate = multithreaded ? 10000 : 100;
 
     @Inject
     private Environment env;
-    private File taxonomyDbFolder;
+    @Inject
+    private YagoEntityRepository yagoEntityRepo;
+    @Inject
+    private YagoLabelRepository yagoLabelRepo;
+    @Inject
+    private PlatformTransactionManager txMgr;
 
     /**
      * Relates a subject resource with an object resource.
@@ -239,29 +241,17 @@ public class ImportYagoTaxonomyApp implements CommandLineRunner {
         private int ops = 0;
     }
 
-    @PostConstruct
-    public void init() {
-        taxonomyDbFolder = new File(env.getRequiredProperty("workspaceDir"), "lumen/taxonomy.neo4j");
-//        txTemplate = new TransactionTemplate(txMgr)
-    }
-
-    @Bean(destroyMethod = "shutdown")
-    public GraphDatabaseService taxonomyDb() {
-        log.info("Opening taxonomy DB: {} ...", taxonomyDbFolder);
-        return new GraphDatabaseFactory().newEmbeddedDatabase(taxonomyDbFolder.getPath());
-    }
-
     /**
-     * Create initial taxonomy type nodes from taxonomyFile.
+     * Get taxonomy type nodes from taxonomyFile.
      * @param taxonomyFile
      * @throws IOException
      * @throws InterruptedException
      */
-    public Set<String> createInitialTypes(final File taxonomyFile) throws IOException, InterruptedException {
-        log.info("Create initial types {} ({} KiB) ...", taxonomyFile, NUMBER.format(taxonomyFile.length() / 1024));
+    public Set<String> getSubjectHrefsFor(File taxonomyFile) {
+        log.info("Get types from {} ({} KiB) ...", taxonomyFile, NUMBER.format(taxonomyFile.length() / 1024));
 
         final Set<String> typeHrefs = new HashSet<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(taxonomyFile), StandardCharsets.UTF_8), (int) 1024 * 1024)) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(taxonomyFile), StandardCharsets.UTF_8), 1024 * 1024)) {
             try (final CSVReader csv = new CSVReader(reader, '\t', CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)) {
 
                 while (true) {
@@ -296,19 +286,26 @@ public class ImportYagoTaxonomyApp implements CommandLineRunner {
                 }
 
             }
+        } catch (IOException e) {
+            Throwables.propagate(e);
         }
+        return typeHrefs;
+    }
 
-
-        try (final Transaction tx = taxonomyDb().beginTx()) {
-            log.info("Creating {} types... {}", typeHrefs.size(), typeHrefs.stream().limit(10).toArray());
-
-            typeHrefs.stream().forEach(it -> {
-                        try (Result res = taxonomyDb().execute("CREATE (n:schema_Thing {nn: {nn}})",
-                                ImmutableMap.of("nn", it))) { }
-                    });
-            log.info("Committing transaction...");
-            tx.success();
-        }
+    /**
+     * Create initial taxonomy type nodes from typeHrefs.
+     * @param typeHrefs
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public Set<String> createInitialTypes(Set<String> typeHrefs) {
+        log.info("Creating {} types... {}", typeHrefs.size(), typeHrefs.stream().limit(10).toArray());
+        yagoEntityRepo.save(typeHrefs.stream().map(typeHref -> {
+            final YagoEntity entity = new YagoEntity();
+            entity.setNn(typeHref);
+            return entity;
+        }).collect(Collectors.toList()));
+        log.info("Created {} types: {}", typeHrefs.size(), typeHrefs.stream().limit(10).toArray());
 
         return typeHrefs;
     }
@@ -319,51 +316,58 @@ public class ImportYagoTaxonomyApp implements CommandLineRunner {
      * @throws IOException
      * @throws InterruptedException
      */
-    public void linkSubclasses(final File taxonomyFile) throws IOException, InterruptedException {
+    public void linkSubclasses(final File taxonomyFile) {
         log.info("Link subclasses {} ({} KiB) ...", taxonomyFile, NUMBER.format(taxonomyFile.length() / 1024));
 
-        try (final Transaction tx = taxonomyDb().beginTx()) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(taxonomyFile), StandardCharsets.UTF_8), 1024 * 1024)) {
+            try (final CSVReader csv = new CSVReader(reader, '\t', CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)) {
 
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(taxonomyFile), StandardCharsets.UTF_8), 1024 * 1024)) {
-                try (final CSVReader csv = new CSVReader(reader, '\t', CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)) {
-
-                    while (true) {
-                        final String[] line = csv.readNext();
-                        if (line == null) {
-                            break;
-                        }
-
-                        final String property = line[2];
-                        if (!"rdfs:subClassOf".equals(property)) {
-                            continue;
-                        }
-
-                        final String subject = line[1];
-                        final String subjectHref;
-                        if (subject.startsWith("<")) {
-                            subjectHref = "yago:" + subject.replaceAll("[<>]", "");
-                        } else {
-                            subjectHref = subject;
-                        }
-
-                        final String resOrLiteral = line[3];
-                        final String objectHref;
-                        if (resOrLiteral.startsWith("<")) {
-                            objectHref = "yago:" + resOrLiteral.replaceAll("[<>]", "");
-                        } else {
-                            objectHref = resOrLiteral;
-                        }
-
-                        final ImmutableMap<String, Object> props = ImmutableMap.of("subclass", subjectHref, "superclass", objectHref);
-                        try (Result res = taxonomyDb().execute("MATCH (subclass:schema_Thing {nn: {subclass}}), (superclass:schema_Thing {nn: {superclass}}) " +
-                                "CREATE (subclass) -[:rdfs_subClassOf]-> (superclass)", props)) {}
+                int addedCount = 0;
+                while (true) {
+                    final String[] line = csv.readNext();
+                    if (line == null) {
+                        break;
                     }
 
+                    final String property = line[2];
+                    if (!"rdfs:subClassOf".equals(property)) {
+                        continue;
+                    }
+
+                    final String subject = line[1];
+                    final String subjectHref;
+                    if (subject.startsWith("<")) {
+                        subjectHref = "yago:" + subject.replaceAll("[<>]", "");
+                    } else {
+                        subjectHref = subject;
+                    }
+
+                    final String resOrLiteral = line[3];
+                    final String objectHref;
+                    if (resOrLiteral.startsWith("<")) {
+                        objectHref = "yago:" + resOrLiteral.replaceAll("[<>]", "");
+                    } else {
+                        objectHref = resOrLiteral;
+                    }
+
+                    final ImmutableMap<String, Object> props = ImmutableMap.of("subclass", subjectHref, "superclass", objectHref);
+//                    final YagoEntity subclass = yagoEntityRepo.findOneByNn(subjectHref);
+//                    final YagoEntity superclass = yagoEntityRepo.findOneByNn(objectHref);
+//                    subclass.getSuperClasses().add(superclass);
+//                    yagoEntityRepo.save(subclass);
+                    yagoEntityRepo.addSuperClass(subjectHref, objectHref);
+                    addedCount++;
+
+                    if (addedCount % 10000 == 0) {
+                        log.info("Linked {} subclasses so far...", addedCount);
+                    }
                 }
+
             }
 
-            log.info("Committing transaction...");
-            tx.success();
+            log.info("Linked subclasses {} ({} KiB)", taxonomyFile, NUMBER.format(taxonomyFile.length() / 1024));
+        } catch (IOException e) {
+            Throwables.propagate(e);
         }
     }
 
@@ -373,82 +377,105 @@ public class ImportYagoTaxonomyApp implements CommandLineRunner {
      * @throws IOException
      * @throws InterruptedException
      */
-    public void addLabels(final Set<String> typeHrefs, final File labelsFile) throws IOException, InterruptedException {
+    public void addLabelsOnlyForExisting(final Set<String> typeHrefs, final File labelsFile) {
         log.info("Add labels {} ({} KiB) ...", labelsFile, NUMBER.format(labelsFile.length() / 1024));
 
-        try (final Transaction tx = taxonomyDb().beginTx()) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(labelsFile), StandardCharsets.UTF_8), 1024 * 1024)) {
-                try (final CSVReader csv = new CSVReader(reader, '\t', CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)) {
-                    while (true) {
-                        final String[] line = csv.readNext();
-                        if (line == null) {
-                            break;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(labelsFile), StandardCharsets.UTF_8), 1024 * 1024)) {
+            try (final CSVReader csv = new CSVReader(reader, '\t', CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)) {
+                int labelCount = 0;
+                while (true) {
+                    final String[] line = csv.readNext();
+                    if (line == null) {
+                        break;
+                    }
+
+                    final String subject = line[1];
+                    final String subjectHref;
+                    if (subject.startsWith("<")) {
+                        subjectHref = "yago:" + subject.replaceAll("[<>]", "");
+                    } else {
+                        subjectHref = subject;
+                    }
+
+                    if (!typeHrefs.contains(subjectHref)) {
+                        continue;
+                    }
+
+                    final String property = line[2];
+                    if (ImmutableSet.of("skos:prefLabel", "<isPreferredMeaningOf>",
+                            "<hasGivenName>", "<hasFamilyName>", "<hasGloss>", "<redirectedFrom>",
+                            "rdfs:label").contains(property)) {
+                        final String resOrLiteral = line[3];
+
+                        final Node_Literal literal = (Node_Literal) NodeFactoryExtra.parseNode(resOrLiteral, RdfUtils.getPREFIX_MAP());
+                        final String literalLanguage = literal.getLiteralLanguage();
+                        final String literalStr = literal.getLiteralValue().toString();
+
+                        final ImmutableMap<String, Object> props = ImmutableMap.of("href", subjectHref, "literalStr", literalStr);
+                        if ("skos:prefLabel".equals(property)) {
+                            yagoEntityRepo.updatePrefLabel(subjectHref, literalStr);
+                            labelCount++;
+                        } else if ("<isPreferredMeaningOf>".equals(property)) {
+                            yagoEntityRepo.updateIsPreferredMeaningOf(subjectHref, literalStr);
+                            labelCount++;
+                        } else if ("<hasGivenName>".equals(property)) {
+                            yagoEntityRepo.updateHasGivenName(subjectHref, literalStr);
+                            labelCount++;
+                        } else if ("<hasFamilyName>".equals(property)) {
+                            yagoEntityRepo.updateHasFamilyName(subjectHref, literalStr);
+                            labelCount++;
+                        } else if ("<hasGloss>".equals(property)) {
+                            yagoEntityRepo.updateHasGloss(subjectHref, literalStr);
+                            labelCount++;
+                        } else if ("<redirectedFrom>".equals(property)) {
+                            yagoEntityRepo.updateRedirectedFrom(subjectHref, literalStr);
+                            labelCount++;
+                        } else if ("rdfs:label".equals(property)) {
+//                            final YagoEntity yagoEntity = yagoEntityRepo.findOneByNn(subjectHref);
+//                            final YagoLabel yagoLabel = new YagoLabel();
+//                            yagoLabel.setEntity(yagoEntity);
+//                            yagoLabel.setInLanguage(literalLanguage);
+//                            yagoLabel.setValue(literalStr);
+//                            yagoLabelRepo.save(yagoLabel);
+                            yagoLabelRepo.addLabel(subjectHref, literalLanguage, literalStr);
+                            labelCount++;
                         }
 
-                        final String subject = line[1];
-                        final String subjectHref;
-                        if (subject.startsWith("<")) {
-                            subjectHref = "yago:" + subject.replaceAll("[<>]", "");
-                        } else {
-                            subjectHref = subject;
-                        }
-
-                        if (!typeHrefs.contains(subjectHref)) {
-                            continue;
-                        }
-
-                        final String property = line[2];
-                        if (ImmutableSet.of("skos:prefLabel", "<isPreferredMeaningOf>").contains(property)) {
-                            final String resOrLiteral = line[3];
-
-                            final Node_Literal literal = (Node_Literal) NodeFactoryExtra.parseNode(resOrLiteral, RdfUtils.getPREFIX_MAP());
-                            final String literalStr = literal.getLiteralValue().toString();
-
-                            final ImmutableMap<String, Object> props = ImmutableMap.of("href", subjectHref, "literalStr", literalStr);
-                            if ("skos:prefLabel".equals(property)) {
-                                try (Result res = taxonomyDb().execute("MATCH (n:schema_Thing {nn: {href}}) SET n.prefLabel = {literalStr}", props)) { }
-                            } else if ("<isPreferredMeaningOf".equals(property)) {
-                                try (Result res = taxonomyDb().execute("MATCH (n:schema_Thing {nn: {href}}) SET n.isPreferredMeaningOf = {literalStr}", props)) { }
-                            }
+                        if (labelCount % 10000 == 0) {
+                            log.info("Added {} labels so far...", labelCount);
                         }
                     }
                 }
             }
 
-            log.info("Committing transaction...");
-            tx.success();
+            log.info("Added labels {} ({} KiB)", labelsFile, NUMBER.format(labelsFile.length() / 1024));
+        } catch (IOException e) {
+            Throwables.propagate(e);
         }
     }
 
     @Override
     public void run(String... args) throws Exception {
-        Preconditions.checkArgument(args.length >= 1, "Usage: ./importyagotaxonomy YAGO3_FOLDER");
+        Preconditions.checkArgument(args.length >= 1, "Usage: ./importyagotaxonomy2 YAGO3_FOLDER");
+        final String yagoTsvFolder = args[0];
 
 //        log.info("Purging {} ...", taxonomyDbFolder);
 //        FileUtils.deleteDirectory(taxonomyDbFolder);
+        final TransactionTemplate txTemplate = new TransactionTemplate(txMgr);
 
-        try (final Transaction tx = taxonomyDb().beginTx()) {
-
-            log.info("Ensuring constraints and indexes");
-            try (Result res = taxonomyDb().execute("CREATE CONSTRAINT ON (thing:schema_Thing) ASSERT thing.nn IS UNIQUE")) {}
-            try (Result res = taxonomyDb().execute("CREATE INDEX ON :schema_Thing(prefLabel)")) {}
-            try (Result res = taxonomyDb().execute("CREATE INDEX ON :schema_Thing(isPreferredMeaningOf)")) {
-            }
-
-            log.info("Committing transaction...");
-            tx.success();
-        }
-
-        final Set<String> typeHrefs = createInitialTypes(new File(args[0], "yagoTaxonomy.tsv"));
-        linkSubclasses(new File(args[0], "yagoTaxonomy.tsv"));
-        addLabels(typeHrefs, new File(args[0], "yagoLabels.tsv"));
+        final Set<String> typeHrefs = getSubjectHrefsFor(new File(yagoTsvFolder, "yagoTaxonomy.tsv"));
+        txTemplate.execute((tx) -> createInitialTypes(typeHrefs));
+        txTemplate.execute((tx) -> { linkSubclasses(new File(yagoTsvFolder, "yagoTaxonomy.tsv")); return null; });
+        // only add labels for existing entities, i.e. types only
+        txTemplate.execute((tx) -> { addLabelsOnlyForExisting(typeHrefs, new File(yagoTsvFolder, "yagoLabels.tsv")); return null; });
 
         log.info("Done");
     }
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(ImportYagoTaxonomyApp.class)
-                .profiles("importyagotaxonomy")
+        new SpringApplicationBuilder(ImportYagoTaxonomy2App.class)
+                .profiles("importYagoTaxonomy2App")
+                .web(false)
                 .run(args);
     }
 
