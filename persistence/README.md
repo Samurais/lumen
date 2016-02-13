@@ -399,16 +399,28 @@ Your heap (`-Xmx`) should be large, i.e. 75% of RAM.
 
 For more info, see (Neo4j Linux Performance Guide](http://neo4j.com/docs/stable/linux-performance-guide.html).
 
-## Yago3-based databases (Lumen Persistence v1.0.0)
+## PostgreSQL + Yago3-based databases (Lumen Persistence v1.0.0)
 
-Now we have a different structure, where each Yago logical knowledge is contained in its own graph database,
-and using OpenCog-friendly schema as much as possible.
+Now we have a different structure, knowledge is split between:
+ 
+1. a PostgreSQL database with multiple schemas containing multiple tables.
+    Schemas are:
+    
+    a. `public`
+    b. `lumen`
+    c. `sanad`
+
+2. a Neo4j database with multiple partitions (using TinkerPop PartitionStrategy)
+   and using OpenCog-friendly schema as much as possible.
 
 Ready database files is available from Hendy Irawan:
 `hendywl\project_passport\lumen\persistence` (see `README.md` there)
 
-1. `~/lumen_lumen_{tenantEnv}/lumen/taxonomy.neo4j`. (325 MB) Contains the entire `yagoTaxonomy.tsv`, plus the
-    `rdfs:label`, `skos:prefLabel`, `isPreferredMeaningOf` from `yagoLabels.tsv` of those mentioned types.
+1. YAGO3 in PostgreSQL.
+   Table: `public.yagofacts`
+   TODO: Even this is too slow to import even before adding indexes, e.g. `yagoSources.tsv`.
+   It doesn't even have a primary key!
+   We need to be selective and optimize (e.g. use `ENUM`).
 
 ### How to Import
 
@@ -417,11 +429,52 @@ Ready database files is available from Hendy Irawan:
    
         workspaceDir=D:/lumen_lumen_${tenantEnv}
 
-2. `ImportYagoTaxonomyApp YAGO3_FOLDER` using `-Xmx4g`
+2. YAGO3 in PostgreSQL.
+    TODO: too slow, see explanation in section above.
+    Download these parts from https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/downloads/ :
+
+        yagoGeonamesGlosses.tsv
+        yagoSimpleTypes.tsv
+        yagoDBpediaClasses.tsv
+        yagoLabels.tsv
+        yagoSources.tsv
+        yagoDBpediaInstances.tsv
+        yagoLiteralFacts.tsv
+        yagoStatistics.tsv
+        yagoFacts.tsv
+        yagoMetaFacts.tsv
+        yagoTaxonomy.tsv
+        yagoGeonamesClassIds.tsv
+        yagoMultilingualClassLabels.tsv
+        yagoTransitiveType.tsv
+        yagoGeonamesClasses.tsv
+        #yagoMultilingualInstanceLabels.tsv
+        yagoTypes.tsv
+        #yagoGeonamesData.tsv
+        yagoGeonamesOnlyData.tsv
+        yagoSchema.tsv
+        yagoWikipediaInfo.tsv
+        yagoGeonamesEntityIds.tsv
+        yagoSimpleTaxonomy.tsv
+        yagoWordnetIds.tsv
+        yagoWordnetDomains.tsv
+    
+    Import using `scripts/postgres_fixed.sql`, e.g.:
+    
+        D:
+        cd \databank\yago3_work
+        psql -a -d lumen_lumen_dev -Upostgres -f postgres_fixed.sql
+
+## No longer used
+
+1. `~/lumen_lumen_{tenantEnv}/lumen/taxonomy.neo4j` (325 MB)
+       Contains the entire `yagoTaxonomy.tsv`, plus the
+       `rdfs:label`, `skos:prefLabel`, `isPreferredMeaningOf` from `yagoLabels.tsv` of those mentioned types.
+
+    `ImportYagoTaxonomyApp YAGO3_FOLDER` using `-Xmx4g`
     Required input files: `yagoTaxonomy.tsv, yagoLabels.tsv`
     Sample YAGO3_FOLDER: `D:\databank\yago3_work`
     ~3 minutes on i7-6700HQ+16GB+SSD
-
 
 ## Steps to Import from Yago2s (Lumen Persistence v0.0.1)
 
