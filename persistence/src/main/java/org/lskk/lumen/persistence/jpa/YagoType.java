@@ -2,7 +2,9 @@ package org.lskk.lumen.persistence.jpa;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,8 +30,11 @@ public class YagoType implements Serializable {
     @Column(columnDefinition = "text")
     private String hasGloss;
     @ManyToMany(fetch = FetchType.LAZY) @JoinTable(name = "yagotype_superclasses",
-        inverseJoinColumns = @JoinColumn(name = "superclass_yagotype_id"))
-    private Set<YagoType> superClasses = new HashSet<>();
+            joinColumns = @JoinColumn(name = "yagotype_id"),
+            inverseJoinColumns = @JoinColumn(name = "superclass_yagotype_id"))
+    private List<YagoType> superClasses = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "superClasses")
+    private List<YagoType> subClasses = new ArrayList<>();
 
     public Integer getId() {
         return id;
@@ -63,8 +68,12 @@ public class YagoType implements Serializable {
         this.isPreferredMeaningOf = isPreferredMeaningOf;
     }
 
-    public Set<YagoType> getSuperClasses() {
+    public List<YagoType> getSuperClasses() {
         return superClasses;
+    }
+
+    public List<YagoType> getSubClasses() {
+        return subClasses;
     }
 
 //    public String getHasGivenName() {
