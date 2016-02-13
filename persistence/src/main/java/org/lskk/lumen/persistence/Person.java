@@ -1,13 +1,13 @@
 package org.lskk.lumen.persistence;
 
-import org.springframework.data.neo4j.annotation.GraphId;
-import org.springframework.data.neo4j.annotation.Indexed;
-import org.springframework.data.neo4j.annotation.NodeEntity;
+import org.lskk.lumen.persistence.neo4j.Thing;
+import org.neo4j.ogm.annotation.GraphId;
 
 /**
  * Created by Budhi on 21/01/2015.
+ * @deprecated Use {@link Thing}.
  */
-@NodeEntity
+//@NodeEntity
 @Deprecated
 public class Person {
     public Long getNodeId() {
@@ -36,7 +36,6 @@ public class Person {
 
     @GraphId
     private Long nodeId;
-    @Indexed(unique = true)
     private String href;
     private String prefLabel;
 }

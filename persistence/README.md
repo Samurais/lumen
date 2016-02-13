@@ -12,7 +12,6 @@ To run from command line, first you have to prepare its dependencies, then build
         mvn -DskipTests install dependency:copy-dependencies
 
 
-
 ## Overview
 
 Persistence handles the following general categories, each one is handled differently:
@@ -434,6 +433,12 @@ Ready database files is available from Hendy Irawan:
    TODO: Even this is too slow to import even before adding indexes, e.g. `yagoSources.tsv`.
    It doesn't even have a primary key!
    We need to be selective and optimize (e.g. use `ENUM`).
+
+2. Things in Neo4j, label: `schema_Thing`, partition: `lumen_${tenantEnv}_var`.
+    Example:
+    
+        MERGE (hendy:schema_Thing {nn: 'lumen:Hendy_Irawan', prefLabel: 'Hendy Irawan', _partition: 'lumen_dev_var'})
+        MERGE (hendy) -[:rdfs_subClassOf]-> (:schema_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_dev_yago'})
 
 ### How to Import
 

@@ -1,16 +1,16 @@
 package org.lskk.lumen.persistence;
 
-import org.springframework.data.neo4j.annotation.GraphId;
-import org.springframework.data.neo4j.annotation.Indexed;
-import org.springframework.data.neo4j.annotation.Labels;
-import org.springframework.data.neo4j.annotation.NodeEntity;
+import org.lskk.lumen.persistence.neo4j.Thing;
+import org.neo4j.ogm.annotation.GraphId;
 
 import java.util.Set;
 
 /**
  * Created by Budhi on 21/01/2015.
+ * @deprecated Use {@link Thing}
  */
-@NodeEntity
+//@NodeEntity
+@Deprecated
 public class Entity {
     @Override
     public String toString() {
@@ -67,7 +67,6 @@ public class Entity {
 
     @GraphId
     private Long nodeId;
-    @Indexed(unique = true)
     private String uri;
     /**
      * Make it more convenient to visualize, and only for visualization purpose (that's why it's not indexed).
@@ -81,6 +80,5 @@ public class Entity {
      * Make it more convenient to visualize and ad-hoc output, and only for visualization purpose (that's why it's not indexed).
      */
     private String prefLabel;
-    @Labels
     private Set<String> nodeLabels;
 }

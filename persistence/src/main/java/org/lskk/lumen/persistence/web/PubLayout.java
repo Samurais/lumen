@@ -39,6 +39,7 @@ public abstract class PubLayout extends WebPage {
         add(new Label("title", getTitleModel()));
         add(new MetaTag("metaDescription", new Model<>("description"), getMetaDescriptionModel()));
         add(new BookmarkablePageLink<>("yagoTypeListLink", YagoTypeListPage.class));
+        add(new BookmarkablePageLink<>("thingListLink", ThingListPage.class));
         add(new BookmarkablePageLink<>("taxonomyListLink", TaxonomyNeo4jListPage.class));
         notificationPanel = new NotificationPanel("notificationPanel");
         notificationPanel.setOutputMarkupId(true);
