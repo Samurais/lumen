@@ -44,7 +44,8 @@ public class YagoTypeListPage extends PubLayout {
         super(parameters);
 
         final ImmutableList<PropertyColumn<YagoType, String>> columns = ImmutableList.of(
-            new TextFilteredPropertyColumn<>(new Model<>("Node name"), "nn", "nn"),
+            new LinkColumn<>(new Model<>("Node name"), "nn", "nn",
+                    YagoTypeShowPage.class, "nodeName", "nn"),
             new PropertyColumn<>(new Model<>("prefLabel"), "prefLabel", "prefLabel"),
             new PropertyColumn<>(new Model<>("isPreferredMeaningOf"), "isPreferredMeaningOf"),
             new PropertyColumn<>(new Model<>("hasGloss"), "hasGloss")

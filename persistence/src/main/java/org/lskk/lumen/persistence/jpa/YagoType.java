@@ -98,4 +98,9 @@ public class YagoType implements Serializable {
     public void setHasGloss(String hasGloss) {
         this.hasGloss = hasGloss;
     }
+
+    @Override
+    public String toString() {
+        return nn;
+    }
 }
