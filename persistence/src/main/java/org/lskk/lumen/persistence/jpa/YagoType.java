@@ -7,10 +7,9 @@ import java.util.Set;
 
 /**
  * Created by ceefour on 13/02/2016.
- * @todo Rename to YagoType, because not all entities are here
  */
 @Entity
-public class YagoEntity implements Serializable {
+public class YagoType implements Serializable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Column(unique = true, length = 4000)
@@ -19,17 +18,18 @@ public class YagoEntity implements Serializable {
     private String prefLabel;
     @Column(length = 4000)
     private String isPreferredMeaningOf;
-    @Column
-    private String hasGivenName;
-    @Column
-    private String hasFamilyName;
-    @Column(length = 4000)
-    private String redirectedFrom;
+    // type entities don't use them
+//    @Column
+//    private String hasGivenName;
+//    @Column
+//    private String hasFamilyName;
+//    @Column(length = 4000)
+//    private String redirectedFrom;
     @Column(columnDefinition = "text")
     private String hasGloss;
-    @ManyToMany(fetch = FetchType.LAZY) @JoinTable(name = "yagoentity_superclasses",
-        inverseJoinColumns = @JoinColumn(name = "superclass_yagoentity_id"))
-    private Set<YagoEntity> superClasses = new HashSet<>();
+    @ManyToMany(fetch = FetchType.LAZY) @JoinTable(name = "yagotype_superclasses",
+        inverseJoinColumns = @JoinColumn(name = "superclass_yagotype_id"))
+    private Set<YagoType> superClasses = new HashSet<>();
 
     public Integer getId() {
         return id;
@@ -63,33 +63,33 @@ public class YagoEntity implements Serializable {
         this.isPreferredMeaningOf = isPreferredMeaningOf;
     }
 
-    public Set<YagoEntity> getSuperClasses() {
+    public Set<YagoType> getSuperClasses() {
         return superClasses;
     }
 
-    public String getHasGivenName() {
-        return hasGivenName;
-    }
-
-    public void setHasGivenName(String hasGivenName) {
-        this.hasGivenName = hasGivenName;
-    }
-
-    public String getHasFamilyName() {
-        return hasFamilyName;
-    }
-
-    public void setHasFamilyName(String hasFamilyName) {
-        this.hasFamilyName = hasFamilyName;
-    }
-
-    public String getRedirectedFrom() {
-        return redirectedFrom;
-    }
-
-    public void setRedirectedFrom(String redirectedFrom) {
-        this.redirectedFrom = redirectedFrom;
-    }
+//    public String getHasGivenName() {
+//        return hasGivenName;
+//    }
+//
+//    public void setHasGivenName(String hasGivenName) {
+//        this.hasGivenName = hasGivenName;
+//    }
+//
+//    public String getHasFamilyName() {
+//        return hasFamilyName;
+//    }
+//
+//    public void setHasFamilyName(String hasFamilyName) {
+//        this.hasFamilyName = hasFamilyName;
+//    }
+//
+//    public String getRedirectedFrom() {
+//        return redirectedFrom;
+//    }
+//
+//    public void setRedirectedFrom(String redirectedFrom) {
+//        this.redirectedFrom = redirectedFrom;
+//    }
 
     public String getHasGloss() {
         return hasGloss;

@@ -11,7 +11,7 @@ public class YagoLabel implements Serializable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @ManyToOne(fetch = FetchType.LAZY)
-    private YagoEntity entity;
+    private YagoType type;
     private String inLanguage;
     @Column(length = 4000)
     private String value;
@@ -24,12 +24,12 @@ public class YagoLabel implements Serializable {
         this.id = id;
     }
 
-    public YagoEntity getEntity() {
-        return entity;
+    public YagoType getType() {
+        return type;
     }
 
-    public void setEntity(YagoEntity entity) {
-        this.entity = entity;
+    public void setType(YagoType type) {
+        this.type = type;
     }
 
     public String getInLanguage() {

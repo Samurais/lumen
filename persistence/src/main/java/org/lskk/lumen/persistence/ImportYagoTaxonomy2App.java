@@ -11,9 +11,8 @@ import com.opencsv.CSVReader;
 import org.apache.camel.spring.boot.CamelAutoConfiguration;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.sparql.util.NodeFactoryExtra;
-import org.lskk.lumen.persistence.jpa.YagoEntity;
-import org.lskk.lumen.persistence.jpa.YagoEntityRepository;
-import org.lskk.lumen.persistence.jpa.YagoLabel;
+import org.lskk.lumen.persistence.jpa.YagoType;
+import org.lskk.lumen.persistence.jpa.YagoTypeRepository;
 import org.lskk.lumen.persistence.jpa.YagoLabelRepository;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
@@ -53,7 +52,7 @@ public class ImportYagoTaxonomy2App implements CommandLineRunner {
     @Inject
     private Environment env;
     @Inject
-    private YagoEntityRepository yagoEntityRepo;
+    private YagoTypeRepository yagoEntityRepo;
     @Inject
     private YagoLabelRepository yagoLabelRepo;
     @Inject
@@ -301,7 +300,7 @@ public class ImportYagoTaxonomy2App implements CommandLineRunner {
     public Set<String> createInitialTypes(Set<String> typeHrefs) {
         log.info("Creating {} types... {}", typeHrefs.size(), typeHrefs.stream().limit(10).toArray());
         yagoEntityRepo.save(typeHrefs.stream().map(typeHref -> {
-            final YagoEntity entity = new YagoEntity();
+            final YagoType entity = new YagoType();
             entity.setNn(typeHref);
             return entity;
         }).collect(Collectors.toList()));
@@ -459,8 +458,6 @@ public class ImportYagoTaxonomy2App implements CommandLineRunner {
         Preconditions.checkArgument(args.length >= 1, "Usage: ./importyagotaxonomy2 YAGO3_FOLDER");
         final String yagoTsvFolder = args[0];
 
-//        log.info("Purging {} ...", taxonomyDbFolder);
-//        FileUtils.deleteDirectory(taxonomyDbFolder);
         final TransactionTemplate txTemplate = new TransactionTemplate(txMgr);
 
         final Set<String> typeHrefs = getSubjectHrefsFor(new File(yagoTsvFolder, "yagoTaxonomy.tsv"));
