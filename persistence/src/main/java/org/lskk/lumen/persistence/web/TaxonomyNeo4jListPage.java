@@ -1,18 +1,15 @@
 package org.lskk.lumen.persistence.web;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.wicket.ajax.AjaxSelfUpdatingTimerBehavior;
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.TextFilteredPropertyColumn;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.util.time.Duration;
 import org.lskk.lumen.persistence.TaxonomyRelated;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -20,8 +17,6 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import javax.inject.Inject;
@@ -32,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 @MountPath("taxonomy")
-public class TaxonomyListPage extends PubLayout {
+public class TaxonomyNeo4jListPage extends PubLayout {
 
-    private static Logger log = LoggerFactory.getLogger(TaxonomyListPage.class);
+    private static Logger log = LoggerFactory.getLogger(TaxonomyNeo4jListPage.class);
 
     @Inject @TaxonomyRelated
     private GraphDatabaseService taxonomyDb;
@@ -78,7 +73,7 @@ public class TaxonomyListPage extends PubLayout {
         }
     }
 
-    public TaxonomyListPage(PageParameters parameters) {
+    public TaxonomyNeo4jListPage(PageParameters parameters) {
         super(parameters);
 
         final List<Thing> things = new ArrayList<>();
