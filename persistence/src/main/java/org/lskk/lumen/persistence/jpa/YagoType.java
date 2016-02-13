@@ -35,6 +35,8 @@ public class YagoType implements Serializable {
     private List<YagoType> superClasses = new ArrayList<>();
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "superClasses")
     private List<YagoType> subClasses = new ArrayList<>();
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "type")
+    private List<YagoLabel> labels = new ArrayList<>();
 
     public Integer getId() {
         return id;
@@ -76,7 +78,11 @@ public class YagoType implements Serializable {
         return subClasses;
     }
 
-//    public String getHasGivenName() {
+    public List<YagoLabel> getLabels() {
+        return labels;
+    }
+
+    //    public String getHasGivenName() {
 //        return hasGivenName;
 //    }
 //

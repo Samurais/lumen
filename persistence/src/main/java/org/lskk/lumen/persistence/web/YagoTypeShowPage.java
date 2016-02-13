@@ -12,6 +12,7 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.model.*;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.lskk.lumen.persistence.jpa.YagoLabel;
 import org.lskk.lumen.persistence.jpa.YagoType;
 import org.lskk.lumen.persistence.jpa.YagoTypeRepository;
 import org.slf4j.Logger;
@@ -52,6 +53,14 @@ public class YagoTypeShowPage extends PubLayout {
         add(new Label("prefLabel"));
         add(new Label("isPreferredMeaningOf"));
         add(new Label("hasGloss"));
+        add(new BootstrapListView<YagoLabel>("labels") {
+            @Override
+            protected void populateItem(ListItem<YagoLabel> item) {
+                final YagoLabel yagoLabel = item.getModelObject();
+                item.add(new Label("value", yagoLabel.getValue()));
+                item.add(new Label("inLanguage", yagoLabel.getInLanguage()));
+            }
+        });
         add(new BootstrapListView<YagoType>("superClasses") {
             @Override
             protected void populateItem(ListItem<YagoType> item) {
