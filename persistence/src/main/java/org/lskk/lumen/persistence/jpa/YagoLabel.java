@@ -16,6 +16,14 @@ public class YagoLabel implements Serializable {
     @Column(length = 4000)
     private String value;
 
+    public YagoLabel() {
+    }
+
+    public YagoLabel(String value, String inLanguage) {
+        this.value = value;
+        this.inLanguage = inLanguage;
+    }
+
     public Integer getId() {
         return id;
     }

@@ -17,7 +17,7 @@ public interface FactService {
      *                which will be reflected in {@link MatchingThing#getConfidence()}.
      * @param inLanguage Language of the provided label.
      * @param contexts Contexts of the match. Key is node name, value is non-normalized confidence [0..1].
-     * @return
+     * @return Matching things, sorted descending by confidence.
      */
     List<MatchingThing> match(String upLabel, Locale inLanguage, Map<String, Float> contexts);
 

@@ -1,6 +1,5 @@
 package org.lskk.lumen.persistence.service;
 
-import org.lskk.lumen.core.SimpleTruthValue;
 import org.lskk.lumen.persistence.neo4j.Thing;
 
 import java.io.Serializable;
@@ -8,9 +7,17 @@ import java.io.Serializable;
 /**
  * Created by ceefour on 14/02/2016.
  */
-public class MatchingThing implements Serializable {
+public class MatchingThing implements Serializable, Comparable<MatchingThing> {
     private Thing thing;
     private float confidence;
+
+    public MatchingThing() {
+    }
+
+    public MatchingThing(Thing thing, float confidence) {
+        this.thing = thing;
+        this.confidence = confidence;
+    }
 
     public Thing getThing() {
         return thing;
@@ -30,5 +37,10 @@ public class MatchingThing implements Serializable {
 
     public void setConfidence(float confidence) {
         this.confidence = confidence;
+    }
+
+    @Override
+    public int compareTo(MatchingThing o) {
+        return (int) Math.signum(o.getConfidence() - getConfidence());
     }
 }
