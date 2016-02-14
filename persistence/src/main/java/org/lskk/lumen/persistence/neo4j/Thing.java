@@ -24,6 +24,7 @@ public class Thing implements Serializable {
     @Property(name = "nn")
     private String nn;
     private String prefLabel;
+    private String prefLabelLang;
     @Property(name = "_partition")
     private String partition;
     @Relationship(type = "rdf_type")
@@ -69,6 +70,20 @@ public class Thing implements Serializable {
 
     public void setPrefLabel(String prefLabel) {
         this.prefLabel = prefLabel;
+    }
+
+    /**
+     * Language of the {@link #getPrefLabel()} (if set).
+     * {@code null} means unknown.
+     * The default is {@link java.util.Locale#US} and things should have this set.
+     * @return
+     */
+    public String getPrefLabelLang() {
+        return prefLabelLang;
+    }
+
+    public void setPrefLabelLang(String prefLabelLang) {
+        this.prefLabelLang = prefLabelLang;
     }
 
     public Set<Thing> getTypes() {
