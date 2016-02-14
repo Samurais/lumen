@@ -25,6 +25,7 @@ public class Thing implements Serializable {
     private String nn;
     private String prefLabel;
     private String prefLabelLang;
+    private String isPreferredMeaningOf;
     @Property(name = "_partition")
     private String partition;
     @Relationship(type = "rdf_type")
@@ -84,6 +85,14 @@ public class Thing implements Serializable {
 
     public void setPrefLabelLang(String prefLabelLang) {
         this.prefLabelLang = prefLabelLang;
+    }
+
+    public String getIsPreferredMeaningOf() {
+        return isPreferredMeaningOf;
+    }
+
+    public void setIsPreferredMeaningOf(String isPreferredMeaningOf) {
+        this.isPreferredMeaningOf = isPreferredMeaningOf;
     }
 
     public Set<Thing> getTypes() {

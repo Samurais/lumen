@@ -11,13 +11,16 @@ import java.util.Map;
  * Created by ceefour on 14/02/2016.
  */
 public interface FactService {
+
+    int MAX_RESULTS = 100;
+
     /**
      * Matches {@code upLabel} with known {@link org.lskk.lumen.persistence.neo4j.Thing}s based on active contexts.
      * @param upLabel Label to match, free-form. Fuzzy string matching will also be attempted,
      *                which will be reflected in {@link MatchingThing#getConfidence()}.
      * @param inLanguage Language of the provided label.
      * @param contexts Contexts of the match. Key is node name, value is non-normalized confidence [0..1].
-     * @return Matching things, sorted descending by confidence.
+     * @return Matching things, sorted descending by confidence, limited to {@link #MAX_RESULTS}.
      */
     List<MatchingThing> match(String upLabel, Locale inLanguage, Map<String, Float> contexts);
 

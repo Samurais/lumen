@@ -8,16 +8,21 @@ import org.lskk.lumen.persistence.jpa.YagoLabel;
 import org.lskk.lumen.persistence.jpa.YagoTypeRepository;
 import org.lskk.lumen.persistence.neo4j.Thing;
 import org.lskk.lumen.persistence.neo4j.ThingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 14/02/2016.
  */
 @Service
 public class FactServiceImpl implements FactService {
+
+    private static final Logger log = LoggerFactory.getLogger(FactServiceImpl.class);
 
     @Inject
     private ThingRepository thingRepo;
@@ -38,7 +43,7 @@ public class FactServiceImpl implements FactService {
                 leastLev = lev;
             }
         }
-        final double inverseLevenshteinMultiplier = Math.min((-Math.exp(0.25 * leastLev) + 11d) / 10d, 0d);
+        final double inverseLevenshteinMultiplier = Math.max((-Math.exp(0.25 * leastLev) + 11d) / 10d, 0d);
         final double languageMultiplier;
         if (bestLabel.getInLanguage() != null) {
             final Locale labelLang = Locale.forLanguageTag(bestLabel.getInLanguage());
@@ -59,7 +64,7 @@ public class FactServiceImpl implements FactService {
     /**
      * Confidence is calculated as follows:
      *
-     * inverseLevenshteinMultiplier = min( (-e^(0.25 * levenshtein)+11)/10, 0)
+     * inverseLevenshteinMultiplier = max( (-e^(0.25 * levenshtein)+11)/10, 0)
      * languageMultiplier = {matches: 1, partial match: 0.9, not match/unknown: 0.5}
      *
      * @param upLabel Label to match, free-form. Fuzzy string matching will also be attempted,
@@ -79,12 +84,15 @@ public class FactServiceImpl implements FactService {
             }
             final float confidence = getMatchingThingConfidence(upLabel, inLanguage, labels);
             return new MatchingThing(it, confidence);
-        });
+        }).forEach(results::add);
 
-        // TODO: find matches from YagoType
+        // FIXME: find matches from YagoType
 
         // Sort results based on confidence
-        final ImmutableList<MatchingThing> sortedResults = Ordering.natural().immutableSortedCopy(results);
+        final List<MatchingThing> sortedResults = Ordering.natural().immutableSortedCopy(results)
+                .stream().limit(MAX_RESULTS).collect(Collectors.toList());
+        log.info("match() returned {} matches using ({}, {}, {}) => {}",
+                sortedResults.size(), upLabel, inLanguage, contexts, sortedResults);
 
         return sortedResults;
     }

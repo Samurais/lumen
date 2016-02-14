@@ -1,24 +1,28 @@
 package org.lskk.lumen.persistence.web;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesomeIconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.ladda.LaddaAjaxButton;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.*;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.lskk.lumen.persistence.neo4j.Thing;
 import org.lskk.lumen.persistence.neo4j.ThingRepository;
 import org.lskk.lumen.persistence.service.FactService;
+import org.lskk.lumen.persistence.service.MatchingThing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import javax.inject.Inject;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -43,11 +48,43 @@ public class FactServicePage extends PubLayout {
     @Inject
     private FactService factService;
 
-    public static class FactServiceRequest {
+    public static class FactServiceRequest implements Serializable {
         private FactServiceOperation op = null;
         private String upLabel;
         private Locale inLanguage = Locale.forLanguageTag("id-ID");
         private List<String> contextNodeNames = new ArrayList<>();
+
+        public FactServiceOperation getOp() {
+            return op;
+        }
+
+        public void setOp(FactServiceOperation op) {
+            this.op = op;
+        }
+
+        public String getUpLabel() {
+            return upLabel;
+        }
+
+        public void setUpLabel(String upLabel) {
+            this.upLabel = upLabel;
+        }
+
+        public Locale getInLanguage() {
+            return inLanguage;
+        }
+
+        public void setInLanguage(Locale inLanguage) {
+            this.inLanguage = inLanguage;
+        }
+
+        public List<String> getContextNodeNames() {
+            return contextNodeNames;
+        }
+
+        public void setContextNodeNames(List<String> contextNodeNames) {
+            this.contextNodeNames = contextNodeNames;
+        }
     }
 
     public FactServicePage(PageParameters parameters) {
@@ -60,15 +97,38 @@ public class FactServicePage extends PubLayout {
         final Form<FactServiceRequest> form = new Form<>("form", model);
         form.add(new TextField<>("upLabel"));
         form.add(new DropDownChoice<>("inLanguage", LANGUAGE_CHOICES));
-        form.add(new LaddaAjaxButton("matchBtn", Buttons.Type.Primary) {
+        form.add(new LaddaAjaxButton("matchBtn", new Model<>("Match..."), Buttons.Type.Primary) {
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 super.onSubmit(target, form);
+                model.getObject().setOp(FactServiceOperation.MATCH);
                 target.add(matchResponseDiv);
             }
+        }.setIconType(FontAwesomeIconType.search));
+
+        final LoadableDetachableModel<List<MatchingThing>> matchingThingsModel = new LoadableDetachableModel<List<MatchingThing>>() {
+            @Override
+            protected List<MatchingThing> load() {
+                final FactServiceRequest req = model.getObject();
+                if (FactServiceOperation.MATCH == req.getOp()) {
+                    return factService.match(req.getUpLabel(), req.getInLanguage(), ImmutableMap.of());
+                } else {
+                    return ImmutableList.of();
+                }
+            }
+        };
+        matchResponseDiv.add(new ListView<MatchingThing>("matchResultLv", matchingThingsModel) {
+            @Override
+            protected void populateItem(ListItem<MatchingThing> item) {
+                final MatchingThing match = item.getModelObject();
+                final BookmarkablePageLink<ThingShowPage> link = new BookmarkablePageLink<>("link",
+                        ThingShowPage.class, new PageParameters().set("nodeName", match.getThing().getNn()));
+                link.add(new Label("nodeName", match.getThing().getNn()));
+                link.add(new Label("confidence", match.getConfidence() * 100f));
+                item.add(link);
+            }
         });
-
-
+        form.add(matchResponseDiv);
 
         add(form);
 
