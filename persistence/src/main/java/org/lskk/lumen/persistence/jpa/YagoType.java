@@ -32,11 +32,11 @@ public class YagoType implements Serializable {
     @ManyToMany(fetch = FetchType.LAZY) @JoinTable(name = "yagotype_superclasses",
             joinColumns = @JoinColumn(name = "yagotype_id"),
             inverseJoinColumns = @JoinColumn(name = "superclass_yagotype_id"))
-    private List<YagoType> superClasses = new ArrayList<>();
+    private Set<YagoType> superClasses = new HashSet<>();
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "superClasses")
-    private List<YagoType> subClasses = new ArrayList<>();
+    private Set<YagoType> subClasses = new HashSet<>();
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "type")
-    private List<YagoLabel> labels = new ArrayList<>();
+    private Set<YagoLabel> labels = new HashSet<>();
 
     public Integer getId() {
         return id;
@@ -70,15 +70,15 @@ public class YagoType implements Serializable {
         this.isPreferredMeaningOf = isPreferredMeaningOf;
     }
 
-    public List<YagoType> getSuperClasses() {
+    public Set<YagoType> getSuperClasses() {
         return superClasses;
     }
 
-    public List<YagoType> getSubClasses() {
+    public Set<YagoType> getSubClasses() {
         return subClasses;
     }
 
-    public List<YagoLabel> getLabels() {
+    public Set<YagoLabel> getLabels() {
         return labels;
     }
 
@@ -122,6 +122,7 @@ public class YagoType implements Serializable {
     public Thing toThingFull() {
         final Thing thing = toThingCompact();
         thing.getSuperClasses().addAll(getSuperClasses().stream().map(YagoType::toThingCompact).collect(Collectors.toList()));
+        thing.getSubClasses().addAll(getSubClasses().stream().map(YagoType::toThingCompact).collect(Collectors.toList()));
         return thing;
     }
 

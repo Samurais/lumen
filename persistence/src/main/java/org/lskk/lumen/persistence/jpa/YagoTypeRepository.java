@@ -16,7 +16,7 @@ public interface YagoTypeRepository extends PagingAndSortingRepository<YagoType,
 
     YagoType findOneByNn(String nn);
     List<YagoType> findAllByPrefLabelOrIsPreferredMeaningOf(String upPrefLabel, String upIsPreferredMeaningOf);
-    @Query("SELECT t FROM YagoType t LEFT JOIN FETCH t.superClasses WHERE t.prefLabel=:upLabel OR t.isPreferredMeaningOf=:upLabel")
+    @Query("SELECT DISTINCT t FROM YagoType t LEFT JOIN FETCH t.superClasses LEFT JOIN FETCH t.subClasses WHERE t.prefLabel=:upLabel OR t.isPreferredMeaningOf=:upLabel")
     List<YagoType> findAllByPrefLabelOrIsPreferredMeaningOfEager(@Param("upLabel") String upLabel);
 
     @Modifying @Query("UPDATE YagoType SET prefLabel=:prefLabel WHERE nn=:nn")

@@ -86,15 +86,21 @@ public class ThingShowPage extends PubLayout {
                     .setBody(new Model<>(thing.getNn())));
             }
         });
-//        add(new BootstrapListView<Thing>("subClasses") {
-//            @Override
-//            protected void populateItem(ListItem<Thing> item) {
-//                final Thing thing = item.getModelObject();
-//                item.add(new BookmarkablePageLink<>("link", ThingShowPage.class,
-//                        new PageParameters().set("nodeName", thing.getNn()))
-//                    .setBody(new Model<>(thing.getNn())));
-//            }
-//        });
+        final AbstractReadOnlyModel<List<Thing>> subClassesModel = new AbstractReadOnlyModel<List<Thing>>() {
+            @Override
+            public List<Thing> getObject() {
+                return ImmutableList.copyOf(thingModel.getObject().getSubClasses());
+            }
+        };
+        add(new BootstrapListView<Thing>("subClasses", subClassesModel) {
+            @Override
+            protected void populateItem(ListItem<Thing> item) {
+                final Thing thing = item.getModelObject();
+                item.add(new BookmarkablePageLink<>("link", ThingShowPage.class,
+                        new PageParameters().set("nodeName", thing.getNn()))
+                    .setBody(new Model<>(thing.getNn())));
+            }
+        });
     }
 
     @Override

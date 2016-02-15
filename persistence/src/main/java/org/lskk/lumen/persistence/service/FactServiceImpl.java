@@ -138,6 +138,11 @@ public class FactServiceImpl implements FactService {
     }
 
     @Override
+    public Thing unassertThing(String nodeName) {
+        return null;
+    }
+
+    @Override
     public Thing assertPropertyToThing(String nodeName, String property, String objectNodeName, float[] truthValue, DateTime assertionTime, String asserterNodeName) {
         throw new UnsupportedOperationException();
     }

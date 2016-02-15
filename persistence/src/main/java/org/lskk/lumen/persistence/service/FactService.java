@@ -43,6 +43,12 @@ public interface FactService {
                      boolean isPrefLabel);
 
     /**
+     * Unasserts a thing.
+     * @param nodeName
+     */
+    Thing unassertThing(String nodeName);
+
+    /**
      * Assert a property to another thing, i.e. fact.
      * @param nodeName Subject's node name, e.g. {@code lumen:Hendy_Irawan}.
      * @param property Property's QName, e.g. {@code rdf:type}.

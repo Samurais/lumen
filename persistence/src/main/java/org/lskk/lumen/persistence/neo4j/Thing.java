@@ -33,6 +33,8 @@ public class Thing implements Serializable {
     private Set<Thing> types = new HashSet<>();
     @Relationship(type = "rdfs_subClassOf")
     private Set<Thing> superClasses = new HashSet<>();
+    @Relationship(type = "rdfs_subClassOf", direction = "INCOMING")
+    private Set<Thing> subClasses = new HashSet<>();
 
     public Long getGid() {
         return gid;
@@ -104,4 +106,7 @@ public class Thing implements Serializable {
         return superClasses;
     }
 
+    public Set<Thing> getSubClasses() {
+        return subClasses;
+    }
 }
