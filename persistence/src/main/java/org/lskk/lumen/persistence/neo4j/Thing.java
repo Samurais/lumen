@@ -19,6 +19,7 @@ import java.util.Set;
  */
 @NodeEntity(label = "schema_Thing")
 public class Thing implements Serializable {
+
     @GraphId
     private Long gid;
     @Property(name = "nn")
@@ -27,7 +28,7 @@ public class Thing implements Serializable {
     private String prefLabelLang;
     private String isPreferredMeaningOf;
     @Property(name = "_partition")
-    private String partition;
+    private PartitionKey partition;
     @Relationship(type = "rdf_type")
     private Set<Thing> types = new HashSet<>();
     @Relationship(type = "rdfs_subClassOf")
@@ -49,11 +50,11 @@ public class Thing implements Serializable {
      * Why not with [tenantEnv]? To make it easy to import/export.
      * @return
      */
-    public String getPartition() {
+    public PartitionKey getPartition() {
         return partition;
     }
 
-    public void setPartition(String partition) {
+    public void setPartition(PartitionKey partition) {
         this.partition = partition;
     }
 

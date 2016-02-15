@@ -10,6 +10,8 @@ import org.apache.wicket.model.*;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.lskk.lumen.persistence.neo4j.Thing;
 import org.lskk.lumen.persistence.neo4j.ThingRepository;
+import org.lskk.lumen.persistence.service.FactService;
+import org.lskk.lumen.persistence.service.FactServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -22,8 +24,10 @@ public class ThingShowPage extends PubLayout {
 
     private static Logger log = LoggerFactory.getLogger(ThingShowPage.class);
 
+//    @Inject
+//    private ThingRepository thingRepo;
     @Inject
-    private ThingRepository thingRepo;
+    private FactService factSvc;
     private final LoadableDetachableModel<Thing> thingModel;
 
     public ThingShowPage(PageParameters parameters) {
@@ -33,7 +37,7 @@ public class ThingShowPage extends PubLayout {
         thingModel = new LoadableDetachableModel<Thing>() {
             @Override
             protected Thing load() {
-                final Thing thing = Preconditions.checkNotNull(thingRepo.findOneByNn(nodeName),
+                final Thing thing = Preconditions.checkNotNull(factSvc.describeThing(nodeName),
                         "Cannot find thing schema_Thing/%s", nodeName);
                 return thing;
             }
@@ -54,7 +58,7 @@ public class ThingShowPage extends PubLayout {
             @Override
             protected void populateItem(ListItem<Thing> item) {
                 final Thing thing = item.getModelObject();
-                item.add(new BookmarkablePageLink<>("link", YagoTypeShowPage.class,
+                item.add(new BookmarkablePageLink<>("link", ThingShowPage.class,
                         new PageParameters().set("nodeName", thing.getNn()))
                     .setBody(new Model<>(thing.getNn())));
             }
@@ -67,15 +71,21 @@ public class ThingShowPage extends PubLayout {
 //                item.add(new Label("inLanguage", yagoLabel.getInLanguage()));
 //            }
 //        });
-//        add(new BootstrapListView<Thing>("superClasses") {
-//            @Override
-//            protected void populateItem(ListItem<Thing> item) {
-//                final Thing thing = item.getModelObject();
-//                item.add(new BookmarkablePageLink<>("link", ThingShowPage.class,
-//                        new PageParameters().set("nodeName", thing.getNn()))
-//                    .setBody(new Model<>(thing.getNn())));
-//            }
-//        });
+        final AbstractReadOnlyModel<List<Thing>> superClassesModel = new AbstractReadOnlyModel<List<Thing>>() {
+            @Override
+            public List<Thing> getObject() {
+                return ImmutableList.copyOf(thingModel.getObject().getSuperClasses());
+            }
+        };
+        add(new BootstrapListView<Thing>("superClasses", superClassesModel) {
+            @Override
+            protected void populateItem(ListItem<Thing> item) {
+                final Thing thing = item.getModelObject();
+                item.add(new BookmarkablePageLink<>("link", ThingShowPage.class,
+                        new PageParameters().set("nodeName", thing.getNn()))
+                    .setBody(new Model<>(thing.getNn())));
+            }
+        });
 //        add(new BootstrapListView<Thing>("subClasses") {
 //            @Override
 //            protected void populateItem(ListItem<Thing> item) {

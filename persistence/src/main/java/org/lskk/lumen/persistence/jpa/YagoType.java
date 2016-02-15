@@ -1,11 +1,11 @@
 package org.lskk.lumen.persistence.jpa;
 
+import org.lskk.lumen.persistence.neo4j.Thing;
+
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 13/02/2016.
@@ -117,5 +117,20 @@ public class YagoType implements Serializable {
     @Override
     public String toString() {
         return nn;
+    }
+
+    public Thing toThingFull() {
+        final Thing thing = toThingCompact();
+        thing.getSuperClasses().addAll(getSuperClasses().stream().map(YagoType::toThingCompact).collect(Collectors.toList()));
+        return thing;
+    }
+
+    public Thing toThingCompact() {
+        final Thing thing = new Thing();
+        thing.setNn(getNn());
+        thing.setPrefLabel(getPrefLabel());
+        thing.setPrefLabelLang(Locale.US.toLanguageTag());
+        thing.setIsPreferredMeaningOf(getIsPreferredMeaningOf());
+        return thing;
     }
 }

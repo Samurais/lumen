@@ -6,6 +6,8 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Created by ceefour on 13/02/2016.
  */
@@ -13,6 +15,9 @@ import org.springframework.stereotype.Repository;
 public interface YagoTypeRepository extends PagingAndSortingRepository<YagoType, Integer> {
 
     YagoType findOneByNn(String nn);
+    List<YagoType> findAllByPrefLabelOrIsPreferredMeaningOf(String upPrefLabel, String upIsPreferredMeaningOf);
+    @Query("SELECT t FROM YagoType t LEFT JOIN FETCH t.superClasses WHERE t.prefLabel=:upLabel OR t.isPreferredMeaningOf=:upLabel")
+    List<YagoType> findAllByPrefLabelOrIsPreferredMeaningOfEager(@Param("upLabel") String upLabel);
 
     @Modifying @Query("UPDATE YagoType SET prefLabel=:prefLabel WHERE nn=:nn")
     void updatePrefLabel(@Param("nn") String nn, @Param("prefLabel") String prefLabel);

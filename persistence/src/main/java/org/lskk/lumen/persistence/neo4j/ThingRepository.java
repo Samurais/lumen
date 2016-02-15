@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface ThingRepository extends PagingAndSortingRepository<Thing, Long> {
 
-    Thing findOneByNn(String nn);
+    Thing findOneByPartitionAndNn(PartitionKey _partition, String nn);
     List<Thing> findAllByPrefLabelOrIsPreferredMeaningOf(String upLabel);
 
 }
