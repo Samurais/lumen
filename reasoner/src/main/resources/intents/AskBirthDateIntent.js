@@ -1,4 +1,5 @@
-function start(intent, interactionContext) {
+// bindings to scripting scope: this: InteractionContext, intent: Intent
+function start() {
     log.info("User asks birth date of", intent.person);
     // look up the property using factService
     var wasBornOnDate = factService.getProperty(
@@ -9,7 +10,7 @@ function start(intent, interactionContext) {
         response.add(
             new Label("person", person),
             new Label("birthDate", wasBornOnDate));
-        interactionContext.reply(response);
+        reply(response);
     } else {
         // built-in reply for "I don't know"
         // TODO: additional interaction for letting the user teach the robot
