@@ -1,8 +1,6 @@
 package org.lskk.lumen.reasoner.quran;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.http.annotation.Immutable;
-import org.lskk.lumen.reasoner.goal.Goal;
+import org.lskk.lumen.reasoner.intent.Intent;
 
 import java.util.List;
 
@@ -12,7 +10,7 @@ import java.util.List;
  * before can be recited.
  * Created by ceefour on 16/11/2015.
  */
-public class ReciteQuran extends Goal {
+public class ReciteQuran extends Intent {
     private String upChapter;
     private String upVerses;
     private Integer chapterNumber;

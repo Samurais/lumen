@@ -24,7 +24,7 @@ public class Template implements Serializable {
     //    private ImageObject image;
 //    private AudioObject audio;
     private List<SayElement> says = new ArrayList<>();
-    private List<GoalElement> goals = new ArrayList<>();
+    private List<IntentElement> intents = new ArrayList<>();
     private List<SendToAvatar> sendToAvatars = new ArrayList<>();
 
     /**
@@ -132,9 +132,9 @@ public class Template implements Serializable {
         return says;
     }
 
-    @XmlElement(name = "goal")
-    public List<GoalElement> getGoals() {
-        return goals;
+    @XmlElement(name = "intent")
+    public List<IntentElement> getIntents() {
+        return intents;
     }
 
     @XmlElement(name = "sendtoavatar")

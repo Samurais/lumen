@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.aiml;
 
+import org.lskk.lumen.reasoner.intent.Intent;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
@@ -10,9 +12,9 @@ import java.util.Map;
 /**
  * Created by ceefour on 07/11/2015.
  */
-public class GoalElement implements Serializable {
+public class IntentElement implements Serializable {
     private String clazz;
-    private List<GoalProperty> properties = new ArrayList<>();
+    private List<IntentProperty> properties = new ArrayList<>();
 
     @XmlAttribute(name = "class")
     public String getClazz() {
@@ -24,14 +26,14 @@ public class GoalElement implements Serializable {
     }
 
     @XmlElement(name = "property")
-    public List<GoalProperty> getProperties() {
+    public List<IntentProperty> getProperties() {
         return properties;
     }
 
     /**
-     * Set a JavaBean property inside a {@link org.lskk.lumen.reasoner.goal.Goal} object.
+     * Set a JavaBean property inside a {@link Intent} object.
      */
-    public static class GoalProperty {
+    public static class IntentProperty {
         private String name;
         private String valueExpression;
 

@@ -45,10 +45,10 @@
         <pattern lang="id-ID">baca terjemahan quran _ ayat _</pattern>
         <pattern lang="id-ID">baca terjemahan quran surat _ ayat _</pattern>
         <template>
-            <goal class="org.lskk.lumen.reasoner.quran.ReciteQuran">
+            <intent class="org.lskk.lumen.reasoner.quran.ReciteQuran">
                 <property name="upChapter" value="@{groups[1]}"/>
                 <property name="upVerses" value="@{groups[2]}"/>
-            </goal>
+            </intent>
         </template>
     </category>
      <category>
@@ -81,10 +81,10 @@
             <pattern lang="id-ID">baca terjemahan quran _ _ ayat _</pattern>
             <pattern lang="id-ID">baca terjemahan quran surat _ _ ayat _</pattern>
             <template>
-                <goal class="org.lskk.lumen.reasoner.quran.ReciteQuran">
+                <intent class="org.lskk.lumen.reasoner.quran.ReciteQuran">
                     <property name="upChapter" value="@{groups[1]}@{groups[2]}"/>
                     <property name="upVerses" value="@{groups[3]}"/>
-                </goal>
+                </intent>
             </template>
         </category>
 
