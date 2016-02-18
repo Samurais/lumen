@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.intent;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import org.lskk.lumen.reasoner.ux.Channel;
 
 import java.io.Serializable;
@@ -37,7 +39,7 @@ import java.util.Map;
  * [
  *     {
  *         "@type": "Intent",
- *         "intent": "WeatherIntent",
+ *         "intent_type": "WeatherIntent",
  *         "confidence": 0.61,
  *         "parameters": {
  *             "weatherKeyword": "weather",
@@ -51,9 +53,19 @@ import java.util.Map;
  * Created by ceefour on 07/11/2015.
  */
 public class Intent implements Serializable {
+    private String intentTypeId;
     private Channel channel;
     private String avatarId;
+    private float confidence;
     public Map<String, Object> parameters = new HashMap<>();
+
+    public String getIntentTypeId() {
+        return intentTypeId;
+    }
+
+    public void setIntentTypeId(String intentTypeId) {
+        this.intentTypeId = intentTypeId;
+    }
 
     public Channel getChannel() {
         return channel;
@@ -76,7 +88,21 @@ public class Intent implements Serializable {
      * if you don't want to create your own subclass.
      * @return
      */
+    @JsonAnyGetter
     public Map<String, Object> getParameters() {
         return parameters;
+    }
+
+    @JsonAnySetter
+    public void setParameters(String name, Object value) {
+        getParameters().put(name, value);
+    }
+
+    public float getConfidence() {
+        return confidence;
+    }
+
+    public void setConfidence(float confidence) {
+        this.confidence = confidence;
     }
 }

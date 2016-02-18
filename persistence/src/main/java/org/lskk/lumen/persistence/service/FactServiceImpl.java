@@ -51,7 +51,7 @@ public class FactServiceImpl implements FactService {
             final Locale labelLang = Locale.forLanguageTag(bestLabel.getInLanguage());
             if (inLanguage.equals(labelLang)) {
                 languageMultiplier = 1d;
-            } else if (inLanguage.getLanguage().equals(labelLang.getLanguage())) {
+               } else if (inLanguage.getLanguage().equals(labelLang.getLanguage())) {
                 languageMultiplier = 0.9d;
             } else {
                 languageMultiplier = 0.5d;

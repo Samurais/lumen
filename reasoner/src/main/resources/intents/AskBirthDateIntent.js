@@ -14,6 +14,6 @@ function start() {
     } else {
         // built-in reply for "I don't know"
         // TODO: additional interaction for letting the user teach the robot
-        interactionContext.replyDontKnow();
+        replyDontKnow();
     }
 }
