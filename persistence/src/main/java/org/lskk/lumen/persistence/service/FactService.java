@@ -1,5 +1,6 @@
 package org.lskk.lumen.persistence.service;
 
+import org.apache.camel.language.Simple;
 import org.joda.time.DateTime;
 import org.lskk.lumen.persistence.neo4j.Thing;
 
@@ -22,14 +23,15 @@ public interface FactService {
      * @param contexts Contexts of the match. Key is node name, value is non-normalized confidence [0..1].
      * @return Matching things, sorted descending by confidence, limited to {@link #MAX_RESULTS}.
      */
-    List<MatchingThing> match(String upLabel, Locale inLanguage, Map<String, Float> contexts);
+    List<MatchingThing> match(@Simple("body.upLabel") String upLabel, @Simple("body.inLanguage") Locale inLanguage,
+                              @Simple("body.contexts") Map<String, Float> contexts);
 
     /**
      * Describes a thing.
      * @param nodeName
      * @return
      */
-    Thing describeThing(String nodeName);
+    Thing describeThing(@Simple("body.nodeName") String nodeName);
 
     /**
      * Asserts a thing and gives it a preferred label.
@@ -39,14 +41,14 @@ public interface FactService {
      * @param isPrefLabel If {@code true}, this will replace the {@link Thing}'s current {@code prefLabel}.
      *                    Otherwise, will just add a new {@link org.lskk.lumen.persistence.jpa.YagoLabel}.
      */
-    Thing assertThing(String nodeName, String upLabel, Locale inLanguage,
-                     boolean isPrefLabel);
+    Thing assertThing(@Simple("body.nodeName") String nodeName, @Simple("body.upLabel") String upLabel, @Simple("body.inLanguage") Locale inLanguage,
+                      @Simple("body.isPrefLabel") boolean isPrefLabel);
 
     /**
      * Unasserts a thing.
      * @param nodeName
      */
-    Thing unassertThing(String nodeName);
+    Thing unassertThing(@Simple("body.nodeName") String nodeName);
 
     /**
      * Assert a property to another thing, i.e. fact.
@@ -58,6 +60,8 @@ public interface FactService {
      * @param asserterNodeName Node name of the person who asserts this.
      * @return
      */
-    Thing assertPropertyToThing(String nodeName, String property, String objectNodeName,
-                                float[] truthValue, DateTime assertionTime, String asserterNodeName);
+    Thing assertPropertyToThing(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property,
+                                @Simple("body.objectNodeName") String objectNodeName,
+                                @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime,
+                                @Simple("body.asserterNodeName") String asserterNodeName);
 }

@@ -6,6 +6,8 @@ import org.lskk.lumen.persistence.jpa.YagoTypeRepository;
 import org.lskk.lumen.persistence.neo4j.Neo4jConfig;
 import org.lskk.lumen.persistence.neo4j.ThingRepository;
 import org.lskk.lumen.persistence.service.FactServiceImpl;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -20,14 +22,18 @@ import javax.inject.Inject;
  * Created by ceefour on 18/02/2016.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = JavaScriptIntentTest.IntentConfig.class)
+//@ContextConfiguration(classes = JavaScriptIntentTest.IntentConfig.class)
+@SpringApplicationConfiguration(JavaScriptIntentTest.IntentConfig.class)
 public class JavaScriptIntentTest {
 
-    @Configuration
-    @ComponentScan(basePackageClasses = {IntentExecutor.class, ThingRepository.class, YagoTypeRepository.class, FactServiceImpl.class})
+    @SpringBootApplication(scanBasePackageClasses = {IntentExecutor.class, ThingRepository.class, YagoTypeRepository.class, FactServiceImpl.class,
+            YagoTypeRepository.class, ThingRepository.class
+    })
+//    @Configuration
+//    @ComponentScan(basePackageClasses = {IntentExecutor.class, ThingRepository.class, YagoTypeRepository.class, FactServiceImpl.class})
     @Import(Neo4jConfig.class)
-    @EnableJpaRepositories(basePackageClasses = YagoTypeRepository.class)
-    @EnableNeo4jRepositories(basePackageClasses = ThingRepository.class)
+//    @EnableJpaRepositories(basePackageClasses = YagoTypeRepository.class)
+//    @EnableNeo4jRepositories(basePackageClasses = ThingRepository.class)
     public static class IntentConfig {
 
     }

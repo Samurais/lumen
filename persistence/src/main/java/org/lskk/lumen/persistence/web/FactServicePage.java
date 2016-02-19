@@ -6,9 +6,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesomeIconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.ladda.LaddaAjaxButton;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
-import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -19,20 +16,15 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.*;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.lskk.lumen.persistence.neo4j.Thing;
-import org.lskk.lumen.persistence.neo4j.ThingRepository;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.persistence.service.MatchingThing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -101,7 +93,7 @@ public class FactServicePage extends PubLayout {
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 super.onSubmit(target, form);
-                model.getObject().setOp(FactServiceOperation.MATCH);
+                model.getObject().setOp(FactServiceOperation.match);
                 target.add(matchResponseDiv);
             }
         }.setIconType(FontAwesomeIconType.search));
@@ -110,7 +102,7 @@ public class FactServicePage extends PubLayout {
             @Override
             protected List<MatchingThing> load() {
                 final FactServiceRequest req = model.getObject();
-                if (FactServiceOperation.MATCH == req.getOp()) {
+                if (FactServiceOperation.match == req.getOp()) {
                     return factService.match(req.getUpLabel(), req.getInLanguage(), ImmutableMap.of());
                 } else {
                     return ImmutableList.of();

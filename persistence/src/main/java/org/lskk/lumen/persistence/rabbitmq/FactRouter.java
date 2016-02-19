@@ -1,10 +1,13 @@
-package org.lskk.lumen.persistence;
+package org.lskk.lumen.persistence.rabbitmq;
 
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
+import org.lskk.lumen.core.LumenChannel;
 import org.lskk.lumen.core.util.AsError;
+import org.lskk.lumen.persistence.ToJson;
+import org.lskk.lumen.persistence.service.FactServiceImpl;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.neo4j.template.Neo4jOperations;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.inject.Inject;
@@ -12,11 +15,11 @@ import javax.inject.Inject;
 /**
  * Created by ceefour on 06/10/2015.
  */
-//@Component // FIXME: re-enable this when refactoring complete
-@Profile("daemon")
+@Component // FIXME: re-enable this when refactoring complete
+@Profile("daemonApp")
 public class FactRouter extends RouteBuilder {
     @Inject
-    private Neo4jOperations neo4j;
+    private FactServiceImpl factService;
     @Inject
     private ToJson toJson;
     @Inject
@@ -28,10 +31,18 @@ public class FactRouter extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class).bean(asError).bean(toJson).handled(true);
         errorHandler(new LoggingErrorHandlerBuilder(log));
-        final String agentId = "arkan";
-//        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + AvatarChannel.PERSISTENCE_FACT.key(agentId) + "&routingKey=" + AvatarChannel.PERSISTENCE_FACT.key(agentId))
-//                .to("log:IN." + AvatarChannel.PERSISTENCE_FACT.key(agentId) + "?showHeaders=true&showAll=true&multiline=true")
-//                .process(it -> {
+        from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + LumenChannel.PERSISTENCE_FACT.key() + "&routingKey=" + LumenChannel.PERSISTENCE_FACT.key())
+                .to("log:IN." + LumenChannel.PERSISTENCE_FACT.key() + "?showHeaders=true&showAll=true&multiline=true")
+                .process(it -> {
+                    final FactRequest factRequest = toJson.getMapper().readValue(it.getIn().getBody(byte[].class), FactRequest.class);
+                    it.getIn().setHeader("CamelBeanMethodName", factRequest.getOperation().name());
+                    it.getIn().setBody(factRequest);
+                })
+                .bean(factService)
+                .bean(toJson)
+                .to("log:OUT." + LumenChannel.PERSISTENCE_FACT.key() + "?showAll=true&multiline=true");
+
+//        final String agentId = "arkan";
 //                    final JsonNode inBodyJson = toJson.getMapper().readTree(it.getIn().getBody(byte[].class));
 //                    final String switchArg = inBodyJson.path("@type").asText();
 //                    if ("FindAllQuery".equals("FindAllQuery")) {
@@ -86,9 +97,7 @@ public class FactRouter extends RouteBuilder {
 //                    } else {
 //                        throw new Exception("Unknown JSON message: " + inBodyJson);
 //                    }
-//                })
-//                .bean(toJson)
-//                .to("log:OUT.persistence-fact?showAll=true&multiline=true");
+
     }
 
 }

@@ -14,7 +14,7 @@ import javax.inject.Inject;
  * Created by ceefour on 1/19/15.
  */
 @Configuration
-@Profile("daemon")
+@Profile("daemonApp")
 public class RabbitMqConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RabbitMqConfig.class);

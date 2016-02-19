@@ -2,6 +2,14 @@
 
 Persistence module for Lumen Social Robot.
 
+## Preparation
+
+1. Ensure PostgreSQL 9.5+ is running
+2. Ensure Neo4j 2.3+ is running
+3. Copy `config/application.dev.properties` to `config/application.properties`
+4. Edit `config/application.properties`
+5. Run
+
 ## Running from Command Line
 
 To run from command line, first you have to prepare its dependencies, then build it.
@@ -10,7 +18,6 @@ To run from command line, first you have to prepare its dependencies, then build
 2. Build `lumen-persistence` plus `dependency:copy-dependencies`:
 
         mvn -DskipTests install dependency:copy-dependencies
-
 
 ## Overview
 

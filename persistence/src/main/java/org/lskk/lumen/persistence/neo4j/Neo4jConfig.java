@@ -43,9 +43,10 @@ public class Neo4jConfig extends Neo4jConfiguration {
         return new SessionFactory(Neo4jConfig.class.getPackage().getName());
     }
 
-    // needed for session in view in web-applications
     @Bean
-    @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    // scoped proxy is needed for session in view in web-applications
+//    @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    // but we're not strictly a web application...!
     public Session getSession() throws Exception {
         return super.getSession();
     }
