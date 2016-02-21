@@ -11,7 +11,7 @@ with(new JavaImporter(org.lskk.lumen.reasoner.ux)) {
             // select which fragment to use from the view by ID
             var response = new Fragment("response");
             response.add(
-                new Label("person", person),
+                new Label("person", intent.person),
                 new Label("birthDate", wasBornOnDate));
             interaction.reply(response);
         } else {

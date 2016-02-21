@@ -55,4 +55,15 @@ public class Fact implements Serializable {
     public void setObjectLanguage(Locale objectLanguage) {
         this.objectLanguage = objectLanguage;
     }
+
+    @Override
+    public String toString() {
+        return "Fact{" +
+                "subject=" + subject +
+                ", property='" + property + '\'' +
+                ", objectAsText='" + objectAsText + '\'' +
+                ", objectAsDateTime=" + objectAsDateTime +
+                ", objectLanguage=" + objectLanguage +
+                '}';
+    }
 }
