@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.lskk.lumen.core.util.AsError;
+import org.lskk.lumen.core.util.ToJson;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.neo4j.template.Neo4jOperations;
 import org.springframework.transaction.PlatformTransactionManager;

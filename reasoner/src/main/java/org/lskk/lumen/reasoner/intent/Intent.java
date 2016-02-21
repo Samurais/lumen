@@ -105,4 +105,15 @@ public class Intent implements Serializable {
     public void setConfidence(float confidence) {
         this.confidence = confidence;
     }
+
+    @Override
+    public String toString() {
+        return "Intent{" +
+                "intentTypeId='" + intentTypeId + '\'' +
+                ", channel=" + channel +
+                ", avatarId='" + avatarId + '\'' +
+                ", confidence=" + confidence +
+                ", parameters=" + parameters +
+                '}';
+    }
 }

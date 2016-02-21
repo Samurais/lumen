@@ -1,6 +1,7 @@
 package org.lskk.lumen.persistence;
 
 import org.lskk.lumen.core.LumenCoreConfig;
+import org.lskk.lumen.core.RabbitMqConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -11,7 +12,7 @@ import org.springframework.context.annotation.Profile;
 
 @SpringBootApplication
 @Profile("daemonApp")
-@Import(LumenCoreConfig.class)
+@Import({LumenCoreConfig.class, RabbitMqConfig.class})
 public class LumenPersistenceApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {

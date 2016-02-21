@@ -3,6 +3,7 @@ package org.lskk.lumen.persistence;
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.lskk.lumen.core.util.AsError;
+import org.lskk.lumen.core.util.ToJson;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.data.neo4j.template.Neo4jOperations;

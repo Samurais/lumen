@@ -64,4 +64,9 @@ public interface FactService {
                                 @Simple("body.objectNodeName") String objectNodeName,
                                 @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime,
                                 @Simple("body.asserterNodeName") String asserterNodeName);
+
+    /**
+     * Get a single fact or literal property.
+     */
+    Fact getProperty(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property);
 }

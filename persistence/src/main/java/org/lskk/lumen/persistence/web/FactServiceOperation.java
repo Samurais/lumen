@@ -8,5 +8,6 @@ public enum FactServiceOperation {
     describeThing,
     assertThing,
     unassertThing,
-    assertPropertyToThing
+    assertPropertyToThing,
+    getProperty
 }

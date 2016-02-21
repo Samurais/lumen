@@ -109,4 +109,17 @@ public class Thing implements Serializable {
     public Set<Thing> getSubClasses() {
         return subClasses;
     }
+
+    @Override
+    public String toString() {
+        return "Thing{" +
+                "gid=" + gid +
+                ", nn='" + nn + '\'' +
+                ", prefLabel='" + prefLabel + '\'' +
+                ", prefLabelLang='" + prefLabelLang + '\'' +
+                ", isPreferredMeaningOf='" + isPreferredMeaningOf + '\'' +
+                ", partition=" + partition +
+                ", types=" + types +
+                '}';
+    }
 }

@@ -1,6 +1,7 @@
 package org.lskk.lumen.persistence.service;
 
 import com.google.common.collect.Ordering;
+import org.apache.camel.language.Simple;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.lskk.lumen.persistence.LumenPersistenceException;
@@ -144,6 +145,11 @@ public class FactServiceImpl implements FactService {
 
     @Override
     public Thing assertPropertyToThing(String nodeName, String property, String objectNodeName, float[] truthValue, DateTime assertionTime, String asserterNodeName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Fact getProperty(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property) {
         throw new UnsupportedOperationException();
     }
 }
