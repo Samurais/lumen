@@ -94,7 +94,7 @@ public class FactServiceImpl implements FactService {
      * @return
      */
     @Override
-    public List<MatchingThing> match(String upLabel, Locale inLanguage, Map<String, Float> contexts) {
+    public MatchingThings match(String upLabel, Locale inLanguage, Map<String, Float> contexts) {
         final List<MatchingThing> results = new ArrayList<>();
 
         // TODO: use metaphone
@@ -129,7 +129,7 @@ public class FactServiceImpl implements FactService {
         log.info("match() returned {} matches using ({}, {}, {}) => {}",
                 sortedResults.size(), upLabel, inLanguage, contexts, sortedResults);
 
-        return sortedResults;
+        return new MatchingThings(sortedResults);
     }
 
     @Override

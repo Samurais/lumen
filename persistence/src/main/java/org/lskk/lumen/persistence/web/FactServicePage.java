@@ -103,7 +103,7 @@ public class FactServicePage extends PubLayout {
             protected List<MatchingThing> load() {
                 final FactServiceRequest req = model.getObject();
                 if (FactServiceOperation.match == req.getOp()) {
-                    return factService.match(req.getUpLabel(), req.getInLanguage(), ImmutableMap.of());
+                    return factService.match(req.getUpLabel(), req.getInLanguage(), ImmutableMap.of()).getMatches();
                 } else {
                     return ImmutableList.of();
                 }

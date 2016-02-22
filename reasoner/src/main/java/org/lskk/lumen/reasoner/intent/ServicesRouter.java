@@ -53,7 +53,8 @@ public class ServicesRouter extends RouteBuilder {
                 })
                 .bean(toJson)
                 .to("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&skipQueueDeclare=true&routingKey=" +
-                        LumenChannel.PERSISTENCE_FACT.key());
+                        LumenChannel.PERSISTENCE_FACT.key())
+                .to("log:REPLY." + LumenChannel.PERSISTENCE_FACT.key());
     }
 
     @Configuration

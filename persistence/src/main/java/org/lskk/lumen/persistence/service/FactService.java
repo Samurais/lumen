@@ -9,6 +9,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
+ * Only return DTOs, do not return collection object because {@link org.apache.camel.TypeConverter} cannot properly
+ * support them due to insufficient type information.
  * Created by ceefour on 14/02/2016.
  */
 public interface FactService {
@@ -23,8 +25,9 @@ public interface FactService {
      * @param contexts Contexts of the match. Key is node name, value is non-normalized confidence [0..1].
      * @return Matching things, sorted descending by confidence, limited to {@link #MAX_RESULTS}.
      */
-    List<MatchingThing> match(@Simple("body.upLabel") String upLabel, @Simple("body.inLanguage") Locale inLanguage,
-                              @Simple("body.contexts") Map<String, Float> contexts);
+    MatchingThings match(@Simple("body.upLabel") String upLabel,
+                         @Simple("body.inLanguage") Locale inLanguage,
+                         @Simple("body.contexts") Map<String, Float> contexts);
 
     /**
      * Describes a thing.
