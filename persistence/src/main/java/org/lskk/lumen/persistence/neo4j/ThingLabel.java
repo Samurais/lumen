@@ -3,16 +3,17 @@ package org.lskk.lumen.persistence.neo4j;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
-import org.neo4j.ogm.annotation.Relationship;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Created by ceefour on 22/02/2016.
  */
 @NodeEntity(label = "lumen_Label")
+@Ensure("CREATE INDEX ON :lumen_Label(_partition)")
+@Ensure("CREATE INDEX ON :lumen_Label(l)")
+@Ensure("CREATE INDEX ON :lumen_Label(v)")
+@Ensure("CREATE INDEX ON :lumen_Label(m)")
 public class ThingLabel implements Serializable {
     @GraphId
     private Long gid;
@@ -59,6 +60,7 @@ public class ThingLabel implements Serializable {
 
     /**
      * Metaphone with a maximum of 15 characters.
+     *
      * @return
      */
     public String getMetaphone() {

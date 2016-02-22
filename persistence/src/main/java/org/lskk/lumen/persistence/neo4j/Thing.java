@@ -51,6 +51,10 @@ public class Thing implements Serializable {
     private ThingLabel isPreferredMeaningOfNode;
     @Relationship(type = "rdfs_label")
     private Set<ThingLabel> labels = new HashSet<>();
+    @Relationship(type = "yago_hasGivenName")
+    private ThingLabel givenName;
+    @Relationship(type = "yago_hasFamilyName")
+    private ThingLabel familyName;
 
     public Long getGid() {
         return gid;
@@ -144,6 +148,22 @@ public class Thing implements Serializable {
 
     public Set<ThingLabel> getLabels() {
         return labels;
+    }
+
+    public ThingLabel getGivenName() {
+        return givenName;
+    }
+
+    public void setGivenName(ThingLabel givenName) {
+        this.givenName = givenName;
+    }
+
+    public ThingLabel getFamilyName() {
+        return familyName;
+    }
+
+    public void setFamilyName(ThingLabel familyName) {
+        this.familyName = familyName;
     }
 
     @Override
