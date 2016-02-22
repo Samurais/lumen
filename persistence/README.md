@@ -62,7 +62,18 @@ For person B.J. Habibie (taken from https://gate.d5.mpi-inf.mpg.de/webyago3spotl
 | id_1xidad2_16x_n6kx1s  | <yago:B.J._Habibie> | isMarriedTo   | <yago:Hasri_Ainun_Habibie>             |            |           |                               |
 | id_1xidad2_p3m_zkjp59  | <yago:B.J._Habibie> | hasGender     | male                                   |            |           |                               |
 
-### Sample Data (new)
+### Sample Data
+
+Complete list of properties are available in `Dropbox/Lumen/LumenSchema.xlsx`, here a few samples are provided.
+
+#### yago:wasBornOnDate
+
+    MERGE (hendy:schema_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) SET hendy.prefLabel='Hendy Irawan'
+    MERGE (wasBornOnDate:rdf_Property {nn: 'yago:wasBornOnDate', _partition: 'lumen_yago'}) SET wasBornOnDate.label='was born on date'
+    MERGE (wasBornOnDate) <-[:rdf_predicate]- (literal:rdfs_Literal {t: 'xs:date', v: '1983-12-14', _partition: 'lumen_var'}) -[:rdf_subject]-> (hendy)
+    RETURN wasBornOnDate, hendy, literal
+
+### Sample Data (obsolete)
 
 Yago2s DB import12 must be imported first, otherwise resources won't `MATCH`.
 
@@ -447,9 +458,9 @@ Ready database files is available from Hendy Irawan:
         MATCH (y {_partition: 'lumen_dev_yago'}) DETACH DELETE y;
         MATCH (v {_partition: 'lumen_dev_var'}) DETACH DELETE v;
     
-        MERGE (hendy:schema_Thing {nn: 'lumen:Hendy_Irawan', prefLabel: 'Hendy Irawan', _partition: 'lumen_var'})
-        MERGE (person:schema_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_yago'})
-        MERGE (hendy) -[:rdf_type]-> (person);
+        MERGE (hendy:schema_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) SET hendy.prefLabel='Hendy Irawan'
+        MERGE (person:schema_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_yago'}) SET person.prefLabel='person'
+        MERGE (hendy) -[:rdf_type]-> (person)
 
 ### How to Import
 
@@ -494,7 +505,7 @@ Ready database files is available from Hendy Irawan:
         cd \databank\yago3_work
         psql -a -d lumen_lumen_dev -Upostgres -f postgres_fixed.sql
 
-## No longer used
+## OBSOLETE: To be determined whether we use PostgreSQL or adapt the Neo4j to use partitioned style
 
 1. `~/lumen_lumen_{tenantEnv}/lumen/taxonomy.neo4j` (325 MB)
        Contains the entire `yagoTaxonomy.tsv`, plus the
@@ -505,7 +516,7 @@ Ready database files is available from Hendy Irawan:
     Sample YAGO3_FOLDER: `D:\databank\yago3_work`
     ~3 minutes on i7-6700HQ+16GB+SSD
 
-## Steps to Import from Yago2s (Lumen Persistence v0.0.1)
+## OBSOLETE: Steps to Import from Yago2s (Lumen Persistence v0.0.1)
 
 This normally should not be required, and only used when database needs to be refreshed or there's a new Yago
 version.
@@ -552,3 +563,4 @@ Excluded Yago files are: (note: even if excluded, these can always be queried on
 7. `yagoMultilingualClassLabels.tsv`: 46 MiB, 787,650 statements. English ones are OK (at least for now, but we do need to say that "car" is "mobil" soon).
 8. `yagoGeonamesData.tsv`: 1.7 GiB, 32,216,600 statements. If you want exact lat-long for `yagoGeoEntity`s,
     you can already get the `geonamesEntityId` and look them up on Geonames DB.
+

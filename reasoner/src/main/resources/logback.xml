@@ -6,8 +6,9 @@
     <logger name="id" level="DEBUG"/>
     <logger name="org.lskk" level="DEBUG"/>
     <logger name="com.hendyirawan" level="DEBUG"/>
-    <logger name="org.apache.camel" level="DEBUG"/>
+    <logger name="org.apache.camel" level="INFO"/>
     <logger name="org.apache.camel.impl.ProducerCache" level="INFO"/>
+    <logger name="org.apache.camel.component.rabbitmq" level="DEBUG"/>
     <logger name="org.apache.camel.component.rabbitmq.reply.ReplyManagerSupport" level="INFO"/>
     <logger name="facebook4j" level="INFO"/>
     <logger name="org.hibernate.SQL" level="DEBUG"/>

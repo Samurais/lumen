@@ -5,6 +5,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.lskk.lumen.core.LumenChannel;
 import org.lskk.lumen.core.util.AsError;
 import org.lskk.lumen.core.util.ToJson;
+import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.persistence.service.FactServiceImpl;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,7 @@ import javax.inject.Inject;
 @Profile("daemonApp")
 public class FactRouter extends RouteBuilder {
     @Inject
-    private FactServiceImpl factService;
+    private FactService factService;
     @Inject
     private ToJson toJson;
     @Inject

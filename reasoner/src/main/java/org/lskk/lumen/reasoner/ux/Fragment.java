@@ -1,21 +1,21 @@
 package org.lskk.lumen.reasoner.ux;
 
 import com.google.common.base.Preconditions;
+import org.apache.tomcat.jni.Local;
 import org.lskk.lumen.reasoner.ReasonerException;
-import org.lskk.lumen.reasoner.aiml.*;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.Optional;
+import java.util.Locale;
 
 /**
  * Created by ceefour on 21/02/2016.
  */
 public class Fragment extends NuiComponent {
 
+    protected Locale locale;
     protected URL markupUrl;
     protected InteractionElement interactionMarkup;
     protected FragmentElement fragmentMarkup;
@@ -24,7 +24,8 @@ public class Fragment extends NuiComponent {
         super(id);
     }
 
-    public void loadMarkup(URL markupUrl) {
+    public void prepareRender(Locale locale, URL markupUrl) {
+        this.locale = locale;
         this.markupUrl = markupUrl;
         try {
             final JAXBContext jaxbContext = JAXBContext.newInstance(InteractionElement.class, FragmentElement.class,
@@ -60,5 +61,10 @@ public class Fragment extends NuiComponent {
         }
         ssml = ssml.trim();
         return ssml;
+    }
+
+    @Override
+    public Locale getLocale() {
+        return locale;
     }
 }

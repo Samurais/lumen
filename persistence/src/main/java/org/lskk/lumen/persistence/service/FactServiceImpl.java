@@ -1,20 +1,27 @@
 package org.lskk.lumen.persistence.service;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import org.apache.camel.language.Simple;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
 import org.lskk.lumen.persistence.LumenPersistenceException;
 import org.lskk.lumen.persistence.jpa.YagoLabel;
 import org.lskk.lumen.persistence.jpa.YagoType;
 import org.lskk.lumen.persistence.jpa.YagoTypeRepository;
-import org.lskk.lumen.persistence.neo4j.PartitionKey;
-import org.lskk.lumen.persistence.neo4j.Thing;
-import org.lskk.lumen.persistence.neo4j.ThingRepository;
+import org.lskk.lumen.persistence.neo4j.*;
+import org.neo4j.ogm.session.Session;
+import org.neo4j.ogm.session.result.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.template.Neo4jTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,6 +30,7 @@ import java.util.stream.Collectors;
  * Created by ceefour on 14/02/2016.
  */
 @Service
+@Transactional
 public class FactServiceImpl implements FactService {
 
     private static final Logger log = LoggerFactory.getLogger(FactServiceImpl.class);
@@ -31,6 +39,15 @@ public class FactServiceImpl implements FactService {
     private ThingRepository thingRepo;
     @Inject
     private YagoTypeRepository yagoTypeRepo;
+//    @Inject
+    private Neo4jTemplate neo4j;
+    @Inject
+    private Session session;
+
+    @PostConstruct
+    public void init() {
+        neo4j = new Neo4jTemplate(session);
+    }
 
     protected static float getMatchingThingConfidence(String upLabel, Locale inLanguage,
                                                List<YagoLabel> labels) {
@@ -150,6 +167,36 @@ public class FactServiceImpl implements FactService {
 
     @Override
     public Fact getProperty(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property) {
-        throw new UnsupportedOperationException();
+        final Literal literal =
+                neo4j.queryForObject(Literal.class,
+                        "MATCH (s:schema_Thing {nn: {nodeName}}) <-[:rdf_subject]- (l:rdfs_Literal) -[:rdf_predicate]-> (p:rdf_Property {nn: {property}})" +
+                        " WHERE s._partition IN {partitions} AND p._partition IN {partitions}" +
+                        " RETURN l LIMIT 1",
+                ImmutableMap.of("nodeName", nodeName, "property", property, "partitions", new String[]{PartitionKey.lumen_yago.name(), PartitionKey.lumen_var.name()}));
+        if (literal != null) {
+//            final Literal literal = (Literal) result.get(0).get("l");
+//            final Thing subject = (Thing) result.get(0).get("s");
+//            final SemanticProperty predicate = (SemanticProperty) result.get(0).get("p");
+            final Thing subject = literal.getSubject();
+//            final SemanticProperty predicate = literal.getPredicate();
+            final Fact fact = new Fact();
+            fact.setSubject(subject);
+            fact.setProperty(property);
+            if ("xsd:string".equals(literal.getType())) {
+                fact.setKind(FactKind.STRING);
+                fact.setObjectAsString((String) literal.getValue());
+            } else if ("xs:date".equals(literal.getType())) {
+                fact.setKind(FactKind.LOCALDATE);
+                fact.setObjectAsLocalDate(new LocalDate(literal.getValue()));
+            } else {
+                throw new LumenPersistenceException(String.format("Unknown Literal type: %s with value '%s' for node %s",
+                        literal.getType(), literal.getValue(), literal.getGid()));
+            }
+            log.info("getProperty {} {} returns {}", nodeName, property, fact);
+            return fact;
+        } else {
+            log.info("getProperty {} {} returns null", nodeName, property);
+            return null;
+        }
     }
 }

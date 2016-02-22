@@ -18,6 +18,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
 
+import java.util.Locale;
+
 import static org.hamcrest.Matchers.*;
 
 /**
@@ -44,7 +46,7 @@ public class JavaScriptIntentTest {
     @Test
     public void askBirthDate() {
         final Intent intent = new Intent();
-        final InteractionContext interactionContext = new InteractionContext(intent);
+        final InteractionContext interactionContext = new InteractionContext(intent, Locale.forLanguageTag("id-ID"));
         intent.setIntentTypeId("AskBirthDateIntent");
         intent.setConfidence(0.91f);
         intent.setParameters("keyword", "lahir");

@@ -1,6 +1,7 @@
 package org.lskk.lumen.persistence.service;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.lskk.lumen.persistence.neo4j.Thing;
 
 import java.io.Serializable;
@@ -10,11 +11,14 @@ import java.util.Locale;
  * Created by ceefour on 21/02/2016.
  */
 public class Fact implements Serializable {
+
     private Thing subject;
     private String property;
-    private String objectAsText;
-    private DateTime objectAsDateTime;
+    private FactKind kind;
+    private String objectAsString;
     private Locale objectLanguage;
+    private DateTime objectAsDateTime;
+    private LocalDate objectAsLocalDate;
 
     public Thing getSubject() {
         return subject;
@@ -32,12 +36,12 @@ public class Fact implements Serializable {
         this.property = property;
     }
 
-    public String getObjectAsText() {
-        return objectAsText;
+    public String getObjectAsString() {
+        return objectAsString;
     }
 
-    public void setObjectAsText(String objectAsText) {
-        this.objectAsText = objectAsText;
+    public void setObjectAsString(String objectAsString) {
+        this.objectAsString = objectAsString;
     }
 
     public DateTime getObjectAsDateTime() {
@@ -56,14 +60,32 @@ public class Fact implements Serializable {
         this.objectLanguage = objectLanguage;
     }
 
+    public FactKind getKind() {
+        return kind;
+    }
+
+    public void setKind(FactKind kind) {
+        this.kind = kind;
+    }
+
+    public LocalDate getObjectAsLocalDate() {
+        return objectAsLocalDate;
+    }
+
+    public void setObjectAsLocalDate(LocalDate objectAsLocalDate) {
+        this.objectAsLocalDate = objectAsLocalDate;
+    }
+
     @Override
     public String toString() {
         return "Fact{" +
                 "subject=" + subject +
                 ", property='" + property + '\'' +
-                ", objectAsText='" + objectAsText + '\'' +
-                ", objectAsDateTime=" + objectAsDateTime +
+                ", kind=" + kind +
+                ", objectAsString='" + objectAsString + '\'' +
                 ", objectLanguage=" + objectLanguage +
+                ", objectAsDateTime=" + objectAsDateTime +
+                ", objectAsLocalDate=" + objectAsLocalDate +
                 '}';
     }
 }

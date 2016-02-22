@@ -1,8 +1,11 @@
 package org.lskk.lumen.persistence.neo4j;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Service;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.data.neo4j.config.Neo4jConfiguration;
@@ -11,6 +14,7 @@ import org.springframework.data.neo4j.server.Neo4jServer;
 import org.springframework.data.neo4j.server.RemoteServer;
 import org.springframework.data.neo4j.template.Neo4jTemplate;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
@@ -43,6 +47,11 @@ public class Neo4jConfig extends Neo4jConfiguration {
         return new SessionFactory(Neo4jConfig.class.getPackage().getName());
     }
 
+//    @Bean
+//    public Neo4jTemplate neo4jTemplate() throws Exception {
+//        return new Neo4jTemplate(getSession());
+//    }
+
     @Bean
     // scoped proxy is needed for session in view in web-applications
 //    @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -54,18 +63,38 @@ public class Neo4jConfig extends Neo4jConfiguration {
     @Configuration
     public static class IndexesConfig {
 
+        private static final Logger log = LoggerFactory.getLogger(IndexesConfig.class);
+
+//        @Inject
+//        private SessionFactory sessionFactory;
+//        @Inject
+//        private Environment env;
         @Inject
-        private SessionFactory sessionFactory;
-        @Inject
-        private Environment env;
+        private Session session;
+//        @Inject
+//        private Neo4jTemplate neo4j;
 
         @PostConstruct
+        @Transactional
         public void init() {
-            final Session session = sessionFactory.openSession(env.getRequiredProperty("spring.neo4j.url"));
+//            final Session session = sessionFactory.openSession(env.getRequiredProperty("spring.neo4j.url"));
+//            final Neo4jTemplate neo4j = new Neo4jTemplate(session);
+//            neo4j.query("CREATE INDEX ON :schema_Thing(_partition)", ImmutableMap.of());
+//            neo4j.query("CREATE INDEX ON :schema_Thing(nn)", ImmutableMap.of());
+//            neo4j.query("CREATE INDEX ON :schema_Thing(prefLabel)", ImmutableMap.of());
+            execEnsures(Thing.class);
+            execEnsures(Statement.class);
+            execEnsures(SemanticProperty.class);
+            execEnsures(Literal.class);
+        }
+
+        public void execEnsures(Class<?> entity) {
             final Neo4jTemplate neo4j = new Neo4jTemplate(session);
-            neo4j.query("CREATE INDEX ON :schema_Thing(_partition)", ImmutableMap.of());
-            neo4j.query("CREATE CONSTRAINT ON (thing:schema_Thing) ASSERT thing.nn IS UNIQUE", ImmutableMap.of());
-            neo4j.query("CREATE INDEX ON :schema_Thing(prefLabel)", ImmutableMap.of());
+            final Ensure[] ensures = entity.getAnnotationsByType(Ensure.class);
+            log.info("Preparing {}: {}", entity.getSimpleName(), ensures);
+            for (final Ensure ensure : ensures) {
+                neo4j.query(ensure.value(), ImmutableMap.of());
+            }
         }
 
     }

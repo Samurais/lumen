@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.ux;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.reasoner.ReasonerException;
 
@@ -7,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Just like Wicket components, NuiComponents can be persisted to jBPM
@@ -17,6 +19,7 @@ public abstract class NuiComponent implements Serializable {
     private final String id;
     private Object model;
     protected final List<NuiComponent> children = new ArrayList<>();
+    private NuiComponent parent;
 
     public NuiComponent(String id) {
         this.id = id;
@@ -44,7 +47,10 @@ public abstract class NuiComponent implements Serializable {
     }
 
     public void add(NuiComponent... children) {
-        this.children.addAll(Arrays.asList(children));
+        for (final NuiComponent child : children) {
+            child.setParent(this);
+            this.children.add(child);
+        }
     }
 
     /**
@@ -70,6 +76,23 @@ public abstract class NuiComponent implements Serializable {
      */
     public String renderSsml() {
         throw new UnsupportedOperationException("NUI component " + getClass().getName() + " does not (yet) support SSML.");
+    }
+
+    public Locale getLocale() {
+        if (parent != null) {
+            return Preconditions.checkNotNull(parent.getLocale(),
+                    "%s's parent %s should return proper getLocale()", getId(), parent.getId());
+        } else {
+            throw new UnsupportedOperationException("Topmost component should support locale.");
+        }
+    }
+
+    public NuiComponent getParent() {
+        return parent;
+    }
+
+    protected void setParent(NuiComponent parent) {
+        this.parent = parent;
     }
 
     @Override
