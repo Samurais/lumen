@@ -30,8 +30,11 @@ public class Thing implements Serializable {
     private Long gid;
     @Property(name = "nn")
     private String nn;
+    @Deprecated
     private String prefLabel;
+    @Deprecated
     private String prefLabelLang;
+    @Deprecated
     private String isPreferredMeaningOf;
     @Property(name = "_partition")
     private PartitionKey partition;
@@ -41,6 +44,13 @@ public class Thing implements Serializable {
     private Set<Thing> superClasses = new HashSet<>();
     @Relationship(type = "rdfs_subClassOf", direction = "INCOMING")
     private Set<Thing> subClasses = new HashSet<>();
+
+    @Relationship(type = "skos_prefLabel")
+    private ThingLabel prefLabelNode;
+    @Relationship(type = "yago_isPreferredMeaningOf")
+    private ThingLabel isPreferredMeaningOfNode;
+    @Relationship(type = "rdfs_label")
+    private Set<ThingLabel> labels = new HashSet<>();
 
     public Long getGid() {
         return gid;
@@ -114,6 +124,26 @@ public class Thing implements Serializable {
 
     public Set<Thing> getSubClasses() {
         return subClasses;
+    }
+
+    public ThingLabel getPrefLabelNode() {
+        return prefLabelNode;
+    }
+
+    public void setPrefLabelNode(ThingLabel prefLabelNode) {
+        this.prefLabelNode = prefLabelNode;
+    }
+
+    public ThingLabel getIsPreferredMeaningOfNode() {
+        return isPreferredMeaningOfNode;
+    }
+
+    public void setIsPreferredMeaningOfNode(ThingLabel isPreferredMeaningOfNode) {
+        this.isPreferredMeaningOfNode = isPreferredMeaningOfNode;
+    }
+
+    public Set<ThingLabel> getLabels() {
+        return labels;
     }
 
     @Override
