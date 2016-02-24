@@ -8,5 +8,5 @@ package org.lskk.lumen.reasoner.interaction;
  *
  * Created by ceefour on 17/02/2016.
  */
-public class Qa extends InteractionPattern {
+public class Qa extends InteractionTask {
 }

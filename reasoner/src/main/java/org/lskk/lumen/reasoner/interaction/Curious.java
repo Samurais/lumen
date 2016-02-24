@@ -13,5 +13,5 @@ package org.lskk.lumen.reasoner.interaction;
  *
  * Created by ceefour on 17/02/2016.
  */
-public class Curious extends InteractionPattern {
+public class Curious extends InteractionTask {
 }

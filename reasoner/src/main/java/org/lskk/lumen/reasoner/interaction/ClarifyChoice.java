@@ -8,5 +8,5 @@ package org.lskk.lumen.reasoner.interaction;
  *
  * Created by ceefour on 17/02/2016.
  */
-public class ClarifyChoice extends InteractionPattern {
+public class ClarifyChoice extends InteractionTask {
 }

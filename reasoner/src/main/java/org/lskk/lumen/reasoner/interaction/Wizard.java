@@ -7,5 +7,5 @@ package org.lskk.lumen.reasoner.interaction;
  *
  * Created by ceefour on 17/02/2016.
  */
-public class Wizard extends InteractionPattern {
+public class Wizard extends InteractionTask {
 }
