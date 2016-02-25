@@ -75,7 +75,7 @@ public class PromptTaskTest {
     }
 
     @Test
-    public void promptName() {
+    public void promptNameTask() {
         final PromptTask promptName = promptTaskRepo.get("promptName");
         assertThat(promptName, instanceOf(PromptNameTask.class));
         assertThat(promptName.getAskSsmls(), hasSize(greaterThan(1)));
@@ -85,6 +85,11 @@ public class PromptTaskTest {
 
         assertThat(promptName.getPrompt(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
         assertThat(promptName.getPrompt(Locale.US).getObject(), containsString("name"));
+    }
+
+    @Test
+    public void promptNameHendyIrawan() {
+        final PromptTask promptName = promptTaskRepo.get("promptName");
 
         final List<UtterancePattern> matches = promptName.matchUtterance(LumenLocale.INDONESIAN, "Namaku Hendy Irawan",
                 UtterancePattern.Scope.ANY);
@@ -123,16 +128,8 @@ public class PromptTaskTest {
     }
 
     @Test
-    public void promptNameSigit() {
+    public void promptNameSigitAriWijanarko() {
         final PromptTask promptName = promptTaskRepo.get("promptName");
-        assertThat(promptName, instanceOf(PromptNameTask.class));
-        assertThat(promptName.getAskSsmls(), hasSize(greaterThan(1)));
-        assertThat(promptName.getUtterancePatterns(), hasSize(greaterThan(1)));
-        assertThat(promptName.getProperty(), equalTo("rdfs:label"));
-        assertThat(promptName.getExpectedTypes(), contains("xsd:string"));
-
-        assertThat(promptName.getPrompt(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
-        assertThat(promptName.getPrompt(Locale.US).getObject(), containsString("name"));
 
         final List<UtterancePattern> matches = promptName.matchUtterance(Locale.US, "I am Sigit Ari Wijanarko",
                 UtterancePattern.Scope.ANY);
