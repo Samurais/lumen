@@ -6,7 +6,7 @@
     {"inLanguage": "en-US", "object": "when were you born?"}
   ],
   "utterancePatterns": [
-    {"inLanguage": "id-ID", "pattern": "{birthdate}", "scope": "LOCAL"},
+    {"pattern": "{birthdate}", "scope": "LOCAL"},
     {"inLanguage": "id-ID", "pattern": "aku lahir tanggal {birthdate}"},
     {"inLanguage": "id-ID", "pattern": "tanggal lahirku {birthdate}"},
     {"inLanguage": "en-US", "pattern": "I was born on {birthdate}"}

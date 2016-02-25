@@ -122,4 +122,52 @@ public class PromptTaskTest {
         assertThat(yago_hasFamilyName.getConfidence(), equalTo(1f));
     }
 
+    @Test
+    public void promptNameSigit() {
+        final PromptTask promptName = promptTaskRepo.get("promptName");
+        assertThat(promptName, instanceOf(PromptNameTask.class));
+        assertThat(promptName.getAskSsmls(), hasSize(greaterThan(1)));
+        assertThat(promptName.getUtterancePatterns(), hasSize(greaterThan(1)));
+        assertThat(promptName.getProperty(), equalTo("rdfs:label"));
+        assertThat(promptName.getExpectedTypes(), contains("xsd:string"));
+
+        assertThat(promptName.getPrompt(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
+        assertThat(promptName.getPrompt(Locale.US).getObject(), containsString("name"));
+
+        final List<UtterancePattern> matches = promptName.matchUtterance(Locale.US, "I am Sigit Ari Wijanarko",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(2)));
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("name", "Sigit Ari Wijanarko")));
+        assertThat(confidentMatches.get(0).getSlotValues(), equalTo(ImmutableMap.of("name", "Sigit Ari Wijanarko")));
+
+        final List<ThingLabel> labels = promptName.getLabelsToAssert(Locale.US, "I am Sigit Ari Wijanarko", UtterancePattern.Scope.ANY);
+        assertThat(labels, hasSize(greaterThanOrEqualTo(3)));
+        final ThingLabel skos_prefLabel = labels.stream().filter(it -> "skos:prefLabel".equals(it.getPropertyQName())).findFirst().get();
+        assertThat(skos_prefLabel.getValue(), equalTo("Sigit Ari Wijanarko"));
+        assertThat(skos_prefLabel.getMetaphone(), equalTo("SJTRWJNRK"));
+        assertThat(skos_prefLabel.getInLanguage(), equalTo("en-US"));
+        assertThat(skos_prefLabel.getPartition(), equalTo(PartitionKey.lumen_var));
+        assertThat(skos_prefLabel.getConfidence(), lessThan(1f));
+        final ThingLabel rdfs_label = labels.stream().filter(it -> "rdfs:label".equals(it.getPropertyQName())).findFirst().get();
+        assertThat(rdfs_label.getValue(), equalTo("Sigit Ari Wijanarko"));
+        assertThat(rdfs_label.getMetaphone(), equalTo("SJTRWJNRK"));
+        assertThat(rdfs_label.getInLanguage(), equalTo("en-US"));
+        assertThat(rdfs_label.getPartition(), equalTo(PartitionKey.lumen_var));
+        assertThat(rdfs_label.getConfidence(), equalTo(1f));
+        final ThingLabel yago_hasGivenName = labels.stream().filter(it -> "yago:hasGivenName".equals(it.getPropertyQName())).findFirst().get();
+        assertThat(yago_hasGivenName.getValue(), equalTo("Sigit Ari"));
+        assertThat(yago_hasGivenName.getMetaphone(), equalTo("SJTR"));
+        assertThat(yago_hasGivenName.getInLanguage(), equalTo("en-US"));
+        assertThat(yago_hasGivenName.getPartition(), equalTo(PartitionKey.lumen_var));
+        assertThat(yago_hasGivenName.getConfidence(), equalTo(1f));
+        final ThingLabel yago_hasFamilyName = labels.stream().filter(it -> "yago:hasFamilyName".equals(it.getPropertyQName())).findFirst().get();
+        assertThat(yago_hasFamilyName.getValue(), equalTo("Wijanarko"));
+        assertThat(yago_hasFamilyName.getMetaphone(), equalTo("WJNRK"));
+        assertThat(yago_hasFamilyName.getInLanguage(), equalTo("en-US"));
+        assertThat(yago_hasFamilyName.getPartition(), equalTo(PartitionKey.lumen_var));
+        assertThat(yago_hasFamilyName.getConfidence(), equalTo(1f));
+    }
+
 }
