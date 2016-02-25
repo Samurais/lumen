@@ -36,6 +36,7 @@ public class PromptTaskRepository {
             final String id = StringUtils.substringBefore(res.getFilename(), ".");
             log.debug("Loading '{}' from {} ...", id, res);
             final PromptTask promptTask = mapper.readValue(res.getURL(), PromptTask.class);
+            promptTask.setId(id);
             promptTasks.put(id, promptTask);
         }
         log.info("Loaded {} PromptTasks: {}", promptTasks.size(), promptTasks.keySet());

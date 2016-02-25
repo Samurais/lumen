@@ -9,6 +9,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.lskk.lumen.core.ConfidenceComparator;
+import org.lskk.lumen.core.ConversationStyle;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.slf4j.Logger;
@@ -30,7 +31,9 @@ import java.util.stream.Collectors;
 @JsonTypeInfo(property = "@type", use = JsonTypeInfo.Id.NAME, defaultImpl = PromptTask.class)
 @JsonSubTypes({
     @JsonSubTypes.Type(name = "PromptTask", value = PromptTask.class),
-    @JsonSubTypes.Type(name = "PromptNameTask", value = PromptNameTask.class)})
+    @JsonSubTypes.Type(name = "PromptNameTask", value = PromptNameTask.class),
+    @JsonSubTypes.Type(name = "PromptGenderTask", value = PromptGenderTask.class)
+})
 public class PromptTask extends InteractionTask {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -46,11 +49,25 @@ public class PromptTask extends InteractionTask {
         }
     }
 
-    private List<LocalizedString> askSsmls = new ArrayList<>();
+    private String id;
+    private List<QuestionTemplate> askSsmls = new ArrayList<>();
     private List<UtterancePattern> utterancePatterns = new ArrayList<>();
     private String property;
     private List<String> expectedTypes;
     private String unit;
+
+    /**
+     * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
+     * is {@code promptBirthdate}.
+     * @return
+     */
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     /**
      * e.g. to ask birth date:
@@ -67,11 +84,11 @@ public class PromptTask extends InteractionTask {
      *
      * @return
      */
-    public List<LocalizedString> getAskSsmls() {
+    public List<QuestionTemplate> getAskSsmls() {
         return askSsmls;
     }
 
-    public void setAskSsmls(List<LocalizedString> askSsmls) {
+    public void setAskSsmls(List<QuestionTemplate> askSsmls) {
         this.askSsmls = askSsmls;
     }
 
@@ -126,8 +143,8 @@ public class PromptTask extends InteractionTask {
      * @param locale
      * @return
      */
-    public LocalizedString getPrompt(Locale locale) {
-        final List<LocalizedString> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))
+    public QuestionTemplate getPrompt(Locale locale) {
+        final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))
                 .collect(Collectors.toList());
         if (!matches.isEmpty()) {
             return matches.get(RandomUtils.nextInt(0, matches.size()));
@@ -180,6 +197,9 @@ public class PromptTask extends InteractionTask {
             case "xs:date":
                 SLOT_STRING_PATTERN = "\\d+ [a-z]+ \\d+";
                 break;
+            case "yago:wordnet_sex_105006898":
+                SLOT_STRING_PATTERN = "[a-z0-9 -]+";
+                break;
             default:
                 throw new ReasonerException("Unsupported type: " + expectedTypes);
         }
@@ -218,29 +238,60 @@ public class PromptTask extends InteractionTask {
                         matched.setPattern(it.getPattern());
                         matched.setScope(it.getScope());
                         matched.setActual(utterance);
+                        matched.setStyle(it.getStyle());
                         // language-independent utterance pattern gets 0.9 multiplier
                         final float languageMultiplier = null != it.getInLanguage() ? 1f : 0.9f;
                         // GLOBAL scope has full multiplier, LOCAL scope has 0.9
                         final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.9f;
                         matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * languageMultiplier * scopeMultiplier);
+
+                        // for each slot, check if the captured slot value is valid string
+                        boolean allValid = true;
                         for (final String slot : slots) {
                             final String slotString = realMatcher.group(slot);
                             matched.getSlotStrings().put(slot, slotString);
                             // convert to target value
                             switch (expectedTypes.get(0)) {
                                 case "xsd:string":
-                                    matched.getSlotValues().put(slot, slotString);
                                     break;
                                 case "xs:date":
-                                    final LocalDate localDate = DateTimeFormat.longDate().withLocale(realLocale).parseLocalDate(slotString);
-                                    matched.getSlotValues().put(slot, localDate);
+                                    break;
+                                case "yago:wordnet_sex_105006898":
+                                    if (!isValidStringValue(matched.getInLanguage(), slotString, matched.getStyle())) {
+                                        log.debug("Almost matched {} but not valid string value for {}", matched, expectedTypes);
+                                        allValid = false;
+                                    }
                                     break;
                                 default:
                                     throw new ReasonerException("Unsupported type: " + expectedTypes);
                             }
                         }
-                        log.debug("Matched {}", matched);
-                        return matched;
+                        if (allValid) {
+                            // for each slot, convert string values into target values
+                            for (final String slot : slots) {
+                                final String slotString = realMatcher.group(slot);
+                                matched.getSlotStrings().put(slot, slotString);
+                                // convert to target value
+                                switch (expectedTypes.get(0)) {
+                                    case "xsd:string":
+                                        matched.getSlotValues().put(slot, slotString);
+                                        break;
+                                    case "xs:date":
+                                        final LocalDate localDate = DateTimeFormat.longDate().withLocale(realLocale).parseLocalDate(slotString);
+                                        matched.getSlotValues().put(slot, localDate);
+                                        break;
+                                    case "yago:wordnet_sex_105006898":
+                                        matched.getSlotValues().put(slot, toTargetValue(matched.getInLanguage(), slotString, matched.getStyle()));
+                                        break;
+                                    default:
+                                        throw new ReasonerException("Unsupported type: " + expectedTypes);
+                                }
+                            }
+                            log.debug("Matched {}", matched);
+                            return matched;
+                        } else {
+                            return null;
+                        }
                     } else {
                         return null;
                     }
@@ -255,4 +306,11 @@ public class PromptTask extends InteractionTask {
         return ImmutableList.of();
     }
 
+    public boolean isValidStringValue(String inLanguage, String value, ConversationStyle style) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Object toTargetValue(String inLanguage, String value, ConversationStyle style) {
+        throw new UnsupportedOperationException();
+    }
 }

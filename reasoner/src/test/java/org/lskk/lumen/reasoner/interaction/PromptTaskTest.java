@@ -57,6 +57,7 @@ public class PromptTaskTest {
     @Test
     public void promptBirthDate() {
         final PromptTask promptBirthdate = promptTaskRepo.get("promptBirthdate");
+        assertThat(promptBirthdate.getId(), equalTo("promptBirthdate"));
         assertThat(promptBirthdate.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptBirthdate.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptBirthdate.getProperty(), equalTo("yago:wasBornOnDate"));
@@ -78,6 +79,7 @@ public class PromptTaskTest {
     public void promptNameTask() {
         final PromptTask promptName = promptTaskRepo.get("promptName");
         assertThat(promptName, instanceOf(PromptNameTask.class));
+        assertThat(promptName.getId(), equalTo("promptName"));
         assertThat(promptName.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptName.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptName.getProperty(), equalTo("rdfs:label"));
@@ -165,6 +167,80 @@ public class PromptTaskTest {
         assertThat(yago_hasFamilyName.getInLanguage(), equalTo("en-US"));
         assertThat(yago_hasFamilyName.getPartition(), equalTo(PartitionKey.lumen_var));
         assertThat(yago_hasFamilyName.getConfidence(), equalTo(1f));
+    }
+
+    @Test
+    public void promptGenderTask() {
+        final PromptTask promptGender = promptTaskRepo.get("promptGender");
+        assertThat(promptGender, instanceOf(PromptGenderTask.class));
+        assertThat(promptGender.getId(), equalTo("promptGender"));
+        assertThat(promptGender.getAskSsmls(), hasSize(greaterThan(1)));
+        assertThat(promptGender.getUtterancePatterns(), hasSize(greaterThan(1)));
+        assertThat(promptGender.getProperty(), equalTo("yago:hasGender"));
+        assertThat(promptGender.getExpectedTypes(), contains("yago:wordnet_sex_105006898"));
+
+//        assertThat(promptGender.getPrompt(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
+//        assertThat(promptGender.getPrompt(Locale.US).getObject(), containsString("name"));
+    }
+
+    @Test
+    public void promptGenderIndonesianMale() {
+        final PromptTask promptGender = promptTaskRepo.get("promptGender");
+
+        final List<UtterancePattern> matches = promptGender.matchUtterance(LumenLocale.INDONESIAN, "Gue cowok",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("gender", "cowok")));
+        final Thing gender = (Thing) confidentMatches.get(0).getSlotValues().get("gender");
+        assertThat(gender.getNn(), equalTo("yago:male"));
+        assertThat(gender.getPrefLabelLang(), equalTo("id-ID"));
+    }
+
+    @Test
+    public void promptGenderIndonesianFemale() {
+        final PromptTask promptGender = promptTaskRepo.get("promptGender");
+
+        final List<UtterancePattern> matches = promptGender.matchUtterance(LumenLocale.INDONESIAN, "Aku gadis",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("gender", "gadis")));
+        final Thing gender = (Thing) confidentMatches.get(0).getSlotValues().get("gender");
+        assertThat(gender.getNn(), equalTo("yago:female"));
+        assertThat(gender.getPrefLabelLang(), equalTo("id-ID"));
+    }
+
+    @Test
+    public void promptGenderEnglishMale() {
+        final PromptTask promptGender = promptTaskRepo.get("promptGender");
+
+        final List<UtterancePattern> matches = promptGender.matchUtterance(Locale.US, "I am a man",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("gender", "a man")));
+        final Thing gender = (Thing) confidentMatches.get(0).getSlotValues().get("gender");
+        assertThat(gender.getNn(), equalTo("yago:male"));
+        assertThat(gender.getPrefLabelLang(), equalTo("en-US"));
+    }
+
+    @Test
+    public void promptGenderEnglishFemale() {
+        final PromptTask promptGender = promptTaskRepo.get("promptGender");
+
+        final List<UtterancePattern> matches = promptGender.matchUtterance(Locale.US, "I am female",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("gender", "female")));
+        final Thing gender = (Thing) confidentMatches.get(0).getSlotValues().get("gender");
+        assertThat(gender.getNn(), equalTo("yago:female"));
+        assertThat(gender.getPrefLabelLang(), equalTo("en-US"));
     }
 
 }

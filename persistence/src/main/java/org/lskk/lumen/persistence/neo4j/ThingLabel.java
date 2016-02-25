@@ -1,6 +1,7 @@
 package org.lskk.lumen.persistence.neo4j;
 
 import org.apache.commons.codec.language.Metaphone;
+import org.lskk.lumen.core.ConversationStyle;
 import org.lskk.lumen.core.IConfidenceAware;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -35,10 +36,17 @@ public class ThingLabel implements Serializable, IConfidenceAware {
     private String metaphone;
     @Property(name = "_partition")
     private PartitionKey partition;
+    @Property(name = "style")
+    private ConversationStyle style;
+    @Transient
+    private String thingQName;
     @Transient
     private String propertyQName;
     @Transient
     private Float confidence;
+
+    public ThingLabel() {
+    }
 
     /**
      * Will also set {@link #setMetaphone(String)}
@@ -55,6 +63,17 @@ public class ThingLabel implements Serializable, IConfidenceAware {
         this.propertyQName = propertyQName;
         this.confidence = confidence;
         this.metaphone = METAPHONE.encode(value);
+    }
+
+    public static ThingLabel forThing(String thingQName, String inLanguage, String value, ConversationStyle style) {
+        final ThingLabel label = new ThingLabel();
+        label.setThingQName(thingQName);
+        label.setInLanguage(inLanguage);
+        label.setValue(value);
+        //label.setConfidence(confidence);
+        label.setStyle(style);
+        label.setMetaphone(METAPHONE.encode(value));
+        return label;
     }
 
     public Long getGid() {
@@ -124,6 +143,22 @@ public class ThingLabel implements Serializable, IConfidenceAware {
 
     public void setConfidence(Float confidence) {
         this.confidence = confidence;
+    }
+
+    public String getThingQName() {
+        return thingQName;
+    }
+
+    public void setThingQName(String thingQName) {
+        this.thingQName = thingQName;
+    }
+
+    public ConversationStyle getStyle() {
+        return style;
+    }
+
+    public void setStyle(ConversationStyle style) {
+        this.style = style;
     }
 
     @Override

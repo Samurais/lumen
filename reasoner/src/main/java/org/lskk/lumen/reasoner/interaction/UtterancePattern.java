@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.interaction;
 
+import org.lskk.lumen.core.ConversationStyle;
 import org.lskk.lumen.core.IConfidenceAware;
 
 import java.io.Serializable;
@@ -8,6 +9,7 @@ import java.util.Map;
 
 /**
  * Created by ceefour on 25/02/2016.
+ * @see LocalizedString
  */
 public class UtterancePattern implements Serializable, IConfidenceAware {
 
@@ -29,6 +31,7 @@ public class UtterancePattern implements Serializable, IConfidenceAware {
     private String inLanguage;
     private String pattern;
     private Scope scope = Scope.GLOBAL;
+    private ConversationStyle style;
     private Float confidence;
     private String actual;
     private Map<String, String> slotStrings = new LinkedHashMap<>();
@@ -61,6 +64,18 @@ public class UtterancePattern implements Serializable, IConfidenceAware {
 
     public void setScope(Scope scope) {
         this.scope = scope;
+    }
+
+    /**
+     * {@code null} means neutral.
+     * @return
+     */
+    public ConversationStyle getStyle() {
+        return style;
+    }
+
+    public void setStyle(ConversationStyle style) {
+        this.style = style;
     }
 
     /**
