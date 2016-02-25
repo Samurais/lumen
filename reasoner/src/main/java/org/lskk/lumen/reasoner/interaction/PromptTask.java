@@ -182,8 +182,11 @@ public class PromptTask extends InteractionTask {
                         matched.setPattern(it.getPattern());
                         matched.setScope(it.getScope());
                         matched.setActual(utterance);
+                        // language-independent utterance pattern gets 0.9 multiplier
+                        final float languageMultiplier = null != it.getInLanguage() ? 1f : 0.9f;
+                        // GLOBAL scope has full multiplier, LOCAL scope has 0.9
                         final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.9f;
-                        matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * scopeMultiplier);
+                        matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * languageMultiplier * scopeMultiplier);
                         for (final String slot : slots) {
                             final String slotString = realMatcher.group(slot);
                             matched.getSlotStrings().put(slot, slotString);
