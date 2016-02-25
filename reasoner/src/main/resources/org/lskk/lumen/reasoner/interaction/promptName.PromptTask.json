@@ -1,0 +1,20 @@
+{
+  "@type": "PromptNameTask",
+  "askSsmls": [
+    {"inLanguage": "id-ID", "object": "Siapa namamu?"},
+    {"inLanguage": "id-ID", "object": "Siapa nama kamu?"},
+    {"inLanguage": "id-ID", "object": "Siapa nama Anda?"},
+    {"inLanguage": "en-US", "object": "What is your name?"},
+    {"inLanguage": "en-US", "object": "May I know your name?"}
+  ],
+  "utterancePatterns": [
+    {"inLanguage": "id-ID", "pattern": "{name}", "scope": "LOCAL"},
+    {"inLanguage": "id-ID", "pattern": "Namaku {name}"},
+    {"inLanguage": "id-ID", "pattern": "Nama saya {name}"},
+    {"inLanguage": "id-ID", "pattern": "Saya {name}"},
+    {"inLanguage": "en-US", "pattern": "My name is {name}"},
+    {"inLanguage": "en-US", "pattern": "I am {name}"}
+  ],
+  "property": "rdfs:label",
+  "expectedTypes": ["xsd:string"]
+}

@@ -1,17 +1,21 @@
 package org.lskk.lumen.reasoner.interaction;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.lskk.lumen.core.ConfidenceComparator;
+import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -23,9 +27,13 @@ import java.util.stream.Collectors;
  *
  * Created by ceefour on 17/02/2016.
  */
+@JsonTypeInfo(property = "@type", use = JsonTypeInfo.Id.NAME, defaultImpl = PromptTask.class)
+@JsonSubTypes({
+    @JsonSubTypes.Type(name = "PromptTask", value = PromptTask.class),
+    @JsonSubTypes.Type(name = "PromptNameTask", value = PromptNameTask.class)})
 public class PromptTask extends InteractionTask {
 
-    private static final Logger log = LoggerFactory.getLogger(PromptTask.class);
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     private List<LocalizedString> askSsmls = new ArrayList<>();
     private List<UtterancePattern> utterancePatterns = new ArrayList<>();
@@ -35,7 +43,7 @@ public class PromptTask extends InteractionTask {
 
     /**
      * e.g. to ask birth date:
-     *
+     * <p>
      * <pre>
      * [
      *   {"inLanguage": "id-ID", "object": "kapan tanggal lahirmu?"},
@@ -43,8 +51,9 @@ public class PromptTask extends InteractionTask {
      *   {"inLanguage": "en-US", "object": "when were you born?"}
      * ]
      * </pre>
-     *
+     * <p>
      * There can be several SSMLs for each language.
+     *
      * @return
      */
     public List<LocalizedString> getAskSsmls() {
@@ -57,6 +66,7 @@ public class PromptTask extends InteractionTask {
 
     /**
      * e.g. utterance to provide birth date: "aku lahir tanggal {birthDate}"@id-ID
+     *
      * @return
      */
     public List<UtterancePattern> getUtterancePatterns() {
@@ -65,6 +75,7 @@ public class PromptTask extends InteractionTask {
 
     /**
      * e.g. {@code yago:wasBornOnDate}
+     *
      * @return
      */
     public String getProperty() {
@@ -77,6 +88,7 @@ public class PromptTask extends InteractionTask {
 
     /**
      * e.g. {@code xs:date}, {@code yago:wordnet_person_100007846}
+     *
      * @return
      */
     public List<String> getExpectedTypes() {
@@ -85,6 +97,7 @@ public class PromptTask extends InteractionTask {
 
     /**
      * Any {@link javax.measure.unit.Unit}.
+     *
      * @return
      */
     public String getUnit() {
@@ -98,6 +111,7 @@ public class PromptTask extends InteractionTask {
     /**
      * Get appropriate prompt for target language, if possible.
      * If not, returns first prompt.
+     *
      * @param locale
      * @return
      */
@@ -113,16 +127,20 @@ public class PromptTask extends InteractionTask {
 
     /**
      * Checks whether an utterance matched the defined patterns for this PromptTask.
+     *
      * @param locale
      * @param utterance
-     * @param scope If PromptTask is not active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#GLOBAL}.
-     *              If PromptTask is active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#ANY}.
+     * @param scope     If PromptTask is not active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#GLOBAL}.
+     *                  If PromptTask is active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#ANY}.
      * @return
      */
     public List<UtterancePattern> matchUtterance(Locale locale, String utterance, UtterancePattern.Scope scope) {
         final Pattern PLACEHOLDER_PATTERN = Pattern.compile("[{](?<slot>[a-z0-9_]+)[}]", Pattern.CASE_INSENSITIVE);
         final String SLOT_STRING_PATTERN;
         switch (expectedTypes.get(0)) {
+            case "xsd:string":
+                SLOT_STRING_PATTERN = ".+";
+                break;
             case "xs:date":
                 SLOT_STRING_PATTERN = "\\d+ [a-z]+ \\d+";
                 break;
@@ -164,11 +182,16 @@ public class PromptTask extends InteractionTask {
                         matched.setPattern(it.getPattern());
                         matched.setScope(it.getScope());
                         matched.setActual(utterance);
+                        final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.9f;
+                        matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * scopeMultiplier);
                         for (final String slot : slots) {
                             final String slotString = realMatcher.group(slot);
                             matched.getSlotStrings().put(slot, slotString);
                             // convert to target value
                             switch (expectedTypes.get(0)) {
+                                case "xsd:string":
+                                    matched.getSlotValues().put(slot, slotString);
+                                    break;
                                 case "xs:date":
                                     final LocalDate localDate = DateTimeFormat.longDate().withLocale(realLocale).parseLocalDate(slotString);
                                     matched.getSlotValues().put(slot, localDate);
@@ -182,8 +205,15 @@ public class PromptTask extends InteractionTask {
                     } else {
                         return null;
                     }
-                }).filter(Objects::nonNull).collect(Collectors.toList());
+                })
+                .filter(Objects::nonNull)
+                .sorted(new ConfidenceComparator())
+                .collect(Collectors.toList());
         return matches;
+    }
+
+    public List<ThingLabel> getLabelsToAssert(Locale locale, String utterance, UtterancePattern.Scope scope) {
+        return ImmutableList.of();
     }
 
 }

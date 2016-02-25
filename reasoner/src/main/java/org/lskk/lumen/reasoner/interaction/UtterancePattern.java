@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.interaction;
 
+import org.lskk.lumen.core.IConfidenceAware;
+
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -7,7 +9,7 @@ import java.util.Map;
 /**
  * Created by ceefour on 25/02/2016.
  */
-public class UtterancePattern implements Serializable {
+public class UtterancePattern implements Serializable, IConfidenceAware {
 
     public enum Scope {
         /**
