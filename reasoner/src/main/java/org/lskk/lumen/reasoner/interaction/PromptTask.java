@@ -2,19 +2,19 @@ package org.lskk.lumen.reasoner.interaction;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableList;
+import opennlp.tools.tokenize.TokenizerME;
+import opennlp.tools.tokenize.TokenizerModel;
 import org.apache.commons.lang3.RandomUtils;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.lskk.lumen.core.ConfidenceComparator;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,6 +34,17 @@ import java.util.stream.Collectors;
 public class PromptTask extends InteractionTask {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
+
+    protected static final TokenizerME TOKENIZER_ENGLISH;
+
+    static {
+        try {
+            TOKENIZER_ENGLISH = new TokenizerME(new TokenizerModel(
+                    PromptTask.class.getResource("/org/lskk/lumen/reasoner/en-token.bin")));
+        } catch (IOException e) {
+            throw new ReasonerException("Cannot initialize tokenizer", e);
+        }
+    }
 
     private List<LocalizedString> askSsmls = new ArrayList<>();
     private List<UtterancePattern> utterancePatterns = new ArrayList<>();
@@ -126,6 +137,31 @@ public class PromptTask extends InteractionTask {
     }
 
     /**
+     * Word-tokenizes the plain-text part, quotes using {@link Pattern#quote(String)} each segment independently.
+     * Each token with be separated by regex whitespace ({@code \s+}).
+     * @param plainPart
+     * @return
+     */
+    protected String plainToRegex(String plainPart) {
+        final String[] tokens = TOKENIZER_ENGLISH.tokenize(plainPart);
+        String result = "";
+        for (final String token : tokens) {
+            if (!result.isEmpty()) {
+                result += "\\s+";
+            }
+            result += Pattern.quote(token);
+        }
+        // leading and/or trailing whitespace
+        if (plainPart.startsWith(" ")) {
+            result = "\\s+" + result;
+        }
+        if (plainPart.endsWith(" ")) {
+            result += "\\s+";
+        }
+        return result;
+    }
+
+    /**
      * Checks whether an utterance matched the defined patterns for this PromptTask.
      *
      * @param locale
@@ -161,14 +197,14 @@ public class PromptTask extends InteractionTask {
                         final boolean found = placeholderMatcher.find();
                         if (found) {
                             String plainPart = it.getPattern().substring(lastPlainOffset, placeholderMatcher.start());
-                            real += Pattern.quote(plainPart);
+                            real += plainToRegex(plainPart);
                             final String slot = placeholderMatcher.group("slot");
                             slots.add(slot);
                             real += "(?<" + slot + ">" + SLOT_STRING_PATTERN + ")";
                             lastPlainOffset = placeholderMatcher.end();
                         } else {
                             String plainPart = it.getPattern().substring(lastPlainOffset, it.getPattern().length());
-                            real += Pattern.quote(plainPart);
+                            real += plainToRegex(plainPart);
                             break;
                         }
                     }

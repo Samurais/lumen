@@ -23,12 +23,6 @@ import java.util.stream.Stream;
  */
 public class PromptNameTask extends PromptTask {
 
-    private TokenizerME tokenizer;
-
-    public PromptNameTask() throws IOException {
-        tokenizer = new TokenizerME(new TokenizerModel(PromptNameTask.class.getResource("/org/lskk/lumen/reasoner/en-token.bin")));
-    }
-
     /**
      * Given input utterance, determine the labels that should be given to the Person.
      * The {@link org.apache.jena.vocabulary.SKOS#prefLabel} and {@code yago:isPreferredMeaningOf}
@@ -49,7 +43,7 @@ public class PromptNameTask extends PromptTask {
             outLabels.add(new ThingLabel(PartitionKey.lumen_var, utterancePattern.getInLanguage(),
                     name, "yago:isPreferredMeaningOf", utterancePattern.getConfidence() * 0.9f));
 
-            final String[] nameParts = tokenizer.tokenize(name);
+            final String[] nameParts = TOKENIZER_ENGLISH.tokenize(name);
             if (nameParts.length >= 2) {
                 outLabels.add(new ThingLabel(PartitionKey.lumen_var, utterancePattern.getInLanguage(),
                         Stream.of(Arrays.copyOf(nameParts, nameParts.length - 1)).collect(Collectors.joining(" ")),
