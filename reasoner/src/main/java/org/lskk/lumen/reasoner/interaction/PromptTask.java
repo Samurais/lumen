@@ -8,6 +8,7 @@ import opennlp.tools.tokenize.TokenizerModel;
 import org.apache.commons.lang3.RandomUtils;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
+import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.core.ConversationStyle;
 import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.persistence.neo4j.Literal;
@@ -146,13 +147,14 @@ public class PromptTask extends InteractionTask {
      * @param locale
      * @return
      */
-    public QuestionTemplate getPrompt(Locale locale) {
+    @Override
+    public Optional<QuestionTemplate> getProposition(Locale locale) {
         final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))
                 .collect(Collectors.toList());
         if (!matches.isEmpty()) {
-            return matches.get(RandomUtils.nextInt(0, matches.size()));
+            return Optional.of(matches.get(RandomUtils.nextInt(0, matches.size())));
         } else {
-            return askSsmls.get(0);
+            return Optional.of(askSsmls.get(0));
         }
     }
 
@@ -185,6 +187,19 @@ public class PromptTask extends InteractionTask {
             result += "\\s+";
         }
         return result;
+    }
+
+    @Override
+    public void receiveUtterance(CommunicateAction communicateAction) {
+        final List<UtterancePattern> matchedUtterancePatterns = matchUtterance(communicateAction.getInLanguage(), communicateAction.getObject(),
+                isActive() ? UtterancePattern.Scope.ANY : UtterancePattern.Scope.GLOBAL);
+        getMatchedUtterancePatterns().clear();
+        getMatchedUtterancePatterns().addAll(matchedUtterancePatterns);
+        // add to queue
+        final List<ThingLabel> labelsToAssert = generateLabelsToAssert(matchedUtterancePatterns);
+        getLabelsToAssert().addAll(labelsToAssert);
+        final List<Literal> literalsToAssert = generateLiteralsToAssert(matchedUtterancePatterns);
+        getLiteralsToAssert().addAll(literalsToAssert);
     }
 
     /**
@@ -309,12 +324,10 @@ public class PromptTask extends InteractionTask {
 
     /**
      * By default returns empty list. Override this to return assertable {@link ThingLabel}s.
-     * @param locale
-     * @param utterance
-     * @param scope
+     * @param utteranceMatches Matches of utterance patterns returned by {@link #matchUtterance(Locale, String, UtterancePattern.Scope)}.
      * @return
      */
-    public List<ThingLabel> getLabelsToAssert(Locale locale, String utterance, UtterancePattern.Scope scope) {
+    public List<ThingLabel> generateLabelsToAssert(List<UtterancePattern> utteranceMatches) {
         return ImmutableList.of();
     }
 
@@ -323,7 +336,7 @@ public class PromptTask extends InteractionTask {
      * @param utteranceMatches Matches of utterance patterns returned by {@link #matchUtterance(Locale, String, UtterancePattern.Scope)}.
      * @return
      */
-    public List<Literal> getLiteralsToAssert(List<UtterancePattern> utteranceMatches) {
+    public List<Literal> generateLiteralsToAssert(List<UtterancePattern> utteranceMatches) {
         return ImmutableList.of();
     }
 

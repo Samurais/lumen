@@ -7,7 +7,6 @@ import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,11 +24,11 @@ public class PromptNameTask extends PromptTask {
      * The {@link org.apache.jena.vocabulary.SKOS#prefLabel} and {@code yago:isPreferredMeaningOf}
      * will have a {@link ThingLabel#getConfidence()} from raw confidence multiplied by 0.9f, others will have from raw confidence multiplied by 1.0f.
      * @return
+     * @param utteranceMatches
      */
     @Override
-    public List<ThingLabel> getLabelsToAssert(Locale locale, String utterance, UtterancePattern.Scope scope) {
-        final List<UtterancePattern> utterancePatterns = matchUtterance(locale, utterance, scope);
-        final List<ThingLabel> matchedLabels = utterancePatterns.stream().flatMap(utterancePattern -> {
+    public List<ThingLabel> generateLabelsToAssert(List<UtterancePattern> utteranceMatches) {
+        final List<ThingLabel> matchedLabels = utteranceMatches.stream().flatMap(utterancePattern -> {
             final List<ThingLabel> outLabels = new ArrayList<>();
             final String name = utterancePattern.getSlotStrings().get("name");
 
@@ -58,7 +57,7 @@ public class PromptNameTask extends PromptTask {
         })
                 .sorted(new IConfidence.Comparator())
                 .collect(Collectors.toList());
-        log.debug("Labels for \"{}\"@{} : {}", utterance, locale.toLanguageTag(), matchedLabels);
+        log.debug("Generated Labels: {}", matchedLabels);
         return matchedLabels;
     }
 

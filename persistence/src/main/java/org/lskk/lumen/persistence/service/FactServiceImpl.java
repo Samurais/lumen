@@ -1,20 +1,17 @@
 package org.lskk.lumen.persistence.service;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import org.apache.camel.language.Simple;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.joda.time.format.DateTimeFormat;
 import org.lskk.lumen.persistence.LumenPersistenceException;
 import org.lskk.lumen.persistence.jpa.YagoLabel;
 import org.lskk.lumen.persistence.jpa.YagoType;
 import org.lskk.lumen.persistence.jpa.YagoTypeRepository;
 import org.lskk.lumen.persistence.neo4j.*;
 import org.neo4j.ogm.session.Session;
-import org.neo4j.ogm.session.result.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.neo4j.template.Neo4jTemplate;
@@ -162,6 +159,16 @@ public class FactServiceImpl implements FactService {
 
     @Override
     public Thing assertPropertyToThing(String nodeName, String property, String objectNodeName, float[] truthValue, DateTime assertionTime, String asserterNodeName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Thing assertPropertyToLiteral(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property, @Simple("body.objectType") String objectType, @Simple("body.object") Object object, @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime, @Simple("body.asserterNodeName") String asserterNodeName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Thing assertLabel(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property, @Simple("body.label") String label, String inLanguage, @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime, @Simple("body.asserterNodeName") String asserterNodeName) {
         throw new UnsupportedOperationException();
     }
 

@@ -4,7 +4,6 @@ import org.apache.camel.language.Simple;
 import org.joda.time.DateTime;
 import org.lskk.lumen.persistence.neo4j.Thing;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -67,6 +66,40 @@ public interface FactService {
                                 @Simple("body.objectNodeName") String objectNodeName,
                                 @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime,
                                 @Simple("body.asserterNodeName") String asserterNodeName);
+
+    /**
+     * Assert a property to literal.
+     * @param nodeName Subject's node name, e.g. {@code lumen:Hendy_Irawan}.
+     * @param property Property's QName, e.g. {@code rdf:type}.
+     * @param objectType Literal type, e.g. {@code xsd:string}.
+     * @param object Literal object, can be string or integer or boolean or float.
+     * @param truthValue Truth value of the assertion, relative to asserter.
+     * @param assertionTime Time of the assertion.
+     * @param asserterNodeName Node name of the person who asserts this.
+     * @return
+     */
+    Thing assertPropertyToLiteral(
+            @Simple("body.nodeName") String nodeName, @Simple("body.property") String property,
+            @Simple("body.objectType") String objectType,
+            @Simple("body.object") Object object,
+            @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime,
+            @Simple("body.asserterNodeName") String asserterNodeName);
+
+    /**
+     * Assert a property to label.
+     * @param nodeName Subject's node name, e.g. {@code lumen:Hendy_Irawan}.
+     * @param property Property's QName, e.g. {@code rdf:type}.
+     * @param label Label.
+     * @param inLanguage
+     *@param truthValue Truth value of the assertion, relative to asserter.
+     * @param assertionTime Time of the assertion.
+     * @param asserterNodeName Node name of the person who asserts this.    @return
+     */
+    Thing assertLabel(
+            @Simple("body.nodeName") String nodeName, @Simple("body.property") String property,
+            @Simple("body.label") String label, @Simple("body.inLanguage") String inLanguage,
+            @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime,
+            @Simple("body.asserterNodeName") String asserterNodeName);
 
     /**
      * Get a single fact or literal property.

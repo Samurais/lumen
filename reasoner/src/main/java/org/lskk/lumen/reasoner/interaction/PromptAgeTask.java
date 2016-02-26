@@ -29,7 +29,7 @@ public class PromptAgeTask extends PromptTask {
      * @return
      */
     @Override
-    public List<Literal> getLiteralsToAssert(List<UtterancePattern> utteranceMatches) {
+    public List<Literal> generateLiteralsToAssert(List<UtterancePattern> utteranceMatches) {
         final Optional<UtterancePattern> probableBirthYear = utteranceMatches.stream()
                 .max(new IConfidence.Comparator());
         return probableBirthYear.map(utterancePattern -> {
