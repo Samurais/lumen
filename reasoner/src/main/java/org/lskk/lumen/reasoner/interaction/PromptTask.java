@@ -32,7 +32,8 @@ import java.util.stream.Collectors;
 @JsonSubTypes({
     @JsonSubTypes.Type(name = "PromptTask", value = PromptTask.class),
     @JsonSubTypes.Type(name = "PromptNameTask", value = PromptNameTask.class),
-    @JsonSubTypes.Type(name = "PromptGenderTask", value = PromptGenderTask.class)
+    @JsonSubTypes.Type(name = "PromptGenderTask", value = PromptGenderTask.class),
+    @JsonSubTypes.Type(name = "PromptReligionTask", value = PromptReligionTask.class)
 })
 public class PromptTask extends InteractionTask {
 
@@ -197,8 +198,12 @@ public class PromptTask extends InteractionTask {
             case "xs:date":
                 SLOT_STRING_PATTERN = "\\d+ [a-z]+ \\d+";
                 break;
+            // this pattern is dependent on the Yago Type, not the prompt
             case "yago:wordnet_sex_105006898":
                 SLOT_STRING_PATTERN = "[a-z0-9 -]+";
+                break;
+            case "yago:wordnet_religion_105946687":
+                SLOT_STRING_PATTERN = "[a-z '-]+";
                 break;
             default:
                 throw new ReasonerException("Unsupported type: " + expectedTypes);
@@ -257,8 +262,9 @@ public class PromptTask extends InteractionTask {
                                 case "xs:date":
                                     break;
                                 case "yago:wordnet_sex_105006898":
+                                case "yago:wordnet_religion_105946687":
                                     if (!isValidStringValue(matched.getInLanguage(), slotString, matched.getStyle())) {
-                                        log.debug("Almost matched {} but not valid string value for {}", matched, expectedTypes);
+                                        log.debug("Regex matched {} but no enum of {} has this label", matched, expectedTypes);
                                         allValid = false;
                                     }
                                     break;
@@ -281,6 +287,7 @@ public class PromptTask extends InteractionTask {
                                         matched.getSlotValues().put(slot, localDate);
                                         break;
                                     case "yago:wordnet_sex_105006898":
+                                    case "yago:wordnet_religion_105946687":
                                         matched.getSlotValues().put(slot, toTargetValue(matched.getInLanguage(), slotString, matched.getStyle()));
                                         break;
                                     default:

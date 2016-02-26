@@ -13,7 +13,8 @@
     {"inLanguage": "id-ID", "pattern": "Nama saya {name}"},
     {"inLanguage": "id-ID", "pattern": "Saya {name}"},
     {"inLanguage": "en-US", "pattern": "My name is {name}"},
-    {"inLanguage": "en-US", "pattern": "I am {name}"}
+    {"inLanguage": "en-US", "pattern": "I am {name}"},
+    {"inLanguage": "en-US", "pattern": "I'm {name}"}
   ],
   "property": "rdfs:label",
   "expectedTypes": ["xsd:string"]

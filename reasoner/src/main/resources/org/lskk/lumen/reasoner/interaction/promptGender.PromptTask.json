@@ -24,7 +24,8 @@
     {"inLanguage": "id-ID", "pattern": "Jenis kelamin gue {gender}", "style": "SLANG"},
     {"inLanguage": "id-ID", "pattern": "Jenis kelamin gw {gender}", "style": "SLANG"},
     {"inLanguage": "en-US", "pattern": "My gender is {gender}", "style": "FORMAL"},
-    {"inLanguage": "en-US", "pattern": "I am {gender}"}
+    {"inLanguage": "en-US", "pattern": "I am {gender}"},
+    {"inLanguage": "en-US", "pattern": "I'm {gender}", "style": "CASUAL"}
   ],
   "property": "yago:hasGender",
   "expectedTypes": ["yago:wordnet_sex_105006898"]

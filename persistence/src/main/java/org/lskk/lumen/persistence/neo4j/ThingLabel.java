@@ -76,6 +76,17 @@ public class ThingLabel implements Serializable, IConfidenceAware {
         return label;
     }
 
+    public static ThingLabel forThing(String thingQName, String inLanguage, String value) {
+        final ThingLabel label = new ThingLabel();
+        label.setThingQName(thingQName);
+        label.setInLanguage(inLanguage);
+        label.setValue(value);
+        //label.setConfidence(confidence);
+//        label.setStyle(style);
+        label.setMetaphone(METAPHONE.encode(value));
+        return label;
+    }
+
     public Long getGid() {
         return gid;
     }

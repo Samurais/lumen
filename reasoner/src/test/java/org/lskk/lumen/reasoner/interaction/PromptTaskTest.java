@@ -243,4 +243,50 @@ public class PromptTaskTest {
         assertThat(gender.getPrefLabelLang(), equalTo("en-US"));
     }
 
+    @Test
+    public void promptReligionTask() {
+        final PromptTask promptReligion = promptTaskRepo.get("promptReligion");
+        assertThat(promptReligion, instanceOf(PromptReligionTask.class));
+        assertThat(promptReligion.getId(), equalTo("promptReligion"));
+        assertThat(promptReligion.getAskSsmls(), hasSize(greaterThan(1)));
+        assertThat(promptReligion.getUtterancePatterns(), hasSize(greaterThan(1)));
+        assertThat(promptReligion.getProperty(), equalTo("lumen:hasReligion"));
+        assertThat(promptReligion.getExpectedTypes(), contains("yago:wordnet_religion_105946687"));
+
+//        assertThat(promptGender.getPrompt(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
+//        assertThat(promptGender.getPrompt(Locale.US).getObject(), containsString("name"));
+    }
+
+    @Test
+    public void promptReligionIndonesian() {
+        final PromptTask promptReligion = promptTaskRepo.get("promptReligion");
+
+        final List<UtterancePattern> matches = promptReligion.matchUtterance(LumenLocale.INDONESIAN, "Saya muslimah",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream()
+                .filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("religion", "muslimah")));
+        final Thing religion = (Thing) confidentMatches.get(0).getSlotValues().get("religion");
+        assertThat(religion.getNn(), equalTo(PromptReligionTask.Religion.ISLAM.getHref()));
+        assertThat(religion.getPrefLabelLang(), equalTo("id-ID"));
+    }
+
+    @Test
+    public void promptReligionEnglish() {
+        final PromptTask promptReligion = promptTaskRepo.get("promptReligion");
+
+        final List<UtterancePattern> matches = promptReligion.matchUtterance(Locale.US, "I believe in Protestant",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream()
+                .filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("religion", "Protestant")));
+        final Thing religion = (Thing) confidentMatches.get(0).getSlotValues().get("religion");
+        assertThat(religion.getNn(), equalTo(PromptReligionTask.Religion.PROTESTANTISM.getHref()));
+        assertThat(religion.getPrefLabelLang(), equalTo("en-US"));
+    }
+
 }
