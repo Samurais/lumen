@@ -1,9 +1,7 @@
 package org.lskk.lumen.persistence.neo4j;
 
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Property;
-import org.neo4j.ogm.annotation.Relationship;
+import org.lskk.lumen.core.IConfidence;
+import org.neo4j.ogm.annotation.*;
 
 import java.io.Serializable;
 
@@ -12,7 +10,7 @@ import java.io.Serializable;
  */
 @NodeEntity(label = "rdfs_Literal")
 @Ensure("CREATE INDEX ON :rdfs_Literal(_partition)")
-public class Literal implements Serializable {
+public class Literal implements Serializable, IConfidence {
 
     @GraphId
     private Long gid;
@@ -26,6 +24,8 @@ public class Literal implements Serializable {
     private PartitionKey partition;
     @Property(name = "v")
     private Object value;
+    @Transient
+    private Float confidence;
 
     public Long getGid() {
         return gid;
@@ -51,6 +51,10 @@ public class Literal implements Serializable {
         this.predicate = predicate;
     }
 
+    /**
+     * e.g. {@code xsd:string}, {@code xsd:integer}
+     * @return
+     */
     public String getType() {
         return type;
     }
@@ -73,5 +77,14 @@ public class Literal implements Serializable {
 
     public void setValue(Object value) {
         this.value = value;
+    }
+
+    @Override
+    public Float getConfidence() {
+        return confidence;
+    }
+
+    public void setConfidence(Float confidence) {
+        this.confidence = confidence;
     }
 }

@@ -1,12 +1,9 @@
 package org.lskk.lumen.reasoner.interaction;
 
-import opennlp.tools.tokenize.TokenizerME;
-import opennlp.tools.tokenize.TokenizerModel;
-import org.lskk.lumen.core.ConfidenceComparator;
+import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.persistence.neo4j.PartitionKey;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +56,7 @@ public class PromptNameTask extends PromptTask {
             }
             return outLabels.stream();
         })
-                .sorted(new ConfidenceComparator())
+                .sorted(new IConfidence.Comparator())
                 .collect(Collectors.toList());
         log.debug("Labels for \"{}\"@{} : {}", utterance, locale.toLanguageTag(), matchedLabels);
         return matchedLabels;

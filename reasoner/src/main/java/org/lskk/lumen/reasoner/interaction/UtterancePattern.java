@@ -1,7 +1,7 @@
 package org.lskk.lumen.reasoner.interaction;
 
 import org.lskk.lumen.core.ConversationStyle;
-import org.lskk.lumen.core.IConfidenceAware;
+import org.lskk.lumen.core.IConfidence;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
@@ -11,7 +11,7 @@ import java.util.Map;
  * Created by ceefour on 25/02/2016.
  * @see LocalizedString
  */
-public class UtterancePattern implements Serializable, IConfidenceAware {
+public class UtterancePattern implements Serializable, IConfidence {
 
     public enum Scope {
         /**

@@ -2,7 +2,7 @@ package org.lskk.lumen.persistence.neo4j;
 
 import org.apache.commons.codec.language.Metaphone;
 import org.lskk.lumen.core.ConversationStyle;
-import org.lskk.lumen.core.IConfidenceAware;
+import org.lskk.lumen.core.IConfidence;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
@@ -18,7 +18,7 @@ import java.io.Serializable;
 @Ensure("CREATE INDEX ON :lumen_Label(l)")
 @Ensure("CREATE INDEX ON :lumen_Label(v)")
 @Ensure("CREATE INDEX ON :lumen_Label(m)")
-public class ThingLabel implements Serializable, IConfidenceAware {
+public class ThingLabel implements Serializable, IConfidence {
 
     public static final Metaphone METAPHONE;
     static {

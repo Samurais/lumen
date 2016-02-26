@@ -8,8 +8,9 @@ import opennlp.tools.tokenize.TokenizerModel;
 import org.apache.commons.lang3.RandomUtils;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
-import org.lskk.lumen.core.ConfidenceComparator;
 import org.lskk.lumen.core.ConversationStyle;
+import org.lskk.lumen.core.IConfidence;
+import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.slf4j.Logger;
@@ -33,7 +34,8 @@ import java.util.stream.Collectors;
     @JsonSubTypes.Type(name = "PromptTask", value = PromptTask.class),
     @JsonSubTypes.Type(name = "PromptNameTask", value = PromptNameTask.class),
     @JsonSubTypes.Type(name = "PromptGenderTask", value = PromptGenderTask.class),
-    @JsonSubTypes.Type(name = "PromptReligionTask", value = PromptReligionTask.class)
+    @JsonSubTypes.Type(name = "PromptReligionTask", value = PromptReligionTask.class),
+    @JsonSubTypes.Type(name = "PromptAgeTask", value = PromptAgeTask.class)
 })
 public class PromptTask extends InteractionTask {
 
@@ -160,12 +162,18 @@ public class PromptTask extends InteractionTask {
      * @param plainPart
      * @return
      */
-    protected String plainToRegex(String plainPart) {
+    protected final String plainToRegex(String plainPart) {
         final String[] tokens = TOKENIZER_ENGLISH.tokenize(plainPart);
         String result = "";
         for (final String token : tokens) {
             if (!result.isEmpty()) {
-                result += "\\s+";
+                // Special handling: OpenNLP English Tokenizer tokenizes "I'm" as [I, 'm]
+                // which makes sense but you need to be aware of this
+                if (token.startsWith("'")) {
+                    result += "\\s*";
+                } else {
+                    result += "\\s+";
+                }
             }
             result += Pattern.quote(token);
         }
@@ -194,6 +202,9 @@ public class PromptTask extends InteractionTask {
         switch (expectedTypes.get(0)) {
             case "xsd:string":
                 SLOT_STRING_PATTERN = ".+";
+                break;
+            case "xsd:integer":
+                SLOT_STRING_PATTERN = "[\\d-]+";
                 break;
             case "xs:date":
                 SLOT_STRING_PATTERN = "\\d+ [a-z]+ \\d+";
@@ -250,14 +261,15 @@ public class PromptTask extends InteractionTask {
                         final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.9f;
                         matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * languageMultiplier * scopeMultiplier);
 
-                        // for each slot, check if the captured slot value is valid string
+                        // for each slot, check if the captured slot value is valid in valid format for conversion to target value
                         boolean allValid = true;
                         for (final String slot : slots) {
                             final String slotString = realMatcher.group(slot);
                             matched.getSlotStrings().put(slot, slotString);
-                            // convert to target value
                             switch (expectedTypes.get(0)) {
                                 case "xsd:string":
+                                    break;
+                                case "xsd:integer":
                                     break;
                                 case "xs:date":
                                     break;
@@ -278,21 +290,7 @@ public class PromptTask extends InteractionTask {
                                 final String slotString = realMatcher.group(slot);
                                 matched.getSlotStrings().put(slot, slotString);
                                 // convert to target value
-                                switch (expectedTypes.get(0)) {
-                                    case "xsd:string":
-                                        matched.getSlotValues().put(slot, slotString);
-                                        break;
-                                    case "xs:date":
-                                        final LocalDate localDate = DateTimeFormat.longDate().withLocale(realLocale).parseLocalDate(slotString);
-                                        matched.getSlotValues().put(slot, localDate);
-                                        break;
-                                    case "yago:wordnet_sex_105006898":
-                                    case "yago:wordnet_religion_105946687":
-                                        matched.getSlotValues().put(slot, toTargetValue(matched.getInLanguage(), slotString, matched.getStyle()));
-                                        break;
-                                    default:
-                                        throw new ReasonerException("Unsupported type: " + expectedTypes);
-                                }
+                                matched.getSlotValues().put(slot, toTargetValue(matched.getInLanguage(), slotString, matched.getStyle()));
                             }
                             log.debug("Matched {}", matched);
                             return matched;
@@ -304,12 +302,28 @@ public class PromptTask extends InteractionTask {
                     }
                 })
                 .filter(Objects::nonNull)
-                .sorted(new ConfidenceComparator())
+                .sorted(new IConfidence.Comparator())
                 .collect(Collectors.toList());
         return matches;
     }
 
+    /**
+     * By default returns empty list. Override this to return assertable {@link ThingLabel}s.
+     * @param locale
+     * @param utterance
+     * @param scope
+     * @return
+     */
     public List<ThingLabel> getLabelsToAssert(Locale locale, String utterance, UtterancePattern.Scope scope) {
+        return ImmutableList.of();
+    }
+
+    /**
+     * By default returns empty list. Override this to return assertable {@link Literal}s.
+     * @param utteranceMatches Matches of utterance patterns returned by {@link #matchUtterance(Locale, String, UtterancePattern.Scope)}.
+     * @return
+     */
+    public List<Literal> getLiteralsToAssert(List<UtterancePattern> utteranceMatches) {
         return ImmutableList.of();
     }
 
@@ -317,7 +331,24 @@ public class PromptTask extends InteractionTask {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Convert to target value. You can override this if you have your own format.
+     * @param inLanguage
+     * @param value
+     * @param style
+     * @return
+     */
     public Object toTargetValue(String inLanguage, String value, ConversationStyle style) {
-        throw new UnsupportedOperationException();
+        switch (expectedTypes.get(0)) {
+            case "xsd:string":
+                return value;
+            case "xsd:integer":
+                return Integer.parseInt(value);
+            case "xs:date":
+                final LocalDate localDate = DateTimeFormat.longDate().withLocale(Locale.forLanguageTag(inLanguage)).parseLocalDate(value);
+                return localDate;
+            default:
+                throw new ReasonerException("Unsupported type: " + expectedTypes);
+        }
     }
 }

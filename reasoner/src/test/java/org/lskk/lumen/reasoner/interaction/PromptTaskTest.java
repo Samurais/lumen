@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.lskk.lumen.core.LumenCoreConfig;
 import org.lskk.lumen.core.LumenLocale;
 import org.lskk.lumen.core.RabbitMqConfig;
+import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.PartitionKey;
 import org.lskk.lumen.persistence.neo4j.Thing;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
@@ -287,6 +288,61 @@ public class PromptTaskTest {
         final Thing religion = (Thing) confidentMatches.get(0).getSlotValues().get("religion");
         assertThat(religion.getNn(), equalTo(PromptReligionTask.Religion.PROTESTANTISM.getHref()));
         assertThat(religion.getPrefLabelLang(), equalTo("en-US"));
+    }
+
+
+    @Test
+    public void promptAgeTask() {
+        final PromptTask promptAge = promptTaskRepo.get("promptAge");
+        assertThat(promptAge, instanceOf(PromptAgeTask.class));
+        assertThat(promptAge.getId(), equalTo("promptAge"));
+        assertThat(promptAge.getAskSsmls(), hasSize(greaterThan(1)));
+        assertThat(promptAge.getUtterancePatterns(), hasSize(greaterThan(1)));
+        assertThat(promptAge.getProperty(), equalTo("lumen:hasBirthYear"));
+        assertThat(promptAge.getExpectedTypes(), contains("xsd:integer"));
+
+//        assertThat(promptGender.getPrompt(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
+//        assertThat(promptGender.getPrompt(Locale.US).getObject(), containsString("name"));
+    }
+
+    @Test
+    public void promptAgeIndonesian() {
+        final PromptTask promptAge = promptTaskRepo.get("promptAge");
+
+        final List<UtterancePattern> matches = promptAge.matchUtterance(LumenLocale.INDONESIAN, "Saya berusia 45th",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream()
+                .filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("age", "45")));
+        final Integer age = (Integer) confidentMatches.get(0).getSlotValues().get("age");
+        assertThat(age, equalTo(45));
+        final List<Literal> literals = promptAge.getLiteralsToAssert(matches);
+        assertThat(literals, hasSize(1));
+        assertThat(literals.get(0).getValue(), equalTo(1971));
+        assertThat(literals.get(0).getType(), equalTo("xsd:integer"));
+        assertThat(literals.get(0).getPredicate().getNn(), equalTo("lumen:hasBirthYear"));
+    }
+
+    @Test
+    public void promptAgeEnglish() {
+        final PromptTask promptAge = promptTaskRepo.get("promptAge");
+
+        final List<UtterancePattern> matches = promptAge.matchUtterance(Locale.US, "I'm 16 yrs old",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream()
+                .filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("age", "16")));
+        final Integer age = (Integer) confidentMatches.get(0).getSlotValues().get("age");
+        assertThat(age, equalTo(16));
+        final List<Literal> literals = promptAge.getLiteralsToAssert(matches);
+        assertThat(literals, hasSize(1));
+        assertThat(literals.get(0).getValue(), equalTo(2000));
+        assertThat(literals.get(0).getType(), equalTo("xsd:integer"));
+        assertThat(literals.get(0).getPredicate().getNn(), equalTo("lumen:hasBirthYear"));
     }
 
 }

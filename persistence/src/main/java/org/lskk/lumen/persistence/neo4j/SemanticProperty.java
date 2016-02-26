@@ -1,5 +1,6 @@
 package org.lskk.lumen.persistence.neo4j;
 
+import com.google.common.base.Preconditions;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
@@ -30,6 +31,22 @@ public class SemanticProperty implements Serializable {
     private Set<Thing> domains = new HashSet<>();
     @Relationship(type = "rdfs:range")
     private Set<Thing> ranges = new HashSet<>();
+
+    public static SemanticProperty forYago(String nn) {
+        Preconditions.checkArgument(nn.startsWith("yago:"), "%s is not a \"yago:\" property", nn);
+        final SemanticProperty semanticProperty = new SemanticProperty();
+        semanticProperty.setPartition(PartitionKey.lumen_yago);
+        semanticProperty.setNn(nn);
+        return semanticProperty;
+    }
+
+    public static SemanticProperty forLumen(String nn) {
+        Preconditions.checkArgument(nn.startsWith("lumen:"), "%s is not a \"lumen:\" property", nn);
+        final SemanticProperty semanticProperty = new SemanticProperty();
+        semanticProperty.setPartition(PartitionKey.lumen_common);
+        semanticProperty.setNn(nn);
+        return semanticProperty;
+    }
 
     public Long getGid() {
         return gid;
