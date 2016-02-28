@@ -49,17 +49,6 @@ public abstract class InteractionTask implements Serializable {
     public List<UtterancePattern> getMatchedUtterancePatterns() {
         return matchedUtterancePatterns;
     }
-
-    /**
-     * Given TaskExec state, returns the proposition that Lumen wants to express
-     * to the user (if any).
-     * @param locale
-     * @return
-     */
-    public Optional<QuestionTemplate> getProposition(Locale locale) {
-        throw new UnsupportedOperationException();
-    }
-
     /**
      * You must override this to handle user's input.
      * @param communicateAction
@@ -115,6 +104,8 @@ public abstract class InteractionTask implements Serializable {
     }
 
     /**
+     * Given Task state, returns the proposition that Lumen wants to express
+     * to the user (if any).
      * Will be {@link Queue#poll()}-ed by {@link InteractionSession} to {@link org.lskk.lumen.reasoner.ux.Channel#express(String, CommunicateAction, Object)}
      * back to the user.
      * @return

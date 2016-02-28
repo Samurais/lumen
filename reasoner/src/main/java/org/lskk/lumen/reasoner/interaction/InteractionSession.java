@@ -50,25 +50,12 @@ public class InteractionSession implements Serializable, AutoCloseable {
         Preconditions.checkState(!activeLocales.isEmpty(),
                 "Requires at least one active locale");
         lastLocale = activeLocales.get(0);
-        update();
+        update(null);
     }
 
     @PreDestroy
     public void close() {
 
-    }
-
-    /**
-     * FIXME: find a better name
-     */
-    public void poke(Channel<?> channel) {
-        final Optional<QuestionTemplate> proposition = activeTask.getProposition(activeLocales.get(0));
-        if (proposition.isPresent()) {
-            final String avatarId = null;
-            final CommunicateAction communicateAction = new CommunicateAction(Locale.forLanguageTag(proposition.get().getInLanguage()),
-                    proposition.get().getObject(), null);
-            channel.express(avatarId, communicateAction, null);
-        }
     }
 
     /**
@@ -166,7 +153,22 @@ public class InteractionSession implements Serializable, AutoCloseable {
         }
     }
 
-    public void update() {
+    /**
+     * Call this to fire pending scheduled tasks.
+     * @param channel
+     */
+    public void update(Channel<?> channel) {
+        final String avatarId = null;
+        for (final InteractionTask task : tasks) {
+            while (true) {
+                final CommunicateAction pendingCommunicateAction = task.getPendingCommunicateActions().poll();
+                if (null == pendingCommunicateAction) {
+                    break;
+                }
+                channel.express(avatarId, pendingCommunicateAction, null);
+            }
+        }
+
         final InteractionTask nextTask = pendingActivations.poll();
         if (null != nextTask) {
             activate(nextTask, getLastLocale());

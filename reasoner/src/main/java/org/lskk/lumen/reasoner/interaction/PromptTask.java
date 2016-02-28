@@ -142,24 +142,6 @@ public class PromptTask extends InteractionTask {
     }
 
     /**
-     * Get appropriate prompt for target language, if possible.
-     * If not, returns first prompt.
-     *
-     * @param locale
-     * @return
-     */
-    @Override
-    public Optional<QuestionTemplate> getProposition(Locale locale) {
-        final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))
-                .collect(Collectors.toList());
-        if (!matches.isEmpty()) {
-            return Optional.of(matches.get(RandomUtils.nextInt(0, matches.size())));
-        } else {
-            return Optional.of(askSsmls.get(0));
-        }
-    }
-
-    /**
      * Word-tokenizes the plain-text part, quotes using {@link Pattern#quote(String)} each segment independently.
      * Each token with be separated by regex whitespace ({@code \s+}).
      * @param plainPart
@@ -201,7 +183,25 @@ public class PromptTask extends InteractionTask {
         getLabelsToAssert().addAll(labelsToAssert);
         final List<Literal> literalsToAssert = generateLiteralsToAssert(matchedUtterancePatterns);
         getLiteralsToAssert().addAll(literalsToAssert);
-        session.complete(this, Optional.ofNullable(communicateAction.getInLanguage()).orElse(session.getLastLocale()));
+        final Locale realLocale = Optional.ofNullable(communicateAction.getInLanguage()).orElse(session.getLastLocale());
+
+        // Get appropriate prompt for target language, if possible.
+        // If not, returns first prompt.
+        final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> realLocale.equals(Locale.forLanguageTag(it.getInLanguage())))
+                .collect(Collectors.toList());
+        final QuestionTemplate questionTemplate;
+        if (!matches.isEmpty()) {
+            questionTemplate = matches.get(RandomUtils.nextInt(0, matches.size()));
+        } else {
+            questionTemplate = askSsmls.get(0);
+        }
+        final CommunicateAction reply = new CommunicateAction(
+                Optional.ofNullable(questionTemplate.getInLanguage()).map(Locale::forLanguageTag).orElse(realLocale),
+                questionTemplate.getObject(), communicateAction.getAvatarId());
+        reply.setConversationStyle(questionTemplate.getStyle());
+        getPendingCommunicateActions().add(reply);
+
+        session.complete(this, realLocale);
     }
 
     /**

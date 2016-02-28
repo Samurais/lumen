@@ -72,13 +72,13 @@ public class InteractionSessionTest {
             session.open();
             final PromptTask promptName = promptTaskRepo.create("promptName");
             session.activate(promptName, LumenLocale.INDONESIAN);
-            session.poke(logChannel);
+            session.update(logChannel);
             session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService);
 
             verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
             verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
 
-            session.update();
+            session.update(logChannel);
         }
     }
 
