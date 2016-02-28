@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.util.Locale;
 
 import static org.mockito.Matchers.any;
@@ -60,20 +61,25 @@ public class InteractionSessionTest {
     private LogChannel logChannel;
     @Inject
     private FactService factService;
+    @Inject
+    private Provider<InteractionSession> sessionProvider;
 
     @Test
     public void askNameThenAssert() {
-        try (final InteractionSession session = new InteractionSession()) {
+        try (final InteractionSession session = sessionProvider.get()) {
             session.getActiveLocales().add(LumenLocale.INDONESIAN);
             session.getActiveLocales().add(Locale.US);
             session.open();
             final PromptTask promptName = promptTaskRepo.create("promptName");
-            session.setActiveTask(promptName);
+            session.activate(promptName, LumenLocale.INDONESIAN);
             session.poke(logChannel);
             session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService);
+
+            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
+            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
+
+            session.update();
         }
-        verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
-        verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
     }
 
 }

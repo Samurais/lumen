@@ -59,7 +59,7 @@ public class PromptTask extends InteractionTask {
     private String property;
     private List<String> expectedTypes;
     private String unit;
-    private UnderstoodTask understoodTask;
+    private AffirmationTask affirmationTask;
 
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
@@ -191,7 +191,7 @@ public class PromptTask extends InteractionTask {
     }
 
     @Override
-    public void receiveUtterance(CommunicateAction communicateAction) {
+    public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session) {
         final List<UtterancePattern> matchedUtterancePatterns = matchUtterance(communicateAction.getInLanguage(), communicateAction.getObject(),
                 isActive() ? UtterancePattern.Scope.ANY : UtterancePattern.Scope.GLOBAL);
         getMatchedUtterancePatterns().clear();
@@ -201,6 +201,7 @@ public class PromptTask extends InteractionTask {
         getLabelsToAssert().addAll(labelsToAssert);
         final List<Literal> literalsToAssert = generateLiteralsToAssert(matchedUtterancePatterns);
         getLiteralsToAssert().addAll(literalsToAssert);
+        session.complete(this, Optional.ofNullable(communicateAction.getInLanguage()).orElse(session.getLastLocale()));
     }
 
     /**
@@ -370,11 +371,21 @@ public class PromptTask extends InteractionTask {
      * After this PromptTask is completed, the assigned UnderstoodTask will be used to express the collected information.
      * @return
      */
-    public UnderstoodTask getUnderstoodTask() {
-        return understoodTask;
+    public AffirmationTask getAffirmationTask() {
+        return affirmationTask;
     }
 
-    public void setUnderstoodTask(UnderstoodTask understoodTask) {
-        this.understoodTask = understoodTask;
+    public void setAffirmationTask(AffirmationTask affirmationTask) {
+        this.affirmationTask = affirmationTask;
+    }
+
+    @Override
+    public void onStateChanged(InteractionTaskState previous, InteractionTaskState current, Locale locale, InteractionSession session) {
+        super.onStateChanged(previous, current, locale, session);
+        if (InteractionTaskState.COMPLETED == current) {
+            if (null != getAffirmationTask()) {
+                session.schedule(getAffirmationTask());
+            }
+        }
     }
 }

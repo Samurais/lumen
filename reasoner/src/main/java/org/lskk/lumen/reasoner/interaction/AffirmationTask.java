@@ -6,10 +6,12 @@ import java.util.Locale;
 
 /**
  * Used after {@link PromptTask} to reply answer user has given information.
+ * affirming: to express agreement with or commitment to; uphold; support.
+ * When state changes to {@link InteractionTaskState#ACTIVE}, it will express provided {@link CommunicateAction}.
  * Created by ceefour on 28/02/2016.
  * @todo Maybe merge with {@link CollectTask}.
  */
-public class UnderstoodTask extends InteractionTask {
+public class AffirmationTask extends InteractionTask {
 
     @Override
     public void onStateChanged(InteractionTaskState previous, InteractionTaskState current, Locale locale, InteractionSession session) {

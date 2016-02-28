@@ -63,8 +63,9 @@ public abstract class InteractionTask implements Serializable {
     /**
      * You must override this to handle user's input.
      * @param communicateAction
+     * @param session
      */
-    public void receiveUtterance(CommunicateAction communicateAction) {
+    public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session) {
     }
 
     /**
