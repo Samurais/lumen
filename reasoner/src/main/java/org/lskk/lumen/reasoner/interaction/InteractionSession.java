@@ -74,7 +74,13 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     public void setActiveTask(InteractionTask activeTask) {
+        if (null != this.activeTask && InteractionTaskState.ACTIVE == this.activeTask.getState()) {
+            this.activeTask.setState(InteractionTaskState.PENDING);
+        }
         this.activeTask = activeTask;
+        if (null != this.activeTask && InteractionTaskState.PENDING == this.activeTask.getState()) {
+            this.activeTask.setState(InteractionTaskState.ACTIVE);
+        }
     }
 
     /**
@@ -98,21 +104,25 @@ public class InteractionSession implements Serializable, AutoCloseable {
     // TODO: should parameters replaced by CommunicateAction?
     public void receiveUtterance(Locale locale, String text, FactService factService) {
         final CommunicateAction communicateAction = new CommunicateAction(locale, text, null);
-        log.info("Executing receiveUtterance for {}: {}", activeTask, communicateAction);
-        activeTask.receiveUtterance(communicateAction);
-        while (!activeTask.getLabelsToAssert().isEmpty()) {
-            final ThingLabel label = activeTask.getLabelsToAssert().poll();
-            log.info("Asserting {}", label);
-            factService.assertLabel(label.getThingQName(), label.getPropertyQName(),
-                    label.getValue(), label.getInLanguage(),
-                    new float[] {1f, label.getConfidence(), 0}, new DateTime(), null);
-        }
-        while (!activeTask.getLiteralsToAssert().isEmpty()) {
-            final Literal literal = activeTask.getLiteralsToAssert().poll();
-            log.info("Asserting {}", literal);
-            factService.assertPropertyToLiteral(literal.getSubject().getNn(), literal.getPredicate().getNn(),
-                    literal.getType(), literal.getValue(),
-                    new float[] {1f, literal.getConfidence(), 0}, new DateTime(), null);
+        if (null != activeTask) {
+            log.info("Executing receiveUtterance for {}: {}", activeTask, communicateAction);
+            activeTask.receiveUtterance(communicateAction);
+            while (!activeTask.getLabelsToAssert().isEmpty()) {
+                final ThingLabel label = activeTask.getLabelsToAssert().poll();
+                log.info("Asserting {}", label);
+                factService.assertLabel(label.getThingQName(), label.getPropertyQName(),
+                        label.getValue(), label.getInLanguage(),
+                        new float[]{1f, label.getConfidence(), 0}, new DateTime(), null);
+            }
+            while (!activeTask.getLiteralsToAssert().isEmpty()) {
+                final Literal literal = activeTask.getLiteralsToAssert().poll();
+                log.info("Asserting {}", literal);
+                factService.assertPropertyToLiteral(literal.getSubject().getNn(), literal.getPredicate().getNn(),
+                        literal.getType(), literal.getValue(),
+                        new float[]{1f, literal.getConfidence(), 0}, new DateTime(), null);
+            }
+        } else {
+            log.warn("No active task to receiveUtterance for {}", communicateAction);
         }
     }
 }

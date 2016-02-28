@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
+import org.lskk.lumen.reasoner.expression.Proposition;
 
 import java.io.Serializable;
 import java.util.*;
@@ -26,21 +27,19 @@ import java.util.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class InteractionTask implements Serializable {
 
-    private boolean active = false;
+    private InteractionTaskState state = InteractionTaskState.PENDING;
     private List<UtterancePattern> matchedUtterancePatterns = new ArrayList<>();
     private Queue<ThingLabel> labelsToAssert = new ArrayDeque<>();
     private Queue<Literal> literalsToAssert = new ArrayDeque<>();
+    private Queue<Proposition> pendingPropositions = new ArrayDeque<>();
+    private Queue<CommunicateAction> pendingCommunicateActions = new ArrayDeque<>();
 
     /**
      * If {@link InteractionSession#getActiveTask()} is this one then true, else false.
      * @return
      */
     public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
+        return InteractionTaskState.ACTIVE == state;
     }
 
     /**
@@ -84,5 +83,42 @@ public abstract class InteractionTask implements Serializable {
      */
     public Queue<Literal> getLiteralsToAssert() {
         return literalsToAssert;
+    }
+
+    public InteractionTaskState getState() {
+        return state;
+    }
+
+    public void setState(InteractionTaskState state) {
+        this.state = state;
+    }
+
+    /**
+     * Override this to handle lifecycle state transitions.
+     * @param previous
+     * @param current
+     * @param locale Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
+     * @param session
+     */
+    public void onStateChanged(InteractionTaskState previous, InteractionTaskState current, Locale locale, InteractionSession session) {
+
+    }
+
+    /**
+     * Will be {@link Queue#poll()}-ed by {@link InteractionSession} to {@link org.lskk.lumen.reasoner.ux.Channel#express(String, Proposition, boolean, Object)}
+     * back to the user.
+     * @return
+     */
+    public Queue<Proposition> getPendingPropositions() {
+        return pendingPropositions;
+    }
+
+    /**
+     * Will be {@link Queue#poll()}-ed by {@link InteractionSession} to {@link org.lskk.lumen.reasoner.ux.Channel#express(String, CommunicateAction, Object)}
+     * back to the user.
+     * @return
+     */
+    public Queue<CommunicateAction> getPendingCommunicateActions() {
+        return pendingCommunicateActions;
     }
 }

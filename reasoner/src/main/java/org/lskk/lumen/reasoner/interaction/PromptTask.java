@@ -59,6 +59,7 @@ public class PromptTask extends InteractionTask {
     private String property;
     private List<String> expectedTypes;
     private String unit;
+    private UnderstoodTask understoodTask;
 
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
@@ -363,5 +364,17 @@ public class PromptTask extends InteractionTask {
             default:
                 throw new ReasonerException("Unsupported type: " + expectedTypes);
         }
+    }
+
+    /**
+     * After this PromptTask is completed, the assigned UnderstoodTask will be used to express the collected information.
+     * @return
+     */
+    public UnderstoodTask getUnderstoodTask() {
+        return understoodTask;
+    }
+
+    public void setUnderstoodTask(UnderstoodTask understoodTask) {
+        this.understoodTask = understoodTask;
     }
 }
