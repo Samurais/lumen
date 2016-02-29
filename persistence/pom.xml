@@ -55,7 +55,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>9.4.1207</version>
+            <version>9.4.1208</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -290,6 +290,13 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
+        <!--<repository>
+            <id>spring-milestone</id>
+            <url>http://repo.spring.io/milestone/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>-->
     </repositories>
 
     <distributionManagement>

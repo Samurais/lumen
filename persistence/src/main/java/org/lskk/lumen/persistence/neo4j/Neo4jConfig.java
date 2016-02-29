@@ -1,12 +1,13 @@
 package org.lskk.lumen.persistence.neo4j;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.Service;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.data.neo4j.config.Neo4jConfiguration;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
@@ -15,7 +16,6 @@ import org.springframework.data.neo4j.server.RemoteServer;
 import org.springframework.data.neo4j.template.Neo4jTemplate;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -42,8 +42,18 @@ public class Neo4jConfig extends Neo4jConfiguration {
         return new RemoteServer(env.getRequiredProperty("spring.neo4j.url"));
     }
 
+//    @Bean
+//    public org.neo4j.ogm.config.Configuration neo4jOgmConfiguration() {
+//        final org.neo4j.ogm.config.Configuration config = new org.neo4j.ogm.config.Configuration();
+//        config.driverConfiguration()
+//                .setDriverClassName(HttpDriver.class.getName())
+//                .setURI(env.getRequiredProperty("spring.neo4j.url"));
+//        return config;
+//    }
+
     @Override
     public SessionFactory getSessionFactory() {
+//        return new SessionFactory(neo4jOgmConfiguration(), Neo4jConfig.class.getPackage().getName());
         return new SessionFactory(Neo4jConfig.class.getPackage().getName());
     }
 
@@ -65,7 +75,7 @@ public class Neo4jConfig extends Neo4jConfiguration {
 
         private static final Logger log = LoggerFactory.getLogger(IndexesConfig.class);
 
-//        @Inject
+        //        @Inject
 //        private SessionFactory sessionFactory;
 //        @Inject
 //        private Environment env;
