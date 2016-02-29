@@ -284,7 +284,8 @@ public class ImportYagoTaxonomy2Neo4jApp implements CommandLineRunner {
 
         final String cypher = "USING PERIODIC COMMIT\n" +
                 "LOAD CSV WITH HEADERS FROM '" + forNeo4jFile.toURI() + "' AS line\n" +
-                "CREATE (:owl_Thing {nn: line.subClass, _partition: {partitionKey}}) -[:rdfs_subClassOf]-> (:owl_Thing {nn: line.superClass, _partition: {partitionKey}})";
+                "MATCH (subClass:owl_Thing {nn: line.subClass, _partition: {partitionKey}}), (superClass:owl_Thing {nn: line.superClass, _partition: {partitionKey}})\n" +
+                "CREATE (subClass) -[:rdfs_subClassOf]-> (superClass)";
         log.info("Executing: {} ...", cypher);
         session.query(cypher, ImmutableMap.of("partitionKey", PartitionKey.lumen_yago.name()));
     }
@@ -351,7 +352,8 @@ public class ImportYagoTaxonomy2Neo4jApp implements CommandLineRunner {
 
         final String cypher = "USING PERIODIC COMMIT\n" +
                 "LOAD CSV WITH HEADERS FROM '" + forNeo4jFile.toURI() + "' AS line\n" +
-                "CREATE (:owl_Thing {nn: line.instance, _partition: {partitionKey}}) -[:rdf_type]-> (:owl_Thing {nn: line.type, _partition: {partitionKey}})";
+                "MATCH (instanceThing:owl_Thing {nn: line.instance, _partition: {partitionKey}}), (typeThing:owl_Thing {nn: line.type, _partition: {partitionKey}})\n" +
+                "CREATE (instanceThing) -[:rdf_type]-> (typeThing)";
         log.info("Executing: {} ...", cypher);
         session.query(cypher, ImmutableMap.of("partitionKey", PartitionKey.lumen_yago.name()));
     }
