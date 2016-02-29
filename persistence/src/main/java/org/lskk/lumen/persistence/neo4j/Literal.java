@@ -2,6 +2,7 @@ package org.lskk.lumen.persistence.neo4j;
 
 import org.lskk.lumen.core.IConfidence;
 import org.neo4j.ogm.annotation.*;
+import org.neo4j.ogm.annotation.typeconversion.EnumString;
 
 import java.io.Serializable;
 
@@ -21,9 +22,12 @@ public class Literal implements Serializable, IConfidence {
     @Relationship(type = "rdf_predicate")
     private SemanticProperty predicate;
     @Property(name = "_partition")
+    @EnumString(PartitionKey.class)
     private PartitionKey partition;
     @Property(name = "v")
     private Object value;
+    @Property(name = "tv")
+    private float[] truthValue;
     @Transient
     private Float confidence;
 
@@ -77,6 +81,14 @@ public class Literal implements Serializable, IConfidence {
 
     public void setValue(Object value) {
         this.value = value;
+    }
+
+    public float[] getTruthValue() {
+        return truthValue;
+    }
+
+    public void setTruthValue(float[] truthValue) {
+        this.truthValue = truthValue;
     }
 
     @Override

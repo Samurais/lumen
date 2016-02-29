@@ -1,5 +1,6 @@
 package org.lskk.lumen.persistence.service;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import org.apache.camel.language.Simple;
@@ -14,9 +15,7 @@ import org.lskk.lumen.persistence.neo4j.*;
 import org.neo4j.ogm.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.template.Neo4jTemplate;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -167,8 +166,28 @@ public class FactServiceImpl implements FactService {
     }
 
     @Override
-    public Thing assertPropertyToLiteral(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property, @Simple("body.objectType") String objectType, @Simple("body.object") Object object, @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime, @Simple("body.asserterNodeName") String asserterNodeName) {
-        throw new UnsupportedOperationException();
+    public Literal assertPropertyToLiteral(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property,
+                                           @Simple("body.objectType") String objectType, @Simple("body.object") Object object, @Simple("body.truthValue") float[] truthValue,
+                                           @Simple("body.assertionTime") DateTime assertionTime, @Simple("body.asserterNodeName") String asserterNodeName) {
+        //final String relationship = property.replace(':', '_');
+        final String cypher = "MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MERGE (n) <-[:rdf_subject]-> (literal:rdfs_Literal {t: {type}, v: {value}, _partition: {partitionKey}}) -[:rdf_predicate]-> (p)\n" +
+                "SET literal.tv={tv}\n" +
+                "RETURN literal";
+        final ImmutableMap<String, Object> params = ImmutableMap.<String, Object>builder()
+                .put("partitionKey", PartitionKey.lumen_var)
+                .put("nn", nodeName)
+                .put("property", property)
+                .put("type", objectType)
+                .put("value", object)
+                .put("tv", truthValue)
+                .build();
+        log.trace("assertPropertyToLiteral {} using {}", params, cypher);
+        final Literal literal = neo4j.queryForObject(Literal.class, cypher, params);
+        Preconditions.checkNotNull(literal, "Cannot assert literal \"%s\":%s because either thing '%s' or property '%s' not found",
+                object, objectType, nodeName, property);
+        return literal;
     }
 
     @Override
@@ -177,7 +196,7 @@ public class FactServiceImpl implements FactService {
 
         final String relationship = property.replace(':', '_');
         final String cypher = "MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
-                "MERGE (n) -[:" + relationship + "]-> (label:lumen_Label {l: {inLanguage}, v: {value}, _partition: {partitionKey}}) " +
+                "MERGE (n) -[:" + relationship + "]-> (label:lumen_Label {l: {inLanguage}, v: {value}, _partition: {partitionKey}})\n" +
                 "SET label.tv={tv}, label.m={metaphone}\n" +
                 "RETURN label";
 
@@ -204,9 +223,8 @@ public class FactServiceImpl implements FactService {
                 .put("tv", truthValue)
                 .put("metaphone", metaphone)
                 .build();
-        log.debug("assertLabel {} using {}", params, cypher);
-        return neo4j.queryForObject(ThingLabel.class, cypher,
-                params);
+        log.trace("assertLabel {} using {}", params, cypher);
+        return neo4j.queryForObject(ThingLabel.class, cypher, params);
     }
 
     @Override

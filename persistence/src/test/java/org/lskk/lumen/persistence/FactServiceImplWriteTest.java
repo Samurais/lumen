@@ -1,12 +1,15 @@
 package org.lskk.lumen.persistence;
 
 import org.apache.camel.spring.boot.CamelAutoConfiguration;
+import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.lskk.lumen.core.LumenCoreConfig;
 import org.lskk.lumen.core.LumenProperty;
 import org.lskk.lumen.persistence.jpa.YagoTypeRepository;
+import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.Neo4jConfig;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.persistence.neo4j.ThingRepository;
@@ -25,6 +28,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 /**
  * uses Mockito: http://www.baeldung.com/injecting-mocks-in-spring
@@ -50,22 +56,30 @@ public class FactServiceImplWriteTest {
     private FactService factService;
 
     @Test
-    public void assertName() {
+    public void assertLabelsForPerson() {
         final ThingLabel label1 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.rdfs_label.getQName(), "Hendy Irawan", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
-        log.info("Label1: {}", label1);
+        log.info("rdfs:label = {}", label1);
         final ThingLabel label2 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.skos_prefLabel.getQName(), "Hendy Irawan", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
-        log.info("Label2: {}", label1);
+        log.info("skos:prefLabel = {}", label1);
         final ThingLabel label3 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_isPreferredMeaningOf.getQName(), "Hendy Irawan", "id-ID", new float[]{1f, 0.9f},
                 new DateTime(), null);
-        log.info("Label3: {}", label1);
+        log.info("yago:isPreferredMeaningOf = {}", label1);
         final ThingLabel label4 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_hasGivenName.getQName(), "Hendy", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
-        log.info("Label4: {}", label1);
+        log.info("yago:hasGivenName = {}", label1);
         final ThingLabel label5 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_hasFamilyName.getQName(), "Hendy", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
-        log.info("Label5: {}", label1);
+        log.info("yago:hasFamilyName = {}", label1);
+    }
+
+    @Test
+    public void assertLiteral() {
+        final Literal wasBornOnDate = factService.assertPropertyToLiteral("lumen:Hendy_Irawan", LumenProperty.yago_wasBornOnDate.getQName(), "xs:date", "1983-12-14",
+                new float[]{1f, 1f}, new DateTime(), null);
+        log.info("wasBornOnDate = {}", wasBornOnDate);
+        assertThat(wasBornOnDate, notNullValue());
     }
 
 }
