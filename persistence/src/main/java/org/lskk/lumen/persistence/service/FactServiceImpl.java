@@ -161,8 +161,38 @@ public class FactServiceImpl implements FactService {
     }
 
     @Override
-    public Thing assertPropertyToThing(String nodeName, String property, String objectNodeName, float[] truthValue, DateTime assertionTime, String asserterNodeName) {
-        throw new UnsupportedOperationException();
+    public Statement assertPropertyToThing(String nodeName, String property, String objectNodeName, float[] truthValue, DateTime assertionTime, String asserterNodeName) {
+        final String matchCypher =
+                "MATCH (s:owl_Thing {nn: {nn}}) WHERE s._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MATCH (o:owl_Thing {nn: {objectNodeName}}) WHERE o._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MATCH (p) <-[:rdf_predicate]- (statement:rdf_Statement {_partition: {partitionKey}}) -[:rdf_subject]-> (s),\n" +
+                "                              (statement) -[:rdf_object]-> (o)\n" +
+                "SET statement.tv={tv}" +
+                "RETURN statement";
+        final String createCypher =
+                "MATCH (s:owl_Thing {nn: {nn}}) WHERE s._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MATCH (o:owl_Thing {nn: {objectNodeName}}) WHERE o._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "CREATE (p) <-[:rdf_predicate]- (statement:rdf_Statement {_partition: {partitionKey}}) -[:rdf_subject]-> (s)," +
+                "                               (statement) -[:rdf_object]-> (o)\n" +
+                "SET statement.tv={tv}\n" +
+                "RETURN statement";
+        final ImmutableMap<String, Object> params = ImmutableMap.<String, Object>builder()
+                .put("partitionKey", PartitionKey.lumen_var)
+                .put("nn", nodeName)
+                .put("property", property)
+                .put("objectNodeName", objectNodeName)
+                .put("tv", truthValue)
+                .build();
+        log.trace("assertPropertyToThing existing {} using {}", params, matchCypher);
+        Statement statement = neo4j.queryForObject(Statement.class, matchCypher, params);
+        if (null == statement) {
+            statement = neo4j.queryForObject(Statement.class, createCypher, params);
+            Preconditions.checkNotNull(statement, "Cannot assert rdf_Statement because either subject '%s' or property '%s' or object '%s' not found",
+                    nodeName, property, objectNodeName);
+        }
+        return statement;
     }
 
     @Override
@@ -172,7 +202,7 @@ public class FactServiceImpl implements FactService {
         //final String relationship = property.replace(':', '_');
         final String cypher = "MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
                 "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
-                "MERGE (n) <-[:rdf_subject]-> (literal:rdfs_Literal {t: {type}, v: {value}, _partition: {partitionKey}}) -[:rdf_predicate]-> (p)\n" +
+                "MERGE (n) <-[:rdf_subject]- (literal:rdfs_Literal {t: {type}, v: {value}, _partition: {partitionKey}}) -[:rdf_predicate]-> (p)\n" +
                 "SET literal.tv={tv}\n" +
                 "RETURN literal";
         final ImmutableMap<String, Object> params = ImmutableMap.<String, Object>builder()

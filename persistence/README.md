@@ -480,7 +480,7 @@ Ready database files is available from Hendy Irawan:
 3. Things taxonomy to Neo4j.
     These will `CREATE` `owl:Thing` nodes for types from `yagoTaxonomy.tsv`. (~ 1 min on i7 + RAM 16 GB + SSD)
     These will `CREATE` `owl:Thing` nodes for all things from `yagoTypes.tsv`. (~ 6 mins on i7 + RAM 16 GB + SSD)
-    It will `CREATE` links `rdfs:subClassOf` between types. (~ 1 min on i7 + RAM 16 GB + SSD)
+    It will `CREATE` links `rdfs:subClassOf` between types. (~ 2 min on i7 + RAM 16 GB + SSD)
     It will `CREATE` links `rdf:type` between types and things (and other types). (VERY long time)
     Download these parts from https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/downloads/ :
 

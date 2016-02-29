@@ -3,6 +3,7 @@ package org.lskk.lumen.persistence.service;
 import org.apache.camel.language.Simple;
 import org.joda.time.DateTime;
 import org.lskk.lumen.persistence.neo4j.Literal;
+import org.lskk.lumen.persistence.neo4j.Statement;
 import org.lskk.lumen.persistence.neo4j.Thing;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 
@@ -64,10 +65,10 @@ public interface FactService {
      * @param asserterNodeName Node name of the person who asserts this.
      * @return
      */
-    Thing assertPropertyToThing(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property,
-                                @Simple("body.objectNodeName") String objectNodeName,
-                                @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime,
-                                @Simple("body.asserterNodeName") String asserterNodeName);
+    Statement assertPropertyToThing(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property,
+                                    @Simple("body.objectNodeName") String objectNodeName,
+                                    @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime,
+                                    @Simple("body.asserterNodeName") String asserterNodeName);
 
     /**
      * Assert a property to literal.
