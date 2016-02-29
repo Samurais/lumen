@@ -11,19 +11,19 @@ import java.util.Set;
 
 /**
  * Indexes:
- * CREATE INDEX ON :schema_Thing(_partition);
- * CREATE INDEX ON :schema_Thing(nn);
- * CREATE INDEX ON :schema_Thing(prefLabel);
+ * CREATE INDEX ON :owl_Thing(_partition);
+ * CREATE INDEX ON :owl_Thing(nn);
+ * CREATE INDEX ON :owl_Thing(prefLabel);
  *
  * We actually need a compound unique constraint on _partition+nn, but since it's not available then just use
  * normal indexes.
  *
  * Created by ceefour on 14/02/2016.
  */
-@NodeEntity(label = "schema_Thing")
-@Ensure("CREATE INDEX ON :schema_Thing(_partition)")
-@Ensure("CREATE INDEX ON :schema_Thing(nn)")
-@Ensure("CREATE INDEX ON :schema_Thing(prefLabel)")
+@NodeEntity(label = "owl_Thing")
+@Ensure("CREATE INDEX ON :owl_Thing(_partition)")
+@Ensure("CREATE INDEX ON :owl_Thing(nn)")
+@Ensure("CREATE INDEX ON :owl_Thing(prefLabel)")
 public class Thing implements Serializable {
 
     @GraphId

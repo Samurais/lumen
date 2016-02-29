@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.Environment;
 import org.springframework.data.neo4j.config.Neo4jConfiguration;
+import org.springframework.data.neo4j.conversion.MetaDataDrivenConversionService;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import org.springframework.data.neo4j.server.Neo4jServer;
 import org.springframework.data.neo4j.server.RemoteServer;
@@ -69,6 +71,11 @@ public class Neo4jConfig extends Neo4jConfiguration {
     public Session getSession() throws Exception {
         return super.getSession();
     }
+
+//    @Bean
+//    public ConversionService conversionService() {
+//        return new MetaDataDrivenConversionService(getSessionFactory().metaData());
+//    }
 
     @Configuration
     public static class IndexesConfig {

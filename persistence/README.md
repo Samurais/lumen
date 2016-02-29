@@ -68,10 +68,17 @@ Complete list of properties are available in `Dropbox/Lumen/LumenSchema.xlsx`, h
 
 #### yago:wasBornOnDate
 
-    MERGE (hendy:schema_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) SET hendy.prefLabel='Hendy Irawan'
+    MERGE (hendy:owl_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) SET hendy.prefLabel='Hendy Irawan'
     MERGE (wasBornOnDate:rdf_Property {nn: 'yago:wasBornOnDate', _partition: 'lumen_yago'}) SET wasBornOnDate.label='was born on date'
     MERGE (wasBornOnDate) <-[:rdf_predicate]- (literal:rdfs_Literal {t: 'xs:date', v: '1983-12-14', _partition: 'lumen_var'}) -[:rdf_subject]-> (hendy)
     RETURN wasBornOnDate, hendy, literal
+
+#### rdfs:label
+
+    MATCH (hendy:owl_Thing {nn: 'lumen:Hendy_Irawan'}) WHERE hendy._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']
+    MERGE (hendy) -[label:rdfs_label]-> (:lumen_Label {l: 'id-ID', v: 'Hendy Irawan', _partition: 'lumen_var'})
+    SET hendy.tv=[1.0, 1.0], hendy.m='HNTRWN' 
+    RETURN label
 
 ### Sample Data (obsolete)
 
@@ -452,14 +459,14 @@ Ready database files is available from Hendy Irawan:
    It doesn't even have a primary key!
    We need to be selective and optimize (e.g. use `ENUM`).
 
-2. Things in Neo4j, label: `schema_Thing`, partition: `lumen_var`.
+2. Things in Neo4j, label: `owl_Thing`, partition: `lumen_var`.
     Example:
     
         MATCH (y {_partition: 'lumen_dev_yago'}) DETACH DELETE y;
         MATCH (v {_partition: 'lumen_dev_var'}) DETACH DELETE v;
     
-        MERGE (hendy:schema_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) SET hendy.prefLabel='Hendy Irawan'
-        MERGE (person:schema_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_yago'}) SET person.prefLabel='person'
+        MERGE (hendy:owl_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) SET hendy.prefLabel='Hendy Irawan'
+        MERGE (person:owl_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_yago'}) SET person.prefLabel='person'
         MERGE (hendy) -[:rdf_type]-> (person)
 
 ### How to Import

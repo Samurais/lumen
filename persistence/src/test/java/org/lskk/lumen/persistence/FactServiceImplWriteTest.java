@@ -12,6 +12,8 @@ import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.persistence.neo4j.ThingRepository;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.persistence.service.FactServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
@@ -34,6 +36,8 @@ import javax.inject.Inject;
 @ActiveProfiles("spring-data-neo4j")
 public class FactServiceImplWriteTest {
 
+    private static final Logger log = LoggerFactory.getLogger(FactServiceImplWriteTest.class);
+
     @SpringBootApplication(scanBasePackageClasses = {FactServiceImpl.class, Neo4jConfig.class, ThingRepository.class},
             exclude = {JmxAutoConfiguration.class, CamelAutoConfiguration.class, GroovyTemplateAutoConfiguration.class})
     @Import({LumenCoreConfig.class})
@@ -49,14 +53,19 @@ public class FactServiceImplWriteTest {
     public void assertName() {
         final ThingLabel label1 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.rdfs_label.getQName(), "Hendy Irawan", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
+        log.info("Label1: {}", label1);
         final ThingLabel label2 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.skos_prefLabel.getQName(), "Hendy Irawan", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
+        log.info("Label2: {}", label1);
         final ThingLabel label3 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_isPreferredMeaningOf.getQName(), "Hendy Irawan", "id-ID", new float[]{1f, 0.9f},
                 new DateTime(), null);
+        log.info("Label3: {}", label1);
         final ThingLabel label4 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_hasGivenName.getQName(), "Hendy", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
+        log.info("Label4: {}", label1);
         final ThingLabel label5 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_hasFamilyName.getQName(), "Hendy", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
+        log.info("Label5: {}", label1);
     }
 
 }

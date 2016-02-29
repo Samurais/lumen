@@ -1,5 +1,6 @@
 package org.lskk.lumen.persistence.neo4j;
 
+import com.google.common.base.MoreObjects;
 import org.apache.commons.codec.language.Metaphone;
 import org.lskk.lumen.core.ConversationStyle;
 import org.lskk.lumen.core.IConfidence;
@@ -7,6 +8,7 @@ import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
 import org.neo4j.ogm.annotation.Transient;
+import org.neo4j.ogm.annotation.typeconversion.EnumString;
 
 import java.io.Serializable;
 
@@ -35,8 +37,12 @@ public class ThingLabel implements Serializable, IConfidence {
     @Property(name = "m")
     private String metaphone;
     @Property(name = "_partition")
+    @EnumString(PartitionKey.class)
     private PartitionKey partition;
+    @Property(name = "tv")
+    private float[] truthValue;
     @Property(name = "style")
+    @EnumString(ConversationStyle.class)
     private ConversationStyle style;
     @Transient
     private String thingQName;
@@ -172,16 +178,27 @@ public class ThingLabel implements Serializable, IConfidence {
         this.style = style;
     }
 
+    public float[] getTruthValue() {
+        return truthValue;
+    }
+
+    public void setTruthValue(float[] truthValue) {
+        this.truthValue = truthValue;
+    }
+
     @Override
     public String toString() {
-        return "ThingLabel{" +
-                "gid=" + gid +
-                ", inLanguage='" + inLanguage + '\'' +
-                ", value='" + value + '\'' +
-                ", metaphone='" + metaphone + '\'' +
-                ", partition=" + partition +
-                ", propertyQName='" + propertyQName + '\'' +
-                ", confidence=" + confidence +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("gid", gid)
+                .add("inLanguage", inLanguage)
+                .add("value", value)
+                .add("metaphone", metaphone)
+                .add("partition", partition)
+                .add("truthValue", truthValue)
+                .add("style", style)
+                .add("thingQName", thingQName)
+                .add("propertyQName", propertyQName)
+                .add("confidence", confidence)
+                .toString();
     }
 }

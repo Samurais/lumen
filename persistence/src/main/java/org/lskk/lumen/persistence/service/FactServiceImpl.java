@@ -14,7 +14,9 @@ import org.lskk.lumen.persistence.neo4j.*;
 import org.neo4j.ogm.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.template.Neo4jTemplate;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,8 @@ public class FactServiceImpl implements FactService {
 
     @Inject
     private ThingRepository thingRepo;
+    @Inject
+    private ThingLabelRepository thingLabelRepo;
     @Inject
     private YagoTypeRepository yagoTypeRepo;
 //    @Inject
@@ -169,7 +173,40 @@ public class FactServiceImpl implements FactService {
 
     @Override
     public ThingLabel assertLabel(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property, @Simple("body.label") String label, String inLanguage, @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime, @Simple("body.asserterNodeName") String asserterNodeName) {
-        throw new UnsupportedOperationException();
+        final String metaphone = ThingLabel.METAPHONE.encode(label);
+
+        final String relationship = property.replace(':', '_');
+        final String cypher = "MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MERGE (n) -[:" + relationship + "]-> (label:lumen_Label {l: {inLanguage}, v: {value}, _partition: {partitionKey}}) " +
+                "SET label.tv={tv}, label.m={metaphone}\n" +
+                "RETURN label";
+
+//        @Query("MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+//                "MERGE (n) -[:{property}]-> (label:lumen_Label {l: {inLanguage}, v: {value}, _partition: {partitionKey}})\n" +
+//                "SET label.tv={tv}, label.m={metaphone}\n" +
+//                "RETURN label")
+//        ThingLabel assertLabel(@Param("partitionKey") PartitionKey partitionKey,
+//                @Param("nn") String nn,
+//                @Param("property") String property,
+//                @Param("inLanguage") String inLanguage,
+//                @Param("value") String value,
+//        @Param("tv") float[] tv,
+//        @Param("metaphone") String metaphone);
+
+//        return thingLabelRepo.assertLabel(PartitionKey.lumen_var, nodeName, relationship, inLanguage, label, truthValue, metaphone);
+
+        final ImmutableMap<String, Object> params = ImmutableMap.<String, Object>builder()
+                .put("partitionKey", PartitionKey.lumen_var)
+                .put("nn", nodeName)
+                .put("property", property)
+                .put("inLanguage", inLanguage)
+                .put("value", label)
+                .put("tv", truthValue)
+                .put("metaphone", metaphone)
+                .build();
+        log.debug("assertLabel {} using {}", params, cypher);
+        return neo4j.queryForObject(ThingLabel.class, cypher,
+                params);
     }
 
     @Override
