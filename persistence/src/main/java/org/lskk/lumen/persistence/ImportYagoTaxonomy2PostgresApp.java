@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Profile;
@@ -35,14 +36,19 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * PostgreSQL is used to store labels and glossary, Neo4j is used to store taxonomy hierarchy (e.g. {@link org.apache.jena.vocabulary.RDFS#subClassOf},
+ * {@link org.apache.jena.vocabulary.RDFS#subPropertyOf}, {@link org.apache.jena.vocabulary.RDF#type}).
+ *
+ * This works together with {@link ImportYagoTaxonomy2Neo4jApp}.
+ *
  * -Xmx4g please
  */
 @SpringBootApplication(exclude={//CrshAutoConfiguration.class,
-        JmxAutoConfiguration.class, CamelAutoConfiguration.class})
-@Profile("importYagoTaxonomy2App")
-public class ImportYagoTaxonomy2App implements CommandLineRunner {
+        JmxAutoConfiguration.class, CamelAutoConfiguration.class, GroovyTemplateAutoConfiguration.class})
+@Profile("importYagoTaxonomy2PostgresApp")
+public class ImportYagoTaxonomy2PostgresApp implements CommandLineRunner {
 
-    protected static final Logger log = LoggerFactory.getLogger(ImportYagoTaxonomy2App.class);
+    protected static final Logger log = LoggerFactory.getLogger(ImportYagoTaxonomy2PostgresApp.class);
     protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.US);
     /**
      * Number of import ops per batch. Should be 10-50.
@@ -462,7 +468,7 @@ public class ImportYagoTaxonomy2App implements CommandLineRunner {
 
         final Set<String> typeHrefs = getSubjectHrefsFor(new File(yagoTsvFolder, "yagoTaxonomy.tsv"));
         txTemplate.execute((tx) -> createInitialTypes(typeHrefs));
-        txTemplate.execute((tx) -> { linkSubclasses(new File(yagoTsvFolder, "yagoTaxonomy.tsv")); return null; });
+//        txTemplate.execute((tx) -> { linkSubclasses(new File(yagoTsvFolder, "yagoTaxonomy.tsv")); return null; });
         // only add labels for existing entities, i.e. types only
         txTemplate.execute((tx) -> { addLabelsOnlyForExisting(typeHrefs, new File(yagoTsvFolder, "yagoLabels.tsv")); return null; });
 
@@ -470,8 +476,8 @@ public class ImportYagoTaxonomy2App implements CommandLineRunner {
     }
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(ImportYagoTaxonomy2App.class)
-                .profiles("importYagoTaxonomy2App")
+        new SpringApplicationBuilder(ImportYagoTaxonomy2PostgresApp.class)
+                .profiles("importYagoTaxonomy2PostgresApp")
                 .web(false)
                 .run(args);
     }

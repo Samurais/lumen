@@ -453,20 +453,20 @@ Now we have a different structure, knowledge is split between:
 Ready database files is available from Hendy Irawan:
 `hendywl\project_passport\lumen\persistence` (see `README.md` there)
 
-1. YAGO3 in PostgreSQL.
-   Table: `public.yagofacts`
-   TODO: Even this is too slow to import even before adding indexes, e.g. `yagoSources.tsv`.
-   It doesn't even have a primary key!
-   We need to be selective and optimize (e.g. use `ENUM`).
+1. Thing labels (all partitions: yago+common+var) in PostgreSQL.
+   Table: `public.yagolabel`
+   (I tried YAGO's original PostgreSQL importer before and too slow to import even before adding indexes, e.g. `yagoSources.tsv`.
+   It doesn't even have a primary key!)
+   So we need to be selective and optimize (e.g. use `ENUM`).
 
-2. Things in Neo4j, label: `owl_Thing`, partition: `lumen_var`.
+2. Things and taxonomy in Neo4j, label: `owl_Thing`, partitions: [`lumen_yago`, `lumen_common`, `lumen_var`].
     Example:
     
-        MATCH (y {_partition: 'lumen_dev_yago'}) DETACH DELETE y;
-        MATCH (v {_partition: 'lumen_dev_var'}) DETACH DELETE v;
+        MATCH (y {_partition: 'lumen_yago'}) DETACH DELETE y
+        MATCH (v {_partition: 'lumen_var'}) DETACH DELETE v
     
-        MERGE (hendy:owl_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) SET hendy.prefLabel='Hendy Irawan'
-        MERGE (person:owl_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_yago'}) SET person.prefLabel='person'
+        MERGE (hendy:owl_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) // SET hendy.prefLabel='Hendy Irawan'
+        MERGE (person:owl_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_yago'}) // SET person.prefLabel='person'
         MERGE (hendy) -[:rdf_type]-> (person)
 
 ### How to Import
@@ -476,41 +476,31 @@ Ready database files is available from Hendy Irawan:
    
         workspaceDir=D:/lumen_lumen_${tenantEnv}
 
-2. YAGO3 in PostgreSQL.
-    TODO: too slow, see explanation in section above.
+2. (Optional) Set your Neo4j CE server VM configuration to `-Xmx4g` (in 16 GB system, 4 GB max heap is default)
+3. Things taxonomy to Neo4j.
+    These will `CREATE` `owl:Thing` nodes for types from `yagoTaxonomy.tsv`. (~ 1 min on i7 + RAM 16 GB + SSD)
+    These will `CREATE` `owl:Thing` nodes for all things from `yagoTypes.tsv`. (~ 6 mins on i7 + RAM 16 GB + SSD)
+    It will `CREATE` links `rdfs:subClassOf` between types. (~ 1 min on i7 + RAM 16 GB + SSD)
+    It will `CREATE` links `rdf:type` between types and things (and other types). (VERY long time)
     Download these parts from https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/downloads/ :
 
-        yagoGeonamesGlosses.tsv
-        yagoSimpleTypes.tsv
-        yagoDBpediaClasses.tsv
+        yagoTaxonomy.csv
+        yagoTypes.csv
+        
+    For faster import, get the intermediate files from Hendy's: https://drive.google.com/open?id=0B9dx38a6NVxKWVprQWZwYi1heEE
+    and extract to `lumen/persistence` folder (will fill the `work` subfolder).
+
+4. YAGO3 labels to PostgreSQL.
+    These will add `rdfs:label`, `skos:prefLabel`, `yago:isPreferredMeaningOf`, `yago:hasGloss`, `yago:hasGivenName`, `yago:hasFamilyName`,
+    including metaphone, all indexed.
+    Download these parts from https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/downloads/ :
+
         yagoLabels.tsv
-        yagoSources.tsv
-        yagoDBpediaInstances.tsv
-        yagoLiteralFacts.tsv
-        yagoStatistics.tsv
-        yagoFacts.tsv
-        yagoMetaFacts.tsv
-        yagoTaxonomy.tsv
-        yagoGeonamesClassIds.tsv
+        yagoGeonamesGlosses.tsv
+        yagoDBpediaClasses.tsv
         yagoMultilingualClassLabels.tsv
-        yagoTransitiveType.tsv
-        yagoGeonamesClasses.tsv
-        #yagoMultilingualInstanceLabels.tsv
-        yagoTypes.tsv
-        #yagoGeonamesData.tsv
-        yagoGeonamesOnlyData.tsv
-        yagoSchema.tsv
-        yagoWikipediaInfo.tsv
-        yagoGeonamesEntityIds.tsv
-        yagoSimpleTaxonomy.tsv
-        yagoWordnetIds.tsv
-        yagoWordnetDomains.tsv
-    
-    Import using `scripts/postgres_fixed.sql`, e.g.:
-    
-        D:
-        cd \databank\yago3_work
-        psql -a -d lumen_lumen_dev -Upostgres -f postgres_fixed.sql
+
+    TODO: Importer
 
 ## OBSOLETE: To be determined whether we use PostgreSQL or adapt the Neo4j to use partitioned style
 

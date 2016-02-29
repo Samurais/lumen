@@ -31,11 +31,13 @@ import java.util.*;
 
 /**
  * -Xmx4g please
+ * @deprecated Use {@link ImportYagoTaxonomy2Neo4jApp}.
  */
 @SpringBootApplication(exclude={//CrshAutoConfiguration.class,
         JmxAutoConfiguration.class,
         LiquibaseAutoConfiguration.class})
 @Profile("importyagotaxonomy")
+@Deprecated
 public class ImportYagoTaxonomy1App implements CommandLineRunner {
 
     protected static final Logger log = LoggerFactory.getLogger(ImportYagoTaxonomy1App.class);
