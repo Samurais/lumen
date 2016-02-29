@@ -477,7 +477,9 @@ Ready database files is available from Hendy Irawan:
         workspaceDir=D:/lumen_lumen_${tenantEnv}
 
 2. (Optional) Set your Neo4j CE server VM configuration to `-Xmx4g` (in 16 GB system, 4 GB max heap is default)
-3. Things taxonomy to Neo4j.
+3. TODO: Import `SemanticProperty` nodes and links from `yagoSchema.tsv`.
+
+4. Things taxonomy to Neo4j.
     These will `CREATE` `owl:Thing` nodes for types from `yagoTaxonomy.tsv`. (~ 1 min on i7 + RAM 16 GB + SSD)
     These will `CREATE` `owl:Thing` nodes for all things from `yagoTypes.tsv`. (~ 6 mins on i7 + RAM 16 GB + SSD)
     It will `CREATE` links `rdfs:subClassOf` between types. (~ 2 mins on i7 + RAM 16 GB + SSD)
@@ -490,7 +492,7 @@ Ready database files is available from Hendy Irawan:
     For faster import, get the intermediate files from Hendy's: https://drive.google.com/open?id=0B9dx38a6NVxKWVprQWZwYi1heEE
     and extract to `lumen/persistence` folder (will fill the `work` subfolder).
 
-4. YAGO3 labels to PostgreSQL.
+5. YAGO3 labels to PostgreSQL.
     These will add `rdfs:label`, `skos:prefLabel`, `yago:isPreferredMeaningOf`, `yago:hasGloss`, `yago:hasGivenName`, `yago:hasFamilyName`,
     including metaphone, all indexed.
     Download these parts from https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/downloads/ :
