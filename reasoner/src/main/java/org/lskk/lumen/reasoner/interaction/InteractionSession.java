@@ -154,11 +154,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     /**
-     * Call this to fire pending scheduled tasks.
+     * Used by {@link #update(Channel)} to express all pending propositions.
      * @param channel
+     * @param avatarId
      */
-    public void update(Channel<?> channel) {
-        final String avatarId = null;
+    protected void expressAll(Channel<?> channel, String avatarId) {
         for (final InteractionTask task : tasks) {
             while (true) {
                 final CommunicateAction pendingCommunicateAction = task.getPendingCommunicateActions().poll();
@@ -168,11 +168,22 @@ public class InteractionSession implements Serializable, AutoCloseable {
                 channel.express(avatarId, pendingCommunicateAction, null);
             }
         }
+    }
+
+    /**
+     * Call this to fire pending scheduled tasks.
+     * @param channel
+     */
+    public void update(Channel<?> channel) {
+        final String avatarId = null;
+        expressAll(channel, avatarId); // pre-activation express
 
         final InteractionTask nextTask = pendingActivations.poll();
         if (null != nextTask) {
             activate(nextTask, getLastLocale());
         }
+
+        expressAll(channel, avatarId); // post-activation express
     }
 
     public Locale getLastLocale() {
@@ -191,6 +202,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
     public void complete(InteractionTask task, Locale locale) {
         Preconditions.checkArgument(InteractionTaskState.ACTIVE == task.getState(),
                 "Can only complete an ACTIVE task, but got %s", task);
+        log.debug("Completing from {}: {} ...", task.getState(), task);
         final InteractionTaskState previous = task.getState();
         task.setState(InteractionTaskState.COMPLETED);
         if (task == this.activeTask) {

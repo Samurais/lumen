@@ -185,22 +185,6 @@ public class PromptTask extends InteractionTask {
         getLiteralsToAssert().addAll(literalsToAssert);
         final Locale realLocale = Optional.ofNullable(communicateAction.getInLanguage()).orElse(session.getLastLocale());
 
-        // Get appropriate prompt for target language, if possible.
-        // If not, returns first prompt.
-        final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> realLocale.equals(Locale.forLanguageTag(it.getInLanguage())))
-                .collect(Collectors.toList());
-        final QuestionTemplate questionTemplate;
-        if (!matches.isEmpty()) {
-            questionTemplate = matches.get(RandomUtils.nextInt(0, matches.size()));
-        } else {
-            questionTemplate = askSsmls.get(0);
-        }
-        final CommunicateAction reply = new CommunicateAction(
-                Optional.ofNullable(questionTemplate.getInLanguage()).map(Locale::forLanguageTag).orElse(realLocale),
-                questionTemplate.getObject(), communicateAction.getAvatarId());
-        reply.setConversationStyle(questionTemplate.getStyle());
-        getPendingCommunicateActions().add(reply);
-
         session.complete(this, realLocale);
     }
 
@@ -382,7 +366,24 @@ public class PromptTask extends InteractionTask {
     @Override
     public void onStateChanged(InteractionTaskState previous, InteractionTaskState current, Locale locale, InteractionSession session) {
         super.onStateChanged(previous, current, locale, session);
-        if (InteractionTaskState.COMPLETED == current) {
+        if (InteractionTaskState.ACTIVE == current) {
+            // if we don't yet have the info, express the question
+            // Get appropriate question for target language, if possible.
+            // If not, returns first question.
+            final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))
+                    .collect(Collectors.toList());
+            final QuestionTemplate questionTemplate;
+            if (!matches.isEmpty()) {
+                questionTemplate = matches.get(RandomUtils.nextInt(0, matches.size()));
+            } else {
+                questionTemplate = askSsmls.get(0);
+            }
+            final CommunicateAction initiative = new CommunicateAction(
+                    Optional.ofNullable(questionTemplate.getInLanguage()).map(Locale::forLanguageTag).orElse(locale),
+                    questionTemplate.getObject(), null);
+            initiative.setConversationStyle(questionTemplate.getStyle());
+            getPendingCommunicateActions().add(initiative);
+        } else if (InteractionTaskState.COMPLETED == current) {
             if (null != getAffirmationTask()) {
                 session.schedule(getAffirmationTask());
             }

@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.interaction;
 
+import com.google.common.base.MoreObjects;
 import org.lskk.lumen.core.CommunicateAction;
 
 import java.util.Locale;
@@ -20,4 +21,9 @@ public class AffirmationTask extends InteractionTask {
         }
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .toString();
+    }
 }
