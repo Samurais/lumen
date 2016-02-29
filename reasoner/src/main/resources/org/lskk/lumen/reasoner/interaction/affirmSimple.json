@@ -1,0 +1,24 @@
+{
+  "@type": "AffirmationTask",
+  "description": "Simple affirmation without any dynamic parameter.",
+  "expressions": [
+    {"inLanguage": "id-ID", "pattern": "Oh gitu.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Ya ya ya.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Baik.", "scope": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Baiklah.", "scope": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Saya mengerti.", "scope": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Oke.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Sip.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Yup.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh begitu.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh gitu ya.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Ooo...", "scope": "CASUAL"},
+
+    {"inLanguage": "en-US", "pattern": "I see.", "scope": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "I understand.", "scope": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Oh I see.", "scope": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Okay.", "scope": "CASUAL"},
+    {"inLanguage": "en-US", "pattern": "OK.", "scope": "CASUAL"},
+    {"inLanguage": "en-US", "pattern": "Got it.", "scope": "CASUAL"}
+  ]
+}

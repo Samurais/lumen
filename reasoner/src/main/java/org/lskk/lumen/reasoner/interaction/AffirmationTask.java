@@ -1,9 +1,13 @@
 package org.lskk.lumen.reasoner.interaction;
 
 import com.google.common.base.MoreObjects;
+import org.apache.commons.lang3.RandomUtils;
 import org.lskk.lumen.core.CommunicateAction;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Used after {@link PromptTask} to reply answer user has given information.
@@ -14,10 +18,20 @@ import java.util.Locale;
  */
 public class AffirmationTask extends InteractionTask {
 
+    private List<UtterancePattern> expressions = new ArrayList<>();
+
+    public List<UtterancePattern> getExpressions() {
+        return expressions;
+    }
+
     @Override
     public void onStateChanged(InteractionTaskState previous, InteractionTaskState current, Locale locale, InteractionSession session) {
         if (InteractionTaskState.PENDING == previous && InteractionTaskState.ACTIVE == current) {
-            getPendingCommunicateActions().add(new CommunicateAction(locale, "Oh I see.", null));
+            final List<UtterancePattern> localizedExpressions = expressions.stream()
+                    .filter(it -> null == it.getInLanguage() || locale.equals(Locale.forLanguageTag(it.getInLanguage())))
+                    .collect(Collectors.toList());
+            final UtterancePattern expression = localizedExpressions.get(RandomUtils.nextInt(0, localizedExpressions.size()));
+            getPendingCommunicateActions().add(new CommunicateAction(locale, expression.getPattern(), null));
         }
     }
 

@@ -27,12 +27,39 @@ import java.util.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class InteractionTask implements Serializable {
 
+    private String id;
+    private String description;
     private InteractionTaskState state = InteractionTaskState.PENDING;
     private List<UtterancePattern> matchedUtterancePatterns = new ArrayList<>();
     private Queue<ThingLabel> labelsToAssert = new ArrayDeque<>();
     private Queue<Literal> literalsToAssert = new ArrayDeque<>();
     private Queue<Proposition> pendingPropositions = new ArrayDeque<>();
     private Queue<CommunicateAction> pendingCommunicateActions = new ArrayDeque<>();
+
+    /**
+     * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
+     * is {@code promptBirthdate}.
+     * @return
+     */
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    /**
+     * Helpful description for skill creator.
+     * @return
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     /**
      * If {@link InteractionSession#getActiveTask()} is this one then true, else false.

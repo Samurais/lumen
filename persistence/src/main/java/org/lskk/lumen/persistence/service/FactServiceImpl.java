@@ -254,7 +254,10 @@ public class FactServiceImpl implements FactService {
                 .put("metaphone", metaphone)
                 .build();
         log.trace("assertLabel {} using {}", params, cypher);
-        return neo4j.queryForObject(ThingLabel.class, cypher, params);
+        final ThingLabel labelNode = neo4j.queryForObject(ThingLabel.class, cypher, params);
+        Preconditions.checkNotNull(labelNode, "Cannot assert %s \"%s\"@%s because thing '%s' not found",
+                property, label, inLanguage, nodeName);
+        return labelNode;
     }
 
     @Override

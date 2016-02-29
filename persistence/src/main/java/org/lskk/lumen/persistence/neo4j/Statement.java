@@ -25,7 +25,7 @@ public class Statement implements Serializable {
     private Thing subject;
     @Relationship(type = "rdf_predicate")
     private SemanticProperty predicate;
-    @Relationship(type = "rdf_object", direction = "INCOMING")
+    @Relationship(type = "rdf_object")
     private Thing object;
 
     public Long getGid() {

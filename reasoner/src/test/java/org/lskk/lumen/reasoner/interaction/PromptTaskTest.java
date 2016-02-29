@@ -48,11 +48,11 @@ public class PromptTaskTest {
     }
 
     @Inject
-    private PromptTaskRepository promptTaskRepo;
+    private InteractionTaskRepository promptTaskRepo;
 
     @Test
     public void promptBirthDate() {
-        final PromptTask promptBirthdate = promptTaskRepo.create("promptBirthdate");
+        final PromptTask promptBirthdate = promptTaskRepo.createPrompt("promptBirthdate");
         assertThat(promptBirthdate.getId(), equalTo("promptBirthdate"));
         assertThat(promptBirthdate.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptBirthdate.getUtterancePatterns(), hasSize(greaterThan(1)));
@@ -73,7 +73,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptNameTask() {
-        final PromptTask promptName = promptTaskRepo.create("promptName");
+        final PromptTask promptName = promptTaskRepo.createPrompt("promptName");
         assertThat(promptName, instanceOf(PromptNameTask.class));
         assertThat(promptName.getId(), equalTo("promptName"));
         assertThat(promptName.getAskSsmls(), hasSize(greaterThan(1)));
@@ -87,7 +87,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptNameHendyIrawan() {
-        final PromptTask promptName = promptTaskRepo.create("promptName");
+        final PromptTask promptName = promptTaskRepo.createPrompt("promptName");
 
         final List<UtterancePattern> matches = promptName.matchUtterance(LumenLocale.INDONESIAN, "Namaku Hendy Irawan",
                 UtterancePattern.Scope.ANY);
@@ -127,7 +127,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptNameSigitAriWijanarko() {
-        final PromptTask promptName = promptTaskRepo.create("promptName");
+        final PromptTask promptName = promptTaskRepo.createPrompt("promptName");
 
         final List<UtterancePattern> matches = promptName.matchUtterance(Locale.US, "I am Sigit Ari Wijanarko",
                 UtterancePattern.Scope.ANY);
@@ -167,7 +167,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptGenderTask() {
-        final PromptTask promptGender = promptTaskRepo.create("promptGender");
+        final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
         assertThat(promptGender, instanceOf(PromptGenderTask.class));
         assertThat(promptGender.getId(), equalTo("promptGender"));
         assertThat(promptGender.getAskSsmls(), hasSize(greaterThan(1)));
@@ -181,7 +181,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptGenderIndonesianMale() {
-        final PromptTask promptGender = promptTaskRepo.create("promptGender");
+        final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
 
         final List<UtterancePattern> matches = promptGender.matchUtterance(LumenLocale.INDONESIAN, "Gue cowok",
                 UtterancePattern.Scope.ANY);
@@ -196,7 +196,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptGenderIndonesianFemale() {
-        final PromptTask promptGender = promptTaskRepo.create("promptGender");
+        final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
 
         final List<UtterancePattern> matches = promptGender.matchUtterance(LumenLocale.INDONESIAN, "Aku gadis",
                 UtterancePattern.Scope.ANY);
@@ -211,7 +211,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptGenderEnglishMale() {
-        final PromptTask promptGender = promptTaskRepo.create("promptGender");
+        final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
 
         final List<UtterancePattern> matches = promptGender.matchUtterance(Locale.US, "I am a man",
                 UtterancePattern.Scope.ANY);
@@ -226,7 +226,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptGenderEnglishFemale() {
-        final PromptTask promptGender = promptTaskRepo.create("promptGender");
+        final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
 
         final List<UtterancePattern> matches = promptGender.matchUtterance(Locale.US, "I am female",
                 UtterancePattern.Scope.ANY);
@@ -241,7 +241,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptReligionTask() {
-        final PromptTask promptReligion = promptTaskRepo.create("promptReligion");
+        final PromptTask promptReligion = promptTaskRepo.createPrompt("promptReligion");
         assertThat(promptReligion, instanceOf(PromptReligionTask.class));
         assertThat(promptReligion.getId(), equalTo("promptReligion"));
         assertThat(promptReligion.getAskSsmls(), hasSize(greaterThan(1)));
@@ -255,7 +255,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptReligionIndonesian() {
-        final PromptTask promptReligion = promptTaskRepo.create("promptReligion");
+        final PromptTask promptReligion = promptTaskRepo.createPrompt("promptReligion");
 
         final List<UtterancePattern> matches = promptReligion.matchUtterance(LumenLocale.INDONESIAN, "Saya muslimah",
                 UtterancePattern.Scope.ANY);
@@ -271,7 +271,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptReligionEnglish() {
-        final PromptTask promptReligion = promptTaskRepo.create("promptReligion");
+        final PromptTask promptReligion = promptTaskRepo.createPrompt("promptReligion");
 
         final List<UtterancePattern> matches = promptReligion.matchUtterance(Locale.US, "I believe in Protestant",
                 UtterancePattern.Scope.ANY);
@@ -288,7 +288,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptAgeTask() {
-        final PromptTask promptAge = promptTaskRepo.create("promptAge");
+        final PromptTask promptAge = promptTaskRepo.createPrompt("promptAge");
         assertThat(promptAge, instanceOf(PromptAgeTask.class));
         assertThat(promptAge.getId(), equalTo("promptAge"));
         assertThat(promptAge.getAskSsmls(), hasSize(greaterThan(1)));
@@ -302,7 +302,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptAgeIndonesian() {
-        final PromptTask promptAge = promptTaskRepo.create("promptAge");
+        final PromptTask promptAge = promptTaskRepo.createPrompt("promptAge");
 
         final List<UtterancePattern> matches = promptAge.matchUtterance(LumenLocale.INDONESIAN, "Saya berusia 45th",
                 UtterancePattern.Scope.ANY);
@@ -322,7 +322,7 @@ public class PromptTaskTest {
 
     @Test
     public void promptAgeEnglish() {
-        final PromptTask promptAge = promptTaskRepo.create("promptAge");
+        final PromptTask promptAge = promptTaskRepo.createPrompt("promptAge");
 
         final List<UtterancePattern> matches = promptAge.matchUtterance(Locale.US, "I'm 16 yrs old",
                 UtterancePattern.Scope.ANY);

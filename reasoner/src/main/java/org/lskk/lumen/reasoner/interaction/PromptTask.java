@@ -53,26 +53,12 @@ public class PromptTask extends InteractionTask {
         }
     }
 
-    private String id;
     private List<QuestionTemplate> askSsmls = new ArrayList<>();
     private List<UtterancePattern> utterancePatterns = new ArrayList<>();
     private String property;
     private List<String> expectedTypes;
     private String unit;
     private AffirmationTask affirmationTask;
-
-    /**
-     * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
-     * is {@code promptBirthdate}.
-     * @return
-     */
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     /**
      * e.g. to ask birth date:

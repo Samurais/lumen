@@ -1,0 +1,26 @@
+{
+  "@type": "AffirmationTask",
+  "description": "Affirmation for a user's label where the subject is 'you'.",
+  "expressions": [
+    {"inLanguage": "id-ID", "pattern": "Oh nama kamu {label} ya.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Jadi nama kamu {label}.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Ya, {label}.", "scope": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Baik, {label}.", "scope": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Baiklah, {label}.", "scope": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Saya mengerti, {label}.", "scope": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Oke {label}.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Sip {label}.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Yup {label}.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh begitu, {label}.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh gitu ya, {label}.", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Iya {label}.", "scope": "CASUAL"},
+
+    {"inLanguage": "en-US", "pattern": "So your name is {label}.", "scope": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "I see, {label}.", "scope": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "I understand, {label}.", "scope": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Oh I see, {label}.", "scope": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Okay, {label}.", "scope": "CASUAL"},
+    {"inLanguage": "en-US", "pattern": "OK, {label}.", "scope": "CASUAL"},
+    {"inLanguage": "en-US", "pattern": "{label}. Got it.", "scope": "CASUAL"}
+  ]
+}

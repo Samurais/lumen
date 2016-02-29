@@ -8,8 +8,6 @@ import org.lskk.lumen.core.LumenLocale;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
 import org.lskk.lumen.reasoner.ux.Channel;
-import org.lskk.lumen.reasoner.ux.ChatChannel;
-import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -18,7 +16,6 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
@@ -59,7 +56,7 @@ public class InteractionSessionTest {
     }
 
     @Inject
-    private PromptTaskRepository promptTaskRepo;
+    private InteractionTaskRepository promptTaskRepo;
     @Inject
     private Channel<Void> mockChannel;
     @Inject
@@ -74,7 +71,7 @@ public class InteractionSessionTest {
             session.getActiveLocales().add(LumenLocale.INDONESIAN);
             session.getActiveLocales().add(Locale.US);
             session.open();
-            final PromptTask promptName = promptTaskRepo.create("promptName");
+            final PromptTask promptName = promptTaskRepo.createPrompt("promptName");
             final AffirmationTask affirmationTask = new AffirmationTask();
             promptName.setAffirmationTask(affirmationTask);
             session.getTasks().add(promptName);
