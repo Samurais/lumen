@@ -168,7 +168,7 @@ public class FactServiceImpl implements FactService {
     }
 
     @Override
-    public Thing assertLabel(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property, @Simple("body.label") String label, String inLanguage, @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime, @Simple("body.asserterNodeName") String asserterNodeName) {
+    public ThingLabel assertLabel(@Simple("body.nodeName") String nodeName, @Simple("body.property") String property, @Simple("body.label") String label, String inLanguage, @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime, @Simple("body.asserterNodeName") String asserterNodeName) {
         throw new UnsupportedOperationException();
     }
 

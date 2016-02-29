@@ -3,6 +3,7 @@ package org.lskk.lumen.persistence.service;
 import org.apache.camel.language.Simple;
 import org.joda.time.DateTime;
 import org.lskk.lumen.persistence.neo4j.Thing;
+import org.lskk.lumen.persistence.neo4j.ThingLabel;
 
 import java.util.Locale;
 import java.util.Map;
@@ -91,11 +92,11 @@ public interface FactService {
      * @param property Property's QName, e.g. {@code rdf:type}.
      * @param label Label.
      * @param inLanguage
-     *@param truthValue Truth value of the assertion, relative to asserter.
+     * @param truthValue Truth value of the assertion, relative to asserter.
      * @param assertionTime Time of the assertion.
      * @param asserterNodeName Node name of the person who asserts this.    @return
-     */
-    Thing assertLabel(
+     * */
+    ThingLabel assertLabel(
             @Simple("body.nodeName") String nodeName, @Simple("body.property") String property,
             @Simple("body.label") String label, @Simple("body.inLanguage") String inLanguage,
             @Simple("body.truthValue") float[] truthValue, @Simple("body.assertionTime") DateTime assertionTime,
