@@ -13,7 +13,7 @@ public enum PartitionKey {
      * Common Knowledge Base for all Lumen deployments.
      * Changed during development of Lumen, but not changed during "normal" execution.
      */
-    lumen_common,
+    lumen_platform,
     /**
      * Variable, deployment-specific Knowledge Base that constantly changes.
      */

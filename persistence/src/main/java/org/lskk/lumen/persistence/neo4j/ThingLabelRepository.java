@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
  */
 public interface ThingLabelRepository extends PagingAndSortingRepository<ThingLabel, Long> {
 
-//    @Query("MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+//    @Query("MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
 //            "MERGE (n) -[:{property}]-> (label:lumen_Label {l: {inLanguage}, v: {value}, _partition: {partitionKey}})\n" +
 //            "SET label.tv={tv}, label.m={metaphone}\n" +
 //            "RETURN label")

@@ -163,17 +163,17 @@ public class FactServiceImpl implements FactService {
     @Override
     public Statement assertPropertyToThing(String nodeName, String property, String objectNodeName, float[] truthValue, DateTime assertionTime, String asserterNodeName) {
         final String matchCypher =
-                "MATCH (s:owl_Thing {nn: {nn}}) WHERE s._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
-                "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
-                "MATCH (o:owl_Thing {nn: {objectNodeName}}) WHERE o._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MATCH (s:owl_Thing {nn: {nn}}) WHERE s._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
+                "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
+                "MATCH (o:owl_Thing {nn: {objectNodeName}}) WHERE o._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
                 "MATCH (p) <-[:rdf_predicate]- (statement:rdf_Statement {_partition: {partitionKey}}) -[:rdf_subject]-> (s),\n" +
                 "                              (statement) -[:rdf_object]-> (o)\n" +
                 "SET statement.tv={tv}" +
                 "RETURN statement";
         final String createCypher =
-                "MATCH (s:owl_Thing {nn: {nn}}) WHERE s._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
-                "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
-                "MATCH (o:owl_Thing {nn: {objectNodeName}}) WHERE o._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+                "MATCH (s:owl_Thing {nn: {nn}}) WHERE s._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
+                "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
+                "MATCH (o:owl_Thing {nn: {objectNodeName}}) WHERE o._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
                 "CREATE (p) <-[:rdf_predicate]- (statement:rdf_Statement {_partition: {partitionKey}}) -[:rdf_subject]-> (s)," +
                 "                               (statement) -[:rdf_object]-> (o)\n" +
                 "SET statement.tv={tv}\n" +
@@ -200,8 +200,8 @@ public class FactServiceImpl implements FactService {
                                            @Simple("body.objectType") String objectType, @Simple("body.object") Object object, @Simple("body.truthValue") float[] truthValue,
                                            @Simple("body.assertionTime") DateTime assertionTime, @Simple("body.asserterNodeName") String asserterNodeName) {
         //final String relationship = property.replace(':', '_');
-        final String cypher = "MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
-                "MATCH (p:owl_Thing {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+        final String cypher = "MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
+                "MATCH (p:rdf_Property {nn: {property}}) WHERE p._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
                 "MERGE (n) <-[:rdf_subject]- (literal:rdfs_Literal {t: {type}, v: {value}, _partition: {partitionKey}}) -[:rdf_predicate]-> (p)\n" +
                 "SET literal.tv={tv}\n" +
                 "RETURN literal";
@@ -225,12 +225,12 @@ public class FactServiceImpl implements FactService {
         final String metaphone = ThingLabel.METAPHONE.encode(label);
 
         final String relationship = property.replace(':', '_');
-        final String cypher = "MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+        final String cypher = "MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
                 "MERGE (n) -[:" + relationship + "]-> (label:lumen_Label {l: {inLanguage}, v: {value}, _partition: {partitionKey}})\n" +
                 "SET label.tv={tv}, label.m={metaphone}\n" +
                 "RETURN label";
 
-//        @Query("MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']\n" +
+//        @Query("MATCH (n:owl_Thing {nn: {nn}}) WHERE n._partition IN ['lumen_yago', 'lumen_platform', 'lumen_var']\n" +
 //                "MERGE (n) -[:{property}]-> (label:lumen_Label {l: {inLanguage}, v: {value}, _partition: {partitionKey}})\n" +
 //                "SET label.tv={tv}, label.m={metaphone}\n" +
 //                "RETURN label")

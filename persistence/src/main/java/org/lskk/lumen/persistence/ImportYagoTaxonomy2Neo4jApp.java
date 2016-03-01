@@ -6,6 +6,7 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import org.apache.camel.spring.boot.CamelAutoConfiguration;
+import org.lskk.lumen.core.LumenProperty;
 import org.lskk.lumen.persistence.neo4j.PartitionKey;
 import org.lskk.lumen.persistence.neo4j.ThingRepository;
 import org.neo4j.ogm.session.Session;
@@ -60,13 +61,152 @@ public class ImportYagoTaxonomy2Neo4jApp implements CommandLineRunner {
     private Neo4jTemplate neo4j;
 
     /**
+     * Merge {@link org.lskk.lumen.persistence.neo4j.SemanticProperty} and meta-types from {@code yagoSchema.tsv}.
+     * @param schemaFile
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public void mergeSchema(final File schemaFile) throws IOException, InterruptedException {
+        log.info("Ensuring properties and meta-types {} ({} KiB) ...", schemaFile, NUMBER.format(schemaFile.length() / 1024));
+
+        final File typesForNeo4jFile = new File("work/yago_schema_type_for_neo4j.csv");
+        final File domainsForNeo4jFile = new File("work/yago_schema_domain_for_neo4j.csv");
+        final File rangesForNeo4jFile = new File("work/yago_schema_range_for_neo4j.csv");
+        final File subPropertiesForNeo4jFile = new File("work/yago_schema_subpropertyof_for_neo4j.csv");
+        typesForNeo4jFile.getParentFile().mkdirs();
+        if (!typesForNeo4jFile.exists() || !domainsForNeo4jFile.exists() || !rangesForNeo4jFile.exists() || !subPropertiesForNeo4jFile.exists()) {
+            log.info("Creating Neo4j work CSV files {}, {}, {}, {}, from YAGO types {} ({} KiB) ...",
+                    typesForNeo4jFile, domainsForNeo4jFile, rangesForNeo4jFile, subPropertiesForNeo4jFile,
+                    schemaFile, NUMBER.format(schemaFile.length() / 1024));
+
+            final List<String[]> propToTypes = new ArrayList<>();
+            final List<String[]> propToDomains = new ArrayList<>();
+            final List<String[]> propToRanges = new ArrayList<>();
+            final List<String[]> subProperties = new ArrayList<>();
+
+            try (final BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(schemaFile), StandardCharsets.UTF_8), BUFFER_SIZE);
+                 final CSVReader csv = new CSVReader(reader, '\t', CSVParser.NULL_CHARACTER, CSVParser.NULL_CHARACTER)) {
+
+                while (true) {
+                    final String[] line = csv.readNext();
+                    if (line == null) {
+                        break;
+                    }
+                    if (line[1].startsWith("<yagoTheme_")) {
+                        continue;
+                    }
+
+                    String property = line[2];
+                    if (property.startsWith("<")) {
+                        property = "yago:" + property.replaceAll("[<>]", "");
+                    }
+                    // most of yagoSchema.tsv is imported, containing: yago:hasConfidence (skipped), rdf:type, rdfs:domain, rdfs:range, rdfs:subPropertyOf
+//                        if (!"rdfs:subClassOf".equals(property)) {
+//                            continue;
+//                        }
+
+                    final String subject = line[1];
+                    final String subjectHref;
+                    if (subject.startsWith("<")) {
+                        subjectHref = "yago:" + subject.replaceAll("[<>]", "");
+                    } else {
+                        subjectHref = subject;
+                    }
+
+                    final String resOrLiteral = line[3];
+                    final String objectHref;
+                    if (resOrLiteral.startsWith("<")) {
+                        objectHref = "yago:" + resOrLiteral.replaceAll("[<>]", "");
+                    } else {
+                        objectHref = resOrLiteral;
+                    }
+
+                    if (LumenProperty.rdf_type.getQName().equals(property)) {
+                        propToTypes.add(new String[] { subjectHref, objectHref});
+                    } else if (LumenProperty.rdfs_domain.getQName().equals(property)) {
+                        propToDomains.add(new String[] { subjectHref, objectHref });
+                    } else if (LumenProperty.rdfs_range.getQName().equals(property)) {
+                        propToRanges.add(new String[] { subjectHref, objectHref });
+                    } else if (LumenProperty.rdfs_subPropertyOf.getQName().equals(property)) {
+                        subProperties.add(new String[] { subjectHref, objectHref });
+                    }
+                }
+
+            }
+
+            log.info("Writing {} rdf:type to {} ...", propToTypes.size(), typesForNeo4jFile);
+            try (final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(typesForNeo4jFile), StandardCharsets.UTF_8));
+                final CSVWriter csv = new CSVWriter(writer)) {
+                csv.writeNext(new String[]{"property", "rdf_type"});
+                propToTypes.forEach(csv::writeNext);
+            }
+
+            log.info("Writing {} rdfs:domain to {} ...", propToDomains.size(), typesForNeo4jFile);
+            try (final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(domainsForNeo4jFile), StandardCharsets.UTF_8));
+                final CSVWriter csv = new CSVWriter(writer)) {
+                csv.writeNext(new String[]{"property", "rdfs_domain"});
+                propToDomains.forEach(csv::writeNext);
+            }
+
+            log.info("Writing {} rdfs:range to {} ...", propToRanges.size(), typesForNeo4jFile);
+            try (final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rangesForNeo4jFile), StandardCharsets.UTF_8));
+                final CSVWriter csv = new CSVWriter(writer)) {
+                csv.writeNext(new String[]{"property", "rdfs_range"});
+                propToDomains.forEach(csv::writeNext);
+            }
+
+            log.info("Writing {} rdf:subPropertyOf to {} ...", subProperties.size(), subPropertiesForNeo4jFile);
+            try (final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(subPropertiesForNeo4jFile), StandardCharsets.UTF_8));
+                final CSVWriter csv = new CSVWriter(writer)) {
+                csv.writeNext(new String[]{"subProperty", "superProperty"});
+                subProperties.forEach(csv::writeNext);
+            }
+        } else {
+            log.info("Reusing existing files {}, {}, {}, {}",
+                    typesForNeo4jFile, domainsForNeo4jFile, rangesForNeo4jFile, subPropertiesForNeo4jFile);
+        }
+
+        final String typeCypher = "USING PERIODIC COMMIT\n" +
+                "LOAD CSV WITH HEADERS FROM '" + typesForNeo4jFile.toURI() + "' AS line\n" +
+                "MERGE (s:rdf_Property {nn: line.property, _partition: {partitionKey}})\n" +
+                "MERGE (o:owl_Thing {nn: line.rdf_type, _partition: {partitionKey}})\n" +
+                "MERGE (s) -[:rdf_type]-> (o)";
+        log.info("Executing: {} ...", typeCypher);
+        session.query(typeCypher, ImmutableMap.of("partitionKey", PartitionKey.lumen_yago.name()));
+
+        final String domainCypher = "USING PERIODIC COMMIT\n" +
+                "LOAD CSV WITH HEADERS FROM '" + domainsForNeo4jFile.toURI() + "' AS line\n" +
+                "MERGE (s:rdf_Property {nn: line.property, _partition: {partitionKey}})\n" +
+                "MERGE (o:owl_Thing {nn: line.rdfs_domain, _partition: {partitionKey}})\n" +
+                "MERGE (s) -[:rdfs_domain]-> (o)";
+        log.info("Executing: {} ...", domainCypher);
+        session.query(domainCypher, ImmutableMap.of("partitionKey", PartitionKey.lumen_yago.name()));
+
+        final String rangeCypher = "USING PERIODIC COMMIT\n" +
+                "LOAD CSV WITH HEADERS FROM '" + rangesForNeo4jFile.toURI() + "' AS line\n" +
+                "MERGE (s:rdf_Property {nn: line.property, _partition: {partitionKey}})\n" +
+                "MERGE (o:owl_Thing {nn: line.rdfs_range, _partition: {partitionKey}})\n" +
+                "MERGE (s) -[:rdfs_range]-> (o)";
+        log.info("Executing: {} ...", rangeCypher);
+        session.query(rangeCypher, ImmutableMap.of("partitionKey", PartitionKey.lumen_yago.name()));
+
+        final String subPropertyOfCypher = "USING PERIODIC COMMIT\n" +
+                "LOAD CSV WITH HEADERS FROM '" + subPropertiesForNeo4jFile.toURI() + "' AS line\n" +
+                "MERGE (s:rdf_Property {nn: line.subProperty, _partition: {partitionKey}})\n" +
+                "MERGE (o:rdf_Property {nn: line.superProperty, _partition: {partitionKey}})\n" +
+                "MERGE (s) -[:rdfs_subPropertyOf]-> (o)";
+        log.info("Executing: {} ...", subPropertyOfCypher);
+        session.query(subPropertyOfCypher, ImmutableMap.of("partitionKey", PartitionKey.lumen_yago.name()));
+    }
+
+    /**
      * Create initial taxonomy type nodes from taxonomyFile.
      * @param taxonomyFile
      * @throws IOException
      * @throws InterruptedException
      */
-    public void createInitialTypes(final File taxonomyFile) throws IOException, InterruptedException {
-        log.info("Creating initial types {} ({} KiB) ...", taxonomyFile, NUMBER.format(taxonomyFile.length() / 1024));
+    public void mergeTypes(final File taxonomyFile) throws IOException, InterruptedException {
+        log.info("Merge types {} ({} KiB) ...", taxonomyFile, NUMBER.format(taxonomyFile.length() / 1024));
 
         final File forNeo4jFile = new File("work/yago_types_for_neo4j.csv");
         forNeo4jFile.getParentFile().mkdirs();
@@ -127,7 +267,7 @@ public class ImportYagoTaxonomy2Neo4jApp implements CommandLineRunner {
 
         final String cypher = "USING PERIODIC COMMIT\n" +
                 "LOAD CSV WITH HEADERS FROM '" + forNeo4jFile.toURI() + "' AS line\n" +
-                "CREATE (:owl_Thing {nn: line.nn, _partition: {partitionKey}})";
+                "MERGE (:owl_Thing {nn: line.nn, _partition: {partitionKey}})";
         log.info("Executing: {} ...", cypher);
         session.query(cypher, ImmutableMap.of("partitionKey", PartitionKey.lumen_yago.name()));
     }
@@ -431,11 +571,12 @@ public class ImportYagoTaxonomy2Neo4jApp implements CommandLineRunner {
 //            tx.success();
 //        }
 
-        purgeYagoPartition();
-        createInitialTypes(new File(yagoWorkFolder, "yagoTaxonomy.tsv"));
-        createEntities(new File(yagoWorkFolder, "yagoTypes.tsv"));
-        linkSubclasses(new File(yagoWorkFolder, "yagoTaxonomy.tsv"));
-        linkInstanceOf(new File(yagoWorkFolder, "yagoTypes.tsv"));
+//        purgeYagoPartition();
+        mergeSchema(new File(yagoWorkFolder, "yagoSchema.tsv"));
+//        mergeTypes(new File(yagoWorkFolder, "yagoTaxonomy.tsv"));
+//        createEntities(new File(yagoWorkFolder, "yagoTypes.tsv"));
+//        linkSubclasses(new File(yagoWorkFolder, "yagoTaxonomy.tsv"));
+//        linkInstanceOf(new File(yagoWorkFolder, "yagoTypes.tsv"));
 //        addLabels(typeHrefs, new File(args[0], "yagoLabels.tsv"));
 
         log.info("Done");

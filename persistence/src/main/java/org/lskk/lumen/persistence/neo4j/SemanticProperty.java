@@ -1,6 +1,7 @@
 package org.lskk.lumen.persistence.neo4j;
 
 import com.google.common.base.Preconditions;
+import org.apache.jena.vocabulary.RDF;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Represents {@link RDF#Property}.
  * Created by ceefour on 22/02/2016.
  */
 @NodeEntity(label = "rdf_Property")
@@ -43,7 +45,7 @@ public class SemanticProperty implements Serializable {
     public static SemanticProperty forLumen(String nn) {
         Preconditions.checkArgument(nn.startsWith("lumen:"), "%s is not a \"lumen:\" property", nn);
         final SemanticProperty semanticProperty = new SemanticProperty();
-        semanticProperty.setPartition(PartitionKey.lumen_common);
+        semanticProperty.setPartition(PartitionKey.lumen_platform);
         semanticProperty.setNn(nn);
         return semanticProperty;
     }
@@ -82,6 +84,7 @@ public class SemanticProperty implements Serializable {
 
     /**
      * Must point to {@link org.apache.jena.vocabulary.RDFS#Class} things.
+     *
      * @return
      */
     public Set<Thing> getDomains() {
@@ -90,6 +93,7 @@ public class SemanticProperty implements Serializable {
 
     /**
      * Must point to {@link org.apache.jena.vocabulary.RDFS#Class} things.
+     *
      * @return
      */
     public Set<Thing> getRanges() {

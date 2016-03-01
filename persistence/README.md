@@ -477,10 +477,17 @@ Ready database files is available from Hendy Irawan:
         workspaceDir=D:/lumen_lumen_${tenantEnv}
 
 2. (Optional) Set your Neo4j CE server VM configuration to `-Xmx4g` (in 16 GB system, 4 GB max heap is default)
-3. TODO: Import `SemanticProperty` nodes and links from `yagoSchema.tsv`.
+3. Import `SemanticProperty` nodes and links from `yagoSchema.tsv`.
+   This will `MERGE` `rdf_Property` nodes representing properties,
+   `owl_Thing` nodes (some are `rdfs:Resource` because we have stuff like `xsd:string` too) representing types.
+   Then `MERGE` links `rdf_Property` for `rdf:type` to `owl_Thing`.
+   Then `MERGE` links `rdf_Property` for `rdfs:domain` to `owl_Thing`.
+   Then `MERGE` links `rdf_Property` for `rdfs:range` to `owl_Thing`.
+   Then `MERGE` links `rdf_Property` for `rdfs:subPropertyOf` to super `rdf_Property`.
 
 4. Things taxonomy to Neo4j.
-    These will `CREATE` `owl:Thing` nodes for types from `yagoTaxonomy.tsv`. (~ 1 min on i7 + RAM 16 GB + SSD)
+    These will `MERGE` `owl:Thing` nodes for types from `yagoTaxonomy.tsv`. (~ 1 min on i7 + RAM 16 GB + SSD)
+    (`MERGE` is required here because importing `yagoSchema.tsv` created types too) 
     These will `CREATE` `owl:Thing` nodes for all things from `yagoTypes.tsv`. (~ 6 mins on i7 + RAM 16 GB + SSD)
     It will `CREATE` links `rdfs:subClassOf` between types. (~ 2 mins on i7 + RAM 16 GB + SSD)
     It will `CREATE` links `rdf:type` between types and things (and other types). (~ 26 mins on i7 + RAM 16 GB + SSD)
