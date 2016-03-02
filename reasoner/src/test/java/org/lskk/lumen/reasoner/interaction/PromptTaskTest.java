@@ -5,6 +5,7 @@ import org.apache.camel.spring.boot.CamelAutoConfiguration;
 import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.core.LumenCoreConfig;
 import org.lskk.lumen.core.LumenLocale;
 import org.lskk.lumen.persistence.neo4j.Literal;
@@ -24,6 +25,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.*;
@@ -67,10 +69,10 @@ public class PromptTaskTest {
         final List<UtterancePattern> matches = promptBirthdate.matchUtterance(LumenLocale.INDONESIAN, "Aku lahir tanggal 14 Desember 1983.",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(2));
-        assertThat(matches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("birthdate", "14 Desember 1983")));
-        assertThat(matches.get(1).getSlotStrings(), equalTo(ImmutableMap.of("birthdate", "14 Desember 1983")));
-        assertThat(matches.get(0).getSlotValues(), equalTo(ImmutableMap.of("birthdate", new LocalDate("1983-12-14"))));
-        assertThat(matches.get(1).getSlotValues(), equalTo(ImmutableMap.of("birthdate", new LocalDate("1983-12-14"))));
+        assertThat(matches.get(0).getSlotStrings(), hasEntry("birthdate", "14 Desember 1983"));
+        assertThat(matches.get(1).getSlotStrings(), hasEntry("birthdate", "14 Desember 1983"));
+        assertThat(matches.get(0).getSlotValues(), hasEntry("birthdate", new LocalDate("1983-12-14")));
+        assertThat(matches.get(1).getSlotValues(), hasEntry("birthdate", new LocalDate("1983-12-14")));
     }
 
     @Test
@@ -94,10 +96,11 @@ public class PromptTaskTest {
         final List<UtterancePattern> matches = promptName.matchUtterance(LumenLocale.INDONESIAN, "Namaku Hendy Irawan",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(2)));
-        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
+                .sorted(new IConfidence.Comparator()).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("name", "Hendy Irawan")));
-        assertThat(confidentMatches.get(0).getSlotValues(), equalTo(ImmutableMap.of("name", "Hendy Irawan")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("name", "Hendy Irawan"));
+        assertThat(confidentMatches.get(0).getSlotValues(), hasEntry("name", "Hendy Irawan"));
 
         final List<ThingLabel> labels = promptName.generateLabelsToAssert(matches);
         assertThat(labels, hasSize(greaterThanOrEqualTo(3)));
@@ -112,19 +115,19 @@ public class PromptTaskTest {
         assertThat(rdfs_label.getMetaphone(), equalTo("HNTRWN"));
         assertThat(rdfs_label.getInLanguage(), equalTo("id-ID"));
         assertThat(rdfs_label.getPartition(), equalTo(PartitionKey.lumen_var));
-        assertThat(rdfs_label.getConfidence(), equalTo(1f));
+        assertThat(rdfs_label.getConfidence(), greaterThanOrEqualTo(0.9f));
         final ThingLabel yago_hasGivenName = labels.stream().filter(it -> "yago:hasGivenName".equals(it.getPropertyQName())).findFirst().get();
         assertThat(yago_hasGivenName.getValue(), equalTo("Hendy"));
         assertThat(yago_hasGivenName.getMetaphone(), equalTo("HNT"));
         assertThat(yago_hasGivenName.getInLanguage(), equalTo("id-ID"));
         assertThat(yago_hasGivenName.getPartition(), equalTo(PartitionKey.lumen_var));
-        assertThat(yago_hasGivenName.getConfidence(), equalTo(1f));
+        assertThat(yago_hasGivenName.getConfidence(), greaterThanOrEqualTo(0.9f));
         final ThingLabel yago_hasFamilyName = labels.stream().filter(it -> "yago:hasFamilyName".equals(it.getPropertyQName())).findFirst().get();
         assertThat(yago_hasFamilyName.getValue(), equalTo("Irawan"));
         assertThat(yago_hasFamilyName.getMetaphone(), equalTo("IRWN"));
         assertThat(yago_hasFamilyName.getInLanguage(), equalTo("id-ID"));
         assertThat(yago_hasFamilyName.getPartition(), equalTo(PartitionKey.lumen_var));
-        assertThat(yago_hasFamilyName.getConfidence(), equalTo(1f));
+        assertThat(yago_hasFamilyName.getConfidence(), greaterThanOrEqualTo(0.9f));
     }
 
     @Test
@@ -134,10 +137,11 @@ public class PromptTaskTest {
         final List<UtterancePattern> matches = promptName.matchUtterance(Locale.US, "I am Sigit Ari Wijanarko",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(2)));
-        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
+                .sorted(new IConfidence.Comparator()).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("name", "Sigit Ari Wijanarko")));
-        assertThat(confidentMatches.get(0).getSlotValues(), equalTo(ImmutableMap.of("name", "Sigit Ari Wijanarko")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("name", "Sigit Ari Wijanarko"));
+        assertThat(confidentMatches.get(0).getSlotValues(), hasEntry("name", "Sigit Ari Wijanarko"));
 
         final List<ThingLabel> labels = promptName.generateLabelsToAssert(matches);
         assertThat(labels, hasSize(greaterThanOrEqualTo(3)));
@@ -152,19 +156,19 @@ public class PromptTaskTest {
         assertThat(rdfs_label.getMetaphone(), equalTo("SJTRWJNRK"));
         assertThat(rdfs_label.getInLanguage(), equalTo("en-US"));
         assertThat(rdfs_label.getPartition(), equalTo(PartitionKey.lumen_var));
-        assertThat(rdfs_label.getConfidence(), equalTo(1f));
+        assertThat(rdfs_label.getConfidence(), greaterThanOrEqualTo(0.9f));
         final ThingLabel yago_hasGivenName = labels.stream().filter(it -> "yago:hasGivenName".equals(it.getPropertyQName())).findFirst().get();
         assertThat(yago_hasGivenName.getValue(), equalTo("Sigit Ari"));
         assertThat(yago_hasGivenName.getMetaphone(), equalTo("SJTR"));
         assertThat(yago_hasGivenName.getInLanguage(), equalTo("en-US"));
         assertThat(yago_hasGivenName.getPartition(), equalTo(PartitionKey.lumen_var));
-        assertThat(yago_hasGivenName.getConfidence(), equalTo(1f));
+        assertThat(yago_hasGivenName.getConfidence(), greaterThanOrEqualTo(0.9f));
         final ThingLabel yago_hasFamilyName = labels.stream().filter(it -> "yago:hasFamilyName".equals(it.getPropertyQName())).findFirst().get();
         assertThat(yago_hasFamilyName.getValue(), equalTo("Wijanarko"));
         assertThat(yago_hasFamilyName.getMetaphone(), equalTo("WJNRK"));
         assertThat(yago_hasFamilyName.getInLanguage(), equalTo("en-US"));
         assertThat(yago_hasFamilyName.getPartition(), equalTo(PartitionKey.lumen_var));
-        assertThat(yago_hasFamilyName.getConfidence(), equalTo(1f));
+        assertThat(yago_hasFamilyName.getConfidence(), greaterThanOrEqualTo(0.9f));
     }
 
     @Test
@@ -188,9 +192,10 @@ public class PromptTaskTest {
         final List<UtterancePattern> matches = promptGender.matchUtterance(LumenLocale.INDONESIAN, "Gue cowok",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
-        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
+                .sorted(new IConfidence.Comparator()).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("gender", "cowok")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("gender", "cowok"));
         final Thing gender = (Thing) confidentMatches.get(0).getSlotValues().get("gender");
         assertThat(gender.getNn(), equalTo("yago:male"));
         assertThat(gender.getPrefLabelLang(), equalTo("id-ID"));
@@ -203,9 +208,10 @@ public class PromptTaskTest {
         final List<UtterancePattern> matches = promptGender.matchUtterance(LumenLocale.INDONESIAN, "Aku gadis",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
-        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
+                .sorted(new IConfidence.Comparator()).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("gender", "gadis")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("gender", "gadis"));
         final Thing gender = (Thing) confidentMatches.get(0).getSlotValues().get("gender");
         assertThat(gender.getNn(), equalTo("yago:female"));
         assertThat(gender.getPrefLabelLang(), equalTo("id-ID"));
@@ -218,9 +224,10 @@ public class PromptTaskTest {
         final List<UtterancePattern> matches = promptGender.matchUtterance(Locale.US, "I am a man",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
-        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
+                .sorted(new IConfidence.Comparator()).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("gender", "a man")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("gender", "a man"));
         final Thing gender = (Thing) confidentMatches.get(0).getSlotValues().get("gender");
         assertThat(gender.getNn(), equalTo("yago:male"));
         assertThat(gender.getPrefLabelLang(), equalTo("en-US"));
@@ -233,9 +240,10 @@ public class PromptTaskTest {
         final List<UtterancePattern> matches = promptGender.matchUtterance(Locale.US, "I am female",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
-        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+        final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
+                .sorted(new IConfidence.Comparator()).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("gender", "female")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("gender", "female"));
         final Thing gender = (Thing) confidentMatches.get(0).getSlotValues().get("gender");
         assertThat(gender.getNn(), equalTo("yago:female"));
         assertThat(gender.getPrefLabelLang(), equalTo("en-US"));
@@ -263,9 +271,9 @@ public class PromptTaskTest {
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
-                .filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+                .filter(it -> it.getConfidence() >= 0.9f).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("religion", "muslimah")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("religion", "muslimah"));
         final Thing religion = (Thing) confidentMatches.get(0).getSlotValues().get("religion");
         assertThat(religion.getNn(), equalTo(PromptReligionTask.Religion.ISLAM.getHref()));
         assertThat(religion.getPrefLabelLang(), equalTo("id-ID"));
@@ -279,14 +287,13 @@ public class PromptTaskTest {
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
-                .filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+                .filter(it -> it.getConfidence() >= 0.95f).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("religion", "Protestant")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("religion", "Protestant"));
         final Thing religion = (Thing) confidentMatches.get(0).getSlotValues().get("religion");
         assertThat(religion.getNn(), equalTo(PromptReligionTask.Religion.PROTESTANTISM.getHref()));
         assertThat(religion.getPrefLabelLang(), equalTo("en-US"));
     }
-
 
     @Test
     public void promptAgeTask() {
@@ -310,9 +317,9 @@ public class PromptTaskTest {
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
-                .filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+                .filter(it -> it.getConfidence() >= 0.95f).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("age", "45")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("age", "45"));
         final Integer age = (Integer) confidentMatches.get(0).getSlotValues().get("age");
         assertThat(age, equalTo(45));
         final List<Literal> literals = promptAge.generateLiteralsToAssert(matches);
@@ -330,9 +337,9 @@ public class PromptTaskTest {
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
-                .filter(it -> 1f == it.getConfidence()).collect(Collectors.toList());
+                .filter(it -> it.getConfidence() >= 0.9f).collect(Collectors.toList());
         assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
-        assertThat(confidentMatches.get(0).getSlotStrings(), equalTo(ImmutableMap.of("age", "16")));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("age", "16"));
         final Integer age = (Integer) confidentMatches.get(0).getSlotValues().get("age");
         assertThat(age, equalTo(16));
         final List<Literal> literals = promptAge.generateLiteralsToAssert(matches);
@@ -340,6 +347,59 @@ public class PromptTaskTest {
         assertThat(literals.get(0).getValue(), equalTo(2000));
         assertThat(literals.get(0).getType(), equalTo("xsd:integer"));
         assertThat(literals.get(0).getPredicate().getNn(), equalTo("lumen:hasBirthYear"));
+    }
+
+    @Test
+    public void promptQuranChapterVerseTask() {
+        final PromptTask promptQuranChapterVerse = promptTaskRepo.createPrompt("promptQuranChapterVerse");
+        assertThat(promptQuranChapterVerse, instanceOf(PromptTask.class));
+        assertThat(promptQuranChapterVerse.getId(), equalTo("promptQuranChapterVerse"));
+        assertThat(promptQuranChapterVerse.getAskSsmls(), hasSize(greaterThanOrEqualTo(2)));
+        assertThat(promptQuranChapterVerse.getUtterancePatterns(), hasSize(greaterThanOrEqualTo(2)));
+        //assertThat(promptQuranChapterVerse.getProperty(), equalTo("lumen:hasBirthYear"));
+        assertThat(promptQuranChapterVerse.getExpectedTypes(), hasEntry("chapter", "xsd:string"));
+        assertThat(promptQuranChapterVerse.getExpectedTypes(), hasEntry("verse", "xsd:integer"));
+
+//        assertThat(promptGender.getProposition(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
+//        assertThat(promptGender.getProposition(Locale.US).getObject(), containsString("name"));
+    }
+
+    @Test
+    public void promptQuranChapterVerseIndonesian() {
+        final PromptTask promptQuranChapterVerse = promptTaskRepo.createPrompt("promptQuranChapterVerse");
+
+        final List<UtterancePattern> matches = promptQuranChapterVerse.matchUtterance(LumenLocale.INDONESIAN, "Baca surat Al-Kahfi ayat 45",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream()
+                .filter(it -> it.getConfidence() >= 0.95f).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("chapter", "Al-Kahfi"));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("verse", "45"));
+        final Map<String, Object> slotValues = confidentMatches.get(0).getSlotValues();
+        assertThat(slotValues, hasEntry("chapter", "Al-Kahfi"));
+        assertThat(slotValues, hasEntry("verse", 45));
+        final List<Literal> literals = promptQuranChapterVerse.generateLiteralsToAssert(matches);
+        assertThat(literals, empty());
+    }
+
+    @Test
+    public void promptQuranChapterVerseEnglish() {
+        final PromptTask promptQuranChapterVerse = promptTaskRepo.createPrompt("promptQuranChapterVerse");
+
+        final List<UtterancePattern> matches = promptQuranChapterVerse.matchUtterance(Locale.US, "Read Quran Al-Baqarah:255",
+                UtterancePattern.Scope.ANY);
+        assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
+        final List<UtterancePattern> confidentMatches = matches.stream()
+                .filter(it -> it.getConfidence() >= 0.95f).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
+        assertThat(confidentMatches, hasSize(greaterThanOrEqualTo(1)));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("chapter", "Al-Baqarah"));
+        assertThat(confidentMatches.get(0).getSlotStrings(), hasEntry("verse", "255"));
+        final Map<String, Object> slotValues = confidentMatches.get(0).getSlotValues();
+        assertThat(slotValues, hasEntry("chapter", "Al-Baqarah"));
+        assertThat(slotValues, hasEntry("verse", 255));
+        final List<Literal> literals = promptQuranChapterVerse.generateLiteralsToAssert(matches);
+        assertThat(literals, empty());
     }
 
 }

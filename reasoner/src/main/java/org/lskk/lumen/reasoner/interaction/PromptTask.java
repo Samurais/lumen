@@ -206,11 +206,13 @@ public class PromptTask extends InteractionTask {
                     int lastPlainOffset = 0;
                     final Matcher placeholderMatcher = PLACEHOLDER_PATTERN.matcher(it.getPattern());
                     final ArrayList<String> slots = new ArrayList<>();
+                    int plainPartLength = 0;
                     while (true) {
                         final boolean found = placeholderMatcher.find();
                         if (found) {
                             String plainPart = it.getPattern().substring(lastPlainOffset, placeholderMatcher.start());
                             real += plainToRegex(plainPart);
+                            plainPartLength += plainPart.length();
                             final String slot = placeholderMatcher.group("slot");
                             slots.add(slot);
 
@@ -244,6 +246,7 @@ public class PromptTask extends InteractionTask {
                         } else {
                             String plainPart = it.getPattern().substring(lastPlainOffset, it.getPattern().length());
                             real += plainToRegex(plainPart);
+                            plainPartLength += plainPart.length();
                             break;
                         }
                     }
@@ -262,7 +265,9 @@ public class PromptTask extends InteractionTask {
                         final float languageMultiplier = null != it.getInLanguage() ? 1f : 0.9f;
                         // GLOBAL scope has full multiplier, LOCAL scope has 0.9
                         final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.9f;
-                        matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * languageMultiplier * scopeMultiplier);
+                        // we prefer as many matching plaintext as possible, i.e. "Read Quran {Al-Baqarah}" is preferred over "Read {Quran Al-Baqarah}" over "{Read Quran Al-Baqarah}"
+                        final float plainPartMultiplier = 0.9f + (Math.min(plainPartLength, 20f) / 200f);
+                        matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * languageMultiplier * scopeMultiplier * plainPartMultiplier);
 
                         // for each slot, check if the captured slot value is valid in valid format for conversion to target value
                         boolean allValid = true;
@@ -295,7 +300,8 @@ public class PromptTask extends InteractionTask {
                                 // convert to target value
                                 matched.getSlotValues().put(slot, toTargetValue(expectedTypes.get(slot), matched.getInLanguage(), slotString, matched.getStyle()));
                             }
-                            log.debug("Matched {}", matched);
+                            log.debug("Matched {} multipliers: language={} scope={} plainPart={}({})", matched,
+                                    languageMultiplier, scopeMultiplier, plainPartMultiplier, plainPartLength);
                             return matched;
                         } else {
                             return null;
