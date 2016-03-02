@@ -16,6 +16,8 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
@@ -33,8 +35,10 @@ import static org.mockito.Mockito.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 //@ContextConfiguration(classes = JavaScriptIntentTest.IntentConfig.class)
 @SpringApplicationConfiguration(InteractionSessionTest.Config.class)
+@ActiveProfiles("InteractionSessionTest")
 public class InteractionSessionTest {
 
+    @Profile("InteractionSessionTest")
     @SpringBootApplication(scanBasePackageClasses = {PromptTask.class, WordNetConfig.class},
             exclude = {HibernateJpaAutoConfiguration.class, DataSourceAutoConfiguration.class, JmxAutoConfiguration.class, CamelAutoConfiguration.class, GroovyTemplateAutoConfiguration.class})
     @Import({LumenCoreConfig.class})

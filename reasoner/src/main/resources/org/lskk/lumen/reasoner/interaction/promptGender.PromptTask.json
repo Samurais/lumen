@@ -28,5 +28,7 @@
     {"inLanguage": "en-US", "pattern": "I'm {gender}", "style": "CASUAL"}
   ],
   "property": "yago:hasGender",
-  "expectedTypes": ["yago:wordnet_sex_105006898"]
+  "expectedTypes": {
+    "gender": "yago:wordnet_sex_105006898"
+  }
 }

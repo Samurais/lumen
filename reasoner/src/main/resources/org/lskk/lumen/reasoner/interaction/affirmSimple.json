@@ -3,22 +3,22 @@
   "description": "Simple affirmation without any dynamic parameter.",
   "expressions": [
     {"inLanguage": "id-ID", "pattern": "Oh gitu.", "style": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Ya ya ya.", "scope": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Baik.", "scope": "FORMAL"},
-    {"inLanguage": "id-ID", "pattern": "Baiklah.", "scope": "FORMAL"},
-    {"inLanguage": "id-ID", "pattern": "Saya mengerti.", "scope": "FORMAL"},
-    {"inLanguage": "id-ID", "pattern": "Oke.", "scope": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Sip.", "scope": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Yup.", "scope": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Oh begitu.", "scope": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Oh gitu ya.", "scope": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Ooo...", "scope": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Ya ya ya.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Baik.", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Baiklah.", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Saya mengerti.", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Oke.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Sip.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Yup.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh begitu.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh gitu ya.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Ooo...", "style": "CASUAL"},
 
-    {"inLanguage": "en-US", "pattern": "I see.", "scope": "FORMAL"},
-    {"inLanguage": "en-US", "pattern": "I understand.", "scope": "FORMAL"},
-    {"inLanguage": "en-US", "pattern": "Oh I see.", "scope": "FORMAL"},
-    {"inLanguage": "en-US", "pattern": "Okay.", "scope": "CASUAL"},
-    {"inLanguage": "en-US", "pattern": "OK.", "scope": "CASUAL"},
-    {"inLanguage": "en-US", "pattern": "Got it.", "scope": "CASUAL"}
+    {"inLanguage": "en-US", "pattern": "I see.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "I understand.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Oh I see.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Okay.", "style": "CASUAL"},
+    {"inLanguage": "en-US", "pattern": "OK.", "style": "CASUAL"},
+    {"inLanguage": "en-US", "pattern": "Got it.", "style": "CASUAL"}
   ]
 }

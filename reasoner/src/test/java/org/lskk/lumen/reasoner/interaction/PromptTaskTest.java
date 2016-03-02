@@ -18,6 +18,7 @@ import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertThat;
 @RunWith(SpringJUnit4ClassRunner.class)
 //@ContextConfiguration(classes = JavaScriptIntentTest.IntentConfig.class)
 @SpringApplicationConfiguration(PromptTaskTest.Config.class)
+@ActiveProfiles("PromptTaskTest")
 public class PromptTaskTest {
 
     @SpringBootApplication(scanBasePackageClasses = {PromptTask.class},
@@ -57,7 +59,7 @@ public class PromptTaskTest {
         assertThat(promptBirthdate.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptBirthdate.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptBirthdate.getProperty(), equalTo("yago:wasBornOnDate"));
-        assertThat(promptBirthdate.getExpectedTypes(), contains("xs:date"));
+        assertThat(promptBirthdate.getExpectedTypes(), hasEntry("birthdate", "xs:date"));
 
 //        assertThat(promptBirthdate.getPendingPropositions(LumenLocale.INDONESIAN).peek().getObject(), containsString("lahir"));
 //        assertThat(promptBirthdate.getPendingPropositions(Locale.US).get().getObject(), containsString("born"));
@@ -79,7 +81,7 @@ public class PromptTaskTest {
         assertThat(promptName.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptName.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptName.getProperty(), equalTo("rdfs:label"));
-        assertThat(promptName.getExpectedTypes(), contains("xsd:string"));
+        assertThat(promptName.getExpectedTypes(), hasEntry("name", "xsd:string"));
 
 //        assertThat(promptName.getPendingPropositions(LumenLocale.INDONESIAN).get().getObject(), containsString("nama"));
 //        assertThat(promptName.getPendingPropositions(Locale.US).get().getObject(), containsString("name"));
@@ -173,7 +175,7 @@ public class PromptTaskTest {
         assertThat(promptGender.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptGender.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptGender.getProperty(), equalTo("yago:hasGender"));
-        assertThat(promptGender.getExpectedTypes(), contains("yago:wordnet_sex_105006898"));
+        assertThat(promptGender.getExpectedTypes(), hasEntry("gender", "yago:wordnet_sex_105006898"));
 
 //        assertThat(promptGender.getProposition(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
 //        assertThat(promptGender.getProposition(Locale.US).getObject(), containsString("name"));
@@ -247,7 +249,7 @@ public class PromptTaskTest {
         assertThat(promptReligion.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptReligion.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptReligion.getProperty(), equalTo("lumen:hasReligion"));
-        assertThat(promptReligion.getExpectedTypes(), contains("yago:wordnet_religion_105946687"));
+        assertThat(promptReligion.getExpectedTypes(), hasEntry("religion", "yago:wordnet_religion_105946687"));
 
 //        assertThat(promptGender.getProposition(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
 //        assertThat(promptGender.getProposition(Locale.US).getObject(), containsString("name"));
@@ -294,7 +296,7 @@ public class PromptTaskTest {
         assertThat(promptAge.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptAge.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptAge.getProperty(), equalTo("lumen:hasBirthYear"));
-        assertThat(promptAge.getExpectedTypes(), contains("xsd:integer"));
+        assertThat(promptAge.getExpectedTypes(), hasEntry("age", "xsd:integer"));
 
 //        assertThat(promptGender.getProposition(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
 //        assertThat(promptGender.getProposition(Locale.US).getObject(), containsString("name"));

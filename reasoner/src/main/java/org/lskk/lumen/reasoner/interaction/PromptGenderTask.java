@@ -60,7 +60,7 @@ public class PromptGenderTask extends PromptTask {
     }
 
     @Override
-    public Object toTargetValue(String inLanguage, String value, ConversationStyle style) {
+    public Object toTargetValue(String expectedType, String inLanguage, String value, ConversationStyle style) {
         return LABELS.stream().filter(it -> it.getValue().equalsIgnoreCase(value)).findAny()
                 .map(it -> {
                     final Thing thing = new Thing();

@@ -17,5 +17,7 @@
     {"inLanguage": "en-US", "pattern": "I'm {name}"}
   ],
   "property": "rdfs:label",
-  "expectedTypes": ["xsd:string"]
+  "expectedTypes": {
+    "name": "xsd:string"
+  }
 }

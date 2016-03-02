@@ -12,5 +12,7 @@
     {"inLanguage": "en-US", "pattern": "I was born on {birthdate}"}
   ],
   "property": "yago:wasBornOnDate",
-  "expectedTypes": ["xs:date"]
+  "expectedTypes": {
+    "birthdate": "xs:date"
+  }
 }

@@ -2,6 +2,7 @@ package org.lskk.lumen.reasoner.interaction;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
@@ -56,7 +57,7 @@ public class PromptTask extends InteractionTask {
     private List<QuestionTemplate> askSsmls = new ArrayList<>();
     private List<UtterancePattern> utterancePatterns = new ArrayList<>();
     private String property;
-    private List<String> expectedTypes;
+    private Map<String, String> expectedTypes;
     private String unit;
     private AffirmationTask affirmationTask;
 
@@ -106,11 +107,21 @@ public class PromptTask extends InteractionTask {
     }
 
     /**
-     * e.g. {@code xs:date}, {@code yago:wordnet_person_100007846}
+     * Key is slot name, e.g. <tt>{chapter}</tt>
+     * Value is type QName, e.g. {@code xs:date}, {@code yago:wordnet_person_100007846}
+     *
+     * <p>Example:</p>
+     *
+     * <pre>
+     * "expectedTypes": {
+     *   "chapter": "xsd:string",
+     *   "verse": "xsd:integer"
+     * }
+     * </pre>
      *
      * @return
      */
-    public List<String> getExpectedTypes() {
+    public Map<String, String> getExpectedTypes() {
         return expectedTypes;
     }
 
@@ -185,27 +196,6 @@ public class PromptTask extends InteractionTask {
      */
     public List<UtterancePattern> matchUtterance(Locale locale, String utterance, UtterancePattern.Scope scope) {
         final Pattern PLACEHOLDER_PATTERN = Pattern.compile("[{](?<slot>[a-z0-9_]+)[}]", Pattern.CASE_INSENSITIVE);
-        final String SLOT_STRING_PATTERN;
-        switch (expectedTypes.get(0)) {
-            case "xsd:string":
-                SLOT_STRING_PATTERN = ".+";
-                break;
-            case "xsd:integer":
-                SLOT_STRING_PATTERN = "[\\d-]+";
-                break;
-            case "xs:date":
-                SLOT_STRING_PATTERN = "\\d+ [a-z]+ \\d+";
-                break;
-            // this pattern is dependent on the Yago Type, not the prompt
-            case "yago:wordnet_sex_105006898":
-                SLOT_STRING_PATTERN = "[a-z0-9 -]+";
-                break;
-            case "yago:wordnet_religion_105946687":
-                SLOT_STRING_PATTERN = "[a-z '-]+";
-                break;
-            default:
-                throw new ReasonerException("Unsupported type: " + expectedTypes);
-        }
         final List<UtterancePattern> matches = utterancePatterns.stream()
                 .filter(it -> null == it.getInLanguage() || locale == Locale.forLanguageTag(it.getInLanguage()))
                 .filter(it -> UtterancePattern.Scope.ANY == scope || scope == it.getScope())
@@ -223,7 +213,33 @@ public class PromptTask extends InteractionTask {
                             real += plainToRegex(plainPart);
                             final String slot = placeholderMatcher.group("slot");
                             slots.add(slot);
-                            real += "(?<" + slot + ">" + SLOT_STRING_PATTERN + ")";
+
+                            Preconditions.checkNotNull(expectedTypes.containsKey(slot),
+                                    "Utterance \"%s\" uses slot \"%s\" but not declared in expectedTypes. Declared expectedTypes are: %s",
+                                    it.getPattern(), slot, expectedTypes.keySet());
+                            final String slotStringPattern;
+                            switch (expectedTypes.get(slot)) {
+                                case "xsd:string":
+                                    slotStringPattern = ".+";
+                                    break;
+                                case "xsd:integer":
+                                    slotStringPattern = "[\\d-]+";
+                                    break;
+                                case "xs:date":
+                                    slotStringPattern = "\\d+ [a-z]+ \\d+";
+                                    break;
+                                // this pattern is dependent on the Yago Type, not the prompt
+                                case "yago:wordnet_sex_105006898":
+                                    slotStringPattern = "[a-z0-9 -]+";
+                                    break;
+                                case "yago:wordnet_religion_105946687":
+                                    slotStringPattern = "[a-z '-]+";
+                                    break;
+                                default:
+                                    throw new ReasonerException("Slot '" + slot + "' uses unsupported type: " + expectedTypes);
+                            }
+
+                            real += "(?<" + slot + ">" + slotStringPattern + ")";
                             lastPlainOffset = placeholderMatcher.end();
                         } else {
                             String plainPart = it.getPattern().substring(lastPlainOffset, it.getPattern().length());
@@ -253,7 +269,7 @@ public class PromptTask extends InteractionTask {
                         for (final String slot : slots) {
                             final String slotString = realMatcher.group(slot);
                             matched.getSlotStrings().put(slot, slotString);
-                            switch (expectedTypes.get(0)) {
+                            switch (expectedTypes.get(slot)) {
                                 case "xsd:string":
                                     break;
                                 case "xsd:integer":
@@ -277,7 +293,7 @@ public class PromptTask extends InteractionTask {
                                 final String slotString = realMatcher.group(slot);
                                 matched.getSlotStrings().put(slot, slotString);
                                 // convert to target value
-                                matched.getSlotValues().put(slot, toTargetValue(matched.getInLanguage(), slotString, matched.getStyle()));
+                                matched.getSlotValues().put(slot, toTargetValue(expectedTypes.get(slot), matched.getInLanguage(), slotString, matched.getStyle()));
                             }
                             log.debug("Matched {}", matched);
                             return matched;
@@ -318,13 +334,15 @@ public class PromptTask extends InteractionTask {
 
     /**
      * Convert to target value. You can override this if you have your own format.
+     *
+     * @param expectedType
      * @param inLanguage
      * @param value
      * @param style
      * @return
      */
-    public Object toTargetValue(String inLanguage, String value, ConversationStyle style) {
-        switch (expectedTypes.get(0)) {
+    public Object toTargetValue(String expectedType, String inLanguage, String value, ConversationStyle style) {
+        switch (expectedType) {
             case "xsd:string":
                 return value;
             case "xsd:integer":

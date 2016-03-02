@@ -14,7 +14,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -42,8 +44,8 @@ public class InteractionTaskRepository {
             promptTaskProto.setId(id);
             taskProtos.put(id, promptTaskProto);
         }
-        final Stream<InteractionTask> promptTasks = taskProtos.values().stream().filter(it -> it instanceof PromptTask);
-        log.info("Loaded {} PromptTasks: {}", promptTasks.count(), promptTasks.map(InteractionTask::getId).toArray());
+        final List<InteractionTask> promptTasks = taskProtos.values().stream().filter(it -> it instanceof PromptTask).collect(Collectors.toList());
+        log.info("Loaded {} PromptTasks: {}", promptTasks.size(), promptTasks.stream().map(InteractionTask::getId).toArray());
 
         // AffirmationTasks
         final Resource[] affirmationResources = new PathMatchingResourcePatternResolver(InteractionTaskRepository.class.getClassLoader())
@@ -55,9 +57,9 @@ public class InteractionTaskRepository {
             proto.setId(id);
             taskProtos.put(id, proto);
         }
-        final Stream<InteractionTask> affirmationTasks = taskProtos.values().stream().filter(it -> it instanceof AffirmationTask);
+        final List<InteractionTask> affirmationTasks = taskProtos.values().stream().filter(it -> it instanceof AffirmationTask).collect(Collectors.toList());
         log.info("Loaded {} AffirmationTasks: {}",
-                affirmationTasks.count(), affirmationTasks.map(InteractionTask::getId).toArray());
+                affirmationTasks.size(), affirmationTasks.stream().map(InteractionTask::getId).toArray());
     }
 
     /**
