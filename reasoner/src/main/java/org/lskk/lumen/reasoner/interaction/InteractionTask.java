@@ -7,6 +7,7 @@ import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.expression.Proposition;
+import org.lskk.lumen.reasoner.intent.Slot;
 
 import java.io.Serializable;
 import java.util.*;
@@ -37,6 +38,7 @@ public abstract class InteractionTask implements Serializable {
     private Queue<Proposition> pendingPropositions = new ArrayDeque<>();
     private Queue<CommunicateAction> pendingCommunicateActions = new ArrayDeque<>();
     private InteractionSession parent;
+    private List<Slot> inSlots = new ArrayList<>();
 
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
@@ -168,6 +170,10 @@ public abstract class InteractionTask implements Serializable {
 
     public String getPath() {
         return parent.getId() + "/" + getId();
+    }
+
+    public List<Slot> getInSlots() {
+        return inSlots;
     }
 
     @Override

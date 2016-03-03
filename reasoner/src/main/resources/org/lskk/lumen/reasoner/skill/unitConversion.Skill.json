@@ -1,5 +1,18 @@
 {
   "@type": "Skill",
   "name": "Unit Conversion",
-  "description": "Reads Quran from specific chapter and verse."
+  "description": "Converts a measurement to another unit.",
+  "tasks": [
+    {
+      "href": "prompt:promptMeasurementToUnit",
+      "intentCapturing": true
+    },
+    {
+      "href": "affirm:affirmConvertUnit"
+    }
+  ],
+  "connections": [
+    {"source": "promptMeasurementToUnit.measure", "sink": "affirmConvertUnit.measure"},
+    {"source": "promptMeasurementToUnit.unit", "sink": "affirmConvertUnit.unit"}
+  ]
 }

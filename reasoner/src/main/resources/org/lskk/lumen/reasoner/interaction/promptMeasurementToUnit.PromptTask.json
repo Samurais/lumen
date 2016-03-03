@@ -1,0 +1,48 @@
+{
+  "@type": "PromptTask",
+  "askSsmls": [
+    {"inLanguage": "id-ID", "object": "Anda ingin mengkonversi nilai apa ke satuan apa?", "style": "FORMAL"},
+    {"inLanguage": "en-US", "object": "What measure do you want to convert to another unit?", "style": "FORMAL"}
+  ],
+  "utterancePatterns": [
+    {"inLanguage": "id-ID", "pattern": "{measure} ke {unit}", "scope": "LOCAL"},
+    {"inLanguage": "en-US", "pattern": "{measure} to {unit}", "scope": "LOCAL"},
+    {"inLanguage": "en-US", "pattern": "{measure} as {unit}", "scope": "LOCAL"},
+    {"inLanguage": "en-US", "pattern": "{measure} in {unit}", "scope": "LOCAL"},
+
+    {"inLanguage": "id-ID", "pattern": "Cari {measure} dalam {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Hitung {measure} dalam {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Berapa {measure} dalam {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Ubah {measure} dalam {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Rubah {measure} dalam {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Cari {measure} dalam satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Hitung {measure} dalam satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Berapa {measure} dalam satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Ubah {measure} dalam satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Rubah {measure} dalam satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Cari {measure} ke {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Hitung {measure} ke {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Berapa {measure} ke {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Ubah {measure} ke {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Rubah {measure} ke {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Cari {measure} ke satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Hitung {measure} ke satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Berapa {measure} ke satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Ubah {measure} ke satuan {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "id-ID", "pattern": "Rubah {measure} ke satuan {unit}", "scope": "GLOBAL"},
+
+    {"inLanguage": "en-US", "pattern": "Find {measure} in {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "Find {measure} to {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "Find {measure} as {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "Calculate {measure} in {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "Calculate {measure} to {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "Calculate {measure} as {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "Convert {measure} in {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "Convert {measure} to {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "Convert {measure} as {unit}", "scope": "GLOBAL"}
+  ],
+  "outSlots": {
+    "measure": "yago:yagoQuantity",
+    "unit": "yago:wordnet_unit_of_measurement_113583724"
+  }
+}
