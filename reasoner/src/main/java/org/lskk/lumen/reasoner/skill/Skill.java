@@ -82,6 +82,8 @@ public class Skill implements Serializable {
     protected enum SyntaxKind {
         START,
         STOP,
+        RECEIVE,
+        SEND,
         ACTION,
         ARROW
     }
@@ -118,7 +120,7 @@ public class Skill implements Serializable {
         getTasks().stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing()))
                 .forEach(it -> {
                     syntaxGraph.add(new Syntax(SyntaxKind.START, null));
-                    syntaxGraph.add(new Syntax(SyntaxKind.ACTION, it.getId()));
+                    syntaxGraph.add(new Syntax(SyntaxKind.RECEIVE, it.getId()));
                     syntaxGraph.add(new Syntax(SyntaxKind.STOP, null));
                 });
 
@@ -129,7 +131,7 @@ public class Skill implements Serializable {
             final Syntax arrow;
             if (sink == null) {
                 arrow = new Syntax(SyntaxKind.ARROW, conn.getSourceSlot());
-                sink = new Syntax(SyntaxKind.ACTION, conn.getSinkActivity());
+                sink = new Syntax(conn.getSinkActivity().startsWith("affirm") ? SyntaxKind.SEND : SyntaxKind.ACTION, conn.getSinkActivity());
                 syntaxGraph.add(syntaxGraph.indexOf(source) + 1, arrow);
                 syntaxGraph.add(syntaxGraph.indexOf(source) + 2, sink);
             } else {
@@ -153,6 +155,22 @@ public class Skill implements Serializable {
                     break;
                 case STOP:
                     uml += "stop\n";
+                    break;
+                case RECEIVE:
+                    uml += ":" + syntax.name + "<\n";
+                    if (syntax.note != null) {
+                        uml += "note left\n";
+                        uml += syntax.note + "\n";
+                        uml += "end note\n";
+                    }
+                    break;
+                case SEND:
+                    uml += ":" + syntax.name + ">\n";
+                    if (syntax.note != null) {
+                        uml += "note left\n";
+                        uml += syntax.note + "\n";
+                        uml += "end note\n";
+                    }
                     break;
                 case ACTION:
                     uml += ":" + syntax.name + ";\n";
