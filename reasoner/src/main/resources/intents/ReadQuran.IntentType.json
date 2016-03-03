@@ -1,0 +1,17 @@
+{
+    "@type": "IntentType",
+    "slots": [
+        {
+            "id": "chapter",
+            "kind": "PRIMITIVE",
+            "required": "true",
+            "types": ["xsd:string"]
+        },
+        {
+            "id": "verse",
+            "kind": "PRIMITIVE",
+            "required": "true",
+            "types": ["xsd:integer"]
+        }
+    ]
+}

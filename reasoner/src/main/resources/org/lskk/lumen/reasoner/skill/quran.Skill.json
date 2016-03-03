@@ -1,0 +1,11 @@
+{
+  "@type": "Skill",
+  "name": "Quran",
+  "description": "Reads Quran from specific chapter and verse.",
+  "tasks": [
+    {
+      "href": "prompt:promptQuranChapterVerse",
+      "intentCapturing": true
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "@type": "PromptTask",
+  "askSsmls": [
+    {"inLanguage": "id-ID", "object": "Al-Quran surat apa?", "style": "FORMAL"},
+    {"inLanguage": "en-US", "object": "Which Al-Quran chapter?", "style": "FORMAL"}
+  ],
+  "utterancePatterns": [
+    {"pattern": "{chapter}", "scope": "LOCAL"},
+
+    {"pattern": "Surat {chapter}", "scope": "LOCAL"},
+    {"pattern": "Surah {chapter}", "scope": "LOCAL"},
+
+    {"pattern": "Al-Quran {chapter}", "scope": "LOCAL"},
+    {"pattern": "Quran {chapter}", "scope": "LOCAL"},
+    {"pattern": "AlQuran {chapter}", "scope": "LOCAL"},
+    {"pattern": "Al-Quran surat {chapter}", "scope": "LOCAL"},
+    {"pattern": "Quran surat {chapter}", "scope": "LOCAL"},
+    {"pattern": "AlQuran surat {chapter}", "scope": "LOCAL"},
+    {"pattern": "Al-Quran surah {chapter}", "scope": "LOCAL"},
+    {"pattern": "Quran surah {chapter}", "scope": "LOCAL"},
+    {"pattern": "AlQuran surah {chapter}", "scope": "LOCAL"},
+    {"pattern": "QS {chapter}", "scope": "LOCAL"},
+    {"pattern": "QS. {chapter}", "scope": "LOCAL"},
+    {"pattern": "QS surat {chapter}", "scope": "LOCAL"},
+    {"pattern": "QS. surat {chapter}", "scope": "LOCAL"},
+
+    {"inLanguage": "en-US", "pattern": "Chapter {chapter}", "scope": "LOCAL"},
+    {"inLanguage": "en-US", "pattern": "Al-Quran chapter {chapter}", "scope": "LOCAL"},
+    {"inLanguage": "en-US", "pattern": "AlQuran chapter {chapter}", "scope": "LOCAL"},
+    {"inLanguage": "en-US", "pattern": "Quran chapter {chapter}", "scope": "LOCAL"},
+    {"inLanguage": "en-US", "pattern": "Koran {chapter}", "scope": "LOCAL"},
+    {"inLanguage": "en-US", "pattern": "Koran chapter {chapter}", "scope": "LOCAL"}
+  ],
+  "outSlots": {
+    "chapter": "xsd:string"
+  }
+}

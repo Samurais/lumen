@@ -53,7 +53,7 @@
     {"inLanguage": "en-US", "pattern": "I'm {religion}", "style": "CASUAL"}
   ],
   "property": "lumen:hasReligion",
-  "expectedTypes": {
+  "outSlots": {
     "religion": "yago:wordnet_religion_105946687"
   }
 }

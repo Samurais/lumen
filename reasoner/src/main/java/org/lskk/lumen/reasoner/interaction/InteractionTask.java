@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.interaction;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.persistence.neo4j.Literal;
@@ -35,6 +36,7 @@ public abstract class InteractionTask implements Serializable {
     private Queue<Literal> literalsToAssert = new ArrayDeque<>();
     private Queue<Proposition> pendingPropositions = new ArrayDeque<>();
     private Queue<CommunicateAction> pendingCommunicateActions = new ArrayDeque<>();
+    private InteractionSession parent;
 
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
@@ -111,6 +113,21 @@ public abstract class InteractionTask implements Serializable {
     }
 
     /**
+     * Checks whether an utterance matched the defined patterns for this {@link InteractionTask}.
+     * IMPORTANT: This method must be strictly stateless.
+     *
+     * @param locale
+     * @param utterance
+     * @param scope     If {@link InteractionTask} is not active or is used as a {@link org.lskk.lumen.reasoner.skill.Skill}'s intent,
+     *                  use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#GLOBAL}.
+     *                  If {@link InteractionTask} is active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#ANY}.
+     * @return
+     */
+    public List<UtterancePattern> matchUtterance(Locale locale, String utterance, UtterancePattern.Scope scope) {
+        return ImmutableList.of();
+    }
+
+    /**
      * Override this to handle lifecycle state transitions.
      * @param previous
      * @param current
@@ -139,5 +156,22 @@ public abstract class InteractionTask implements Serializable {
      */
     public Queue<CommunicateAction> getPendingCommunicateActions() {
         return pendingCommunicateActions;
+    }
+
+    public InteractionSession getParent() {
+        return parent;
+    }
+
+    public void setParent(InteractionSession parent) {
+        this.parent = parent;
+    }
+
+    public String getPath() {
+        return parent.getId() + "/" + getId();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "#" + getId();
     }
 }

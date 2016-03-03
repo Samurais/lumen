@@ -6,5 +6,6 @@ package org.lskk.lumen.reasoner.intent;
 public enum SlotKind {
     LITERAL,
     REGEX,
-    THING
+    THING,
+    PRIMITIVE
 }

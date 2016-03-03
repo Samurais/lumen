@@ -1,10 +1,14 @@
 package org.lskk.lumen.reasoner.interaction;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.lskk.lumen.core.ConversationStyle;
 import org.lskk.lumen.core.IConfidence;
+import org.lskk.lumen.persistence.service.FactService;
+import org.lskk.lumen.reasoner.skill.Skill;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -36,6 +40,8 @@ public class UtterancePattern implements Serializable, IConfidence {
     private String actual;
     private Map<String, String> slotStrings = new LinkedHashMap<>();
     private Map<String, Object> slotValues = new LinkedHashMap<>();
+    private transient InteractionTask intent;
+    private transient Skill skill;
 
     /**
      * If {@code null}, this pattern matches any {@link java.util.Locale}, usually useful for {@link Scope#LOCAL}
@@ -116,6 +122,31 @@ public class UtterancePattern implements Serializable, IConfidence {
      */
     public Map<String, Object> getSlotValues() {
         return slotValues;
+    }
+
+    /**
+     * Only used by {@link InteractionSession#receiveUtterance(Locale, String, FactService, InteractionTaskRepository)}.
+     * @return
+     */
+    @JsonIgnore
+    public InteractionTask getIntent() {
+        return intent;
+    }
+
+    public void setIntent(InteractionTask intent) {
+        this.intent = intent;
+    }
+
+    /**
+     * Only used by {@link InteractionSession#receiveUtterance(Locale, String, FactService, InteractionTaskRepository)}.
+     * @return
+     */
+    public Skill getSkill() {
+        return skill;
+    }
+
+    public void setSkill(Skill skill) {
+        this.skill = skill;
     }
 
     @Override

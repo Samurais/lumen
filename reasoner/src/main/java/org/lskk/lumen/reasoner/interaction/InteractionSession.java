@@ -1,11 +1,15 @@
 package org.lskk.lumen.reasoner.interaction;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.persistence.service.FactService;
+import org.lskk.lumen.reasoner.skill.SkillRepository;
+import org.lskk.lumen.reasoner.skill.TaskRef;
 import org.lskk.lumen.reasoner.ux.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +20,8 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * Soon this will be replaced by {@link org.kie.internal.runtime.StatefulKnowledgeSession},
@@ -36,10 +42,26 @@ import java.util.*;
 @Scope("prototype")
 public class InteractionSession implements Serializable, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(InteractionSession.class);
+    /**
+     * Minimum intent confidence before a session will materialize the skill.
+     */
+    public static final float INTENT_MIN_CONFIDENCE = 0.8f;
+    /**
+     * Minimum {@link ThingLabel} confidence before a session will assert it.
+     */
+    public static final float ASSERT_LABEL_MIN_CONFIDENCE = 0.8f;
+    /**
+     * Minimum {@link Literal} confidence before a session will assert it.
+     */
+    public static final float ASSERT_LITERAL_MIN_CONFIDENCE = 0.8f;
+    private static final AtomicLong SEQ_ID = new AtomicLong(0);
 
     @Inject
     private FactService factService;
+    @Inject
+    private SkillRepository skillRepo;
 
+    private long id = SEQ_ID.incrementAndGet();
     private List<Locale> activeLocales = new ArrayList<>();
     private Locale lastLocale;
     private InteractionTask activeTask;
@@ -69,6 +91,10 @@ public class InteractionSession implements Serializable, AutoCloseable {
         return activeTask;
     }
 
+    public long getId() {
+        return id;
+    }
+
     public void activate(InteractionTask nextTask, Locale locale) {
         if (null != this.activeTask && InteractionTaskState.ACTIVE == this.activeTask.getState()) {
             log.debug("Deactivating {} for {} ...", this.activeTask, nextTask);
@@ -90,12 +116,13 @@ public class InteractionSession implements Serializable, AutoCloseable {
     /**
      * Background tasks can only match {@link UtterancePattern}
      * with scope {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#GLOBAL}.
+     * You can't modify this! Use {@link #add(InteractionTask)}.
      * FIXME: this shouldn't be "InteractionTask" behavior but a stateful DTO, i.e. TaskExec
      *
      * @return
      */
     public List<InteractionTask> getTasks() {
-        return tasks;
+        return ImmutableList.copyOf(tasks);
     }
 
     public List<Locale> getActiveLocales() {
@@ -117,7 +144,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
     protected void pollTaskActions(InteractionTask task) {
         while (!task.getLabelsToAssert().isEmpty()) {
             final ThingLabel label = task.getLabelsToAssert().poll();
-            if (label.getConfidence() >= 0.9f) {
+            if (label.getConfidence() >= ASSERT_LABEL_MIN_CONFIDENCE) {
                 log.info("Asserting {}", label);
                 factService.assertLabel(label.getThingQName(), label.getPropertyQName(),
                         label.getValue(), label.getInLanguage(),
@@ -128,7 +155,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
         }
         while (!task.getLiteralsToAssert().isEmpty()) {
             final Literal literal = task.getLiteralsToAssert().poll();
-            if (literal.getConfidence() >= 0.9f) {
+            if (literal.getConfidence() >= ASSERT_LITERAL_MIN_CONFIDENCE) {
                 log.info("Asserting {}", literal);
                 factService.assertPropertyToLiteral(literal.getSubject().getNn(), literal.getPredicate().getNn(),
                         literal.getType(), literal.getValue(),
@@ -140,17 +167,75 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     // TODO: should parameters replaced by CommunicateAction?
-    public void receiveUtterance(Locale locale, String text, FactService factService) {
+    public void receiveUtterance(Locale locale, String text, FactService factService, InteractionTaskRepository taskRepo) {
         lastLocale = locale;
         final CommunicateAction communicateAction = new CommunicateAction(locale, text, null);
+
+        // Check active task first
+        boolean handled = false;
         if (null != activeTask) {
             final InteractionTask executing = activeTask;
             log.info("Executing receiveUtterance for {}: {}", executing, communicateAction);
             executing.receiveUtterance(communicateAction, this);
             pollTaskActions(executing);
+            handled = true;
         } else {
-            log.warn("No active task to receiveUtterance for {}", communicateAction);
+            log.info("No active task to receiveUtterance for {} (will consult skills)", communicateAction);
+            handled = false;
         }
+
+        if (!handled) {
+            final List<UtterancePattern> totalMatches = skillRepo.getSkills().values().stream().flatMap(skill -> {
+                final List<UtterancePattern> skillMatches = skill.getIntents().stream().flatMap(intent -> {
+                    final List<UtterancePattern> matches = intent.matchUtterance(locale, text, UtterancePattern.Scope.GLOBAL);
+                    matches.forEach(match -> {
+                        match.setIntent(intent);
+                        match.setSkill(skill);
+                    });
+                    if (!matches.isEmpty()) {
+                        log.debug("Skill '{}' intent '{}' returned {} matches for utterance '{}'@{}",
+                                skill.getId(), intent.getId(), matches.size(), text, locale.toLanguageTag());
+                    }
+                    return matches.stream();
+                }).collect(Collectors.toList());
+                log.debug("Skill '{}' with {} intents {} returned {} matches for '{}'@{}",
+                        skill.getId(), skill.getIntents().size(), skill.getIntents().stream().map(InteractionTask::getId).toArray(), skillMatches.size(),
+                        text, locale.toLanguageTag());
+                return skillMatches.stream();
+            }).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
+            log.info("Total {} matches for '{}'@{} from {} skills:\n{}",
+                    totalMatches.size(), text, locale.toLanguageTag(), skillRepo.getSkills().size(),
+                    totalMatches.stream().limit(10)
+                            .map(m -> String.format("* %s/%s: %s", m.getSkill().getId(), m.getIntent().getId(), m))
+                            .collect(Collectors.joining("\n")));
+
+            final Optional<UtterancePattern> best = totalMatches.stream().findFirst();
+            if (best.isPresent() && best.get().getConfidence() >= INTENT_MIN_CONFIDENCE) {
+                launchSkill(best.get(), taskRepo);
+            } else if (best.isPresent()) {
+                log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
+                        best.get().getSkill().getId(), best.get().getIntent().getId());
+            }
+        }
+    }
+
+    /**
+     * Create all {@link InteractionTask}s of a {@link org.lskk.lumen.reasoner.skill.Skill} based
+     * on matched {@link UtterancePattern}.
+     * @param utterancePattern
+     */
+    protected void launchSkill(UtterancePattern utterancePattern, InteractionTaskRepository taskRepo) {
+        log.info("Launching {}/{} ...", utterancePattern.getSkill().getId(), utterancePattern.getIntent().getId());
+        InteractionTask theIntent = null;
+        for (final TaskRef taskRef : utterancePattern.getSkill().getTasks()) {
+            final PromptTask promptTask = taskRepo.createPrompt(taskRef.getId());
+            if (utterancePattern.getIntent().getId().equals(taskRef.getId())) {
+                theIntent = promptTask;
+            }
+            promptTask.setId(utterancePattern.getSkill().getId() + "." + promptTask.getId());
+            add(promptTask);
+        }
+        activate(theIntent, Locale.forLanguageTag(utterancePattern.getInLanguage()));
     }
 
     /**
@@ -214,5 +299,17 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
     public void schedule(InteractionTask task) {
         getPendingActivations().add(task);
+    }
+
+    public InteractionTask getTask(String taskId) {
+        return Preconditions.checkNotNull(tasks.stream().filter(it -> taskId.equals(it.getId())).findAny().orElse(null),
+                "Cannot find task '%s' in session %s. %s available tasks are: %s",
+                taskId, getId(), getTasks().size(), getTasks().stream().map(InteractionTask::getId).toArray());
+    }
+
+    public InteractionTask add(InteractionTask task) {
+        task.setParent(this);
+        tasks.add(task);
+        return task;
     }
 }

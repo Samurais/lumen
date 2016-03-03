@@ -270,7 +270,7 @@
     {"inLanguage": "en-US", "pattern": "I'm {age}", "style": "CASUAL"}
   ],
   "property": "lumen:hasBirthYear",
-  "expectedTypes": {
+  "outSlots": {
     "age": "xsd:integer"
   }
 }

@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.interaction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.slf4j.Logger;
@@ -88,7 +89,9 @@ public class InteractionTaskRepository {
      * @return
      */
     public AffirmationTask createAffirmation(String id) {
-        final URL res = InteractionTaskRepository.class.getResource("/org/lskk/lumen/reasoner/interaction/" + id + ".AffirmationTask.json");
+        final String url = "/org/lskk/lumen/reasoner/interaction/" + id + ".AffirmationTask.json";
+        final URL res = Preconditions.checkNotNull(InteractionTaskRepository.class.getResource(url),
+                "Affirmation '%s' not found in classpath: %s", id, url);
         try {
             final AffirmationTask task = mapper.readValue(res, AffirmationTask.class);
             task.setId(id);

@@ -15,6 +15,10 @@
     {"inLanguage": "id-ID", "pattern": "{chapter} : {verse}", "scope": "LOCAL"},
     {"inLanguage": "id-ID", "pattern": "Surat {chapter} : {verse}", "scope": "LOCAL"},
     
+    {"inLanguage": "id-ID", "pattern": "Baca Quran"},
+    {"inLanguage": "id-ID", "pattern": "Baca Al-Quran"},
+    {"inLanguage": "id-ID", "pattern": "Baca AlQuran"},
+
     {"inLanguage": "id-ID", "pattern": "Baca {chapter} ayat {verse}"},
     {"inLanguage": "id-ID", "pattern": "Baca {chapter}:{verse}"},
     {"inLanguage": "id-ID", "pattern": "Baca {chapter} : {verse}"},
@@ -59,6 +63,11 @@
     {"inLanguage": "en-US", "pattern": "{chapter} : {verse}", "scope": "LOCAL"},
     {"inLanguage": "en-US", "pattern": "Chapter {chapter} : {verse}", "scope": "LOCAL"},
     
+    {"inLanguage": "en-US", "pattern": "Read Quran"},
+    {"inLanguage": "en-US", "pattern": "Read Al-Quran"},
+    {"inLanguage": "en-US", "pattern": "Read AlQuran"},
+    {"inLanguage": "en-US", "pattern": "Read Koran"},
+
     {"inLanguage": "en-US", "pattern": "Read {chapter} verse {verse}"},
     {"inLanguage": "en-US", "pattern": "Read {chapter}:{verse}"},
     {"inLanguage": "en-US", "pattern": "Read {chapter} : {verse}"},
@@ -102,8 +111,7 @@
     {"inLanguage": "en-US", "pattern": "Read QS. chapter {chapter}:{verse}"},
     {"inLanguage": "en-US", "pattern": "Read QS. chapter {chapter} : {verse}"}
   ],
-  "property": "yago:wasBornOnDate",
-  "expectedTypes": {
+  "outSlots": {
     "chapter": "xsd:string",
     "verse": "xsd:integer"
   }

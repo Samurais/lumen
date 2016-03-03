@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.interaction;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomUtils;
 import org.lskk.lumen.core.CommunicateAction;
 
@@ -30,6 +31,9 @@ public class AffirmationTask extends InteractionTask {
             final List<UtterancePattern> localizedExpressions = expressions.stream()
                     .filter(it -> null == it.getInLanguage() || locale.equals(Locale.forLanguageTag(it.getInLanguage())))
                     .collect(Collectors.toList());
+            Preconditions.checkState(!localizedExpressions.isEmpty(),
+                    "Cannot get %s expression for affirmation '%s' from %s expressions: %s",
+                    locale.toLanguageTag(), getPath(), expressions.size(), expressions);
             final UtterancePattern expression = localizedExpressions.get(RandomUtils.nextInt(0, localizedExpressions.size()));
             getPendingCommunicateActions().add(new CommunicateAction(locale, expression.getPattern(), null));
         }

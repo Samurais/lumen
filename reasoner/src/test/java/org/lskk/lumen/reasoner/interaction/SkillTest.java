@@ -7,6 +7,7 @@ import org.lskk.lumen.core.LumenCoreConfig;
 import org.lskk.lumen.core.LumenLocale;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
+import org.lskk.lumen.reasoner.skill.Skill;
 import org.lskk.lumen.reasoner.skill.SkillRepository;
 import org.lskk.lumen.reasoner.ux.Channel;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,23 +26,24 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Locale;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 /**
- * uses Mockito: http://www.baeldung.com/injecting-mocks-in-spring
  * Created by ceefour on 18/02/2016.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration(classes = JavaScriptIntentTest.IntentConfig.class)
-@SpringApplicationConfiguration(InteractionSessionTest.Config.class)
-@ActiveProfiles("InteractionSessionTest")
-public class InteractionSessionTest {
+@SpringApplicationConfiguration(SkillTest.Config.class)
+@ActiveProfiles("SkillTest")
+public class SkillTest {
 
-    @Profile("InteractionSessionTest")
-    @SpringBootApplication(scanBasePackageClasses = {PromptTask.class, WordNetConfig.class, SkillRepository.class},
-            exclude = {HibernateJpaAutoConfiguration.class, DataSourceAutoConfiguration.class, JmxAutoConfiguration.class, CamelAutoConfiguration.class, GroovyTemplateAutoConfiguration.class})
+    @Profile("SkillTest")
+    @SpringBootApplication(scanBasePackageClasses = {SkillRepository.class, InteractionTaskRepository.class, WordNetConfig.class},
+        exclude = {HibernateJpaAutoConfiguration.class, DataSourceAutoConfiguration.class, JmxAutoConfiguration.class, CamelAutoConfiguration.class, GroovyTemplateAutoConfiguration.class})
     @Import({LumenCoreConfig.class})
 //    @Configuration
 //    @ComponentScan(basePackageClasses = {IntentExecutor.class, ThingRepository.class, YagoTypeRepository.class, FactServiceImpl.class})
@@ -61,6 +63,8 @@ public class InteractionSessionTest {
     }
 
     @Inject
+    private SkillRepository skillRepo;
+    @Inject
     private InteractionTaskRepository taskRepo;
     @Inject
     private Channel<Void> mockChannel;
@@ -70,27 +74,35 @@ public class InteractionSessionTest {
     private Provider<InteractionSession> sessionProvider;
 
     @Test
-    public void askNameThenAssert() {
+    public void skillsLoaded() {
+        assertThat(skillRepo.getSkills().values(), hasSize(greaterThanOrEqualTo(1)));
+        skillRepo.resolveIntents(taskRepo);
+    }
+
+    @Test
+    public void quranSkill() {
+        final Skill quranSkill = skillRepo.get("quran");
+        assertThat(quranSkill.getId(), equalTo("quran"));
+        assertThat(quranSkill.getTasks(), hasSize(greaterThanOrEqualTo(1)));
+        assertThat(quranSkill.getIntents(), hasSize(1));
+    }
+
+    @Test
+    public void quranInteraction() {
         reset(factService, mockChannel);
         try (final InteractionSession session = sessionProvider.get()) {
             session.getActiveLocales().add(LumenLocale.INDONESIAN);
             session.getActiveLocales().add(Locale.US);
             session.open();
 
-            final PromptTask promptName = taskRepo.createPrompt("promptName");
-            final AffirmationTask affirmationTask = taskRepo.createAffirmation("affirmSimple");
-            session.add(affirmationTask);
-            promptName.setAffirmationTask(affirmationTask);
-            session.add(promptName);
-
-            session.activate(promptName, LumenLocale.INDONESIAN);
+            session.receiveUtterance(LumenLocale.INDONESIAN, "baca Quran", factService, taskRepo);
             session.update(mockChannel);
+            assertThat(session.getTask("quran.promptQuranChapterVerse").getState(), equalTo(InteractionTaskState.ACTIVE));
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo);
-            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
-            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
-
+            session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo);
             session.update(mockChannel);
+            assertThat(session.getTask("quran.promptQuranChapterVerse").getState(), equalTo(InteractionTaskState.COMPLETED));
+
             verify(mockChannel, times(2)).express(any(), any(), any());
         }
     }

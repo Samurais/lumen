@@ -3,6 +3,8 @@ package org.lskk.lumen.reasoner.interaction;
 import org.lskk.lumen.core.ConversationStyle;
 
 import java.io.Serializable;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Created by ceefour on 24/02/2016.
@@ -13,6 +15,7 @@ public class QuestionTemplate implements Serializable {
     private String inLanguage;
     private String object;
     private ConversationStyle style;
+    private Set<String> dependencies = new LinkedHashSet<>();
 
     public String getInLanguage() {
         return inLanguage;
@@ -44,5 +47,19 @@ public class QuestionTemplate implements Serializable {
 
     public void setStyle(ConversationStyle style) {
         this.style = style;
+    }
+
+    /**
+     * Slot values that need to be provided before this question template can be chosen.
+     * e.g.
+     *
+     * <pre>
+     * {"inLanguage": "id-ID", "object": "Al-Quran surat {chapter} ayat berapa?", "style": "FORMAL", "dependencies": ["chapter"]}
+     * </pre>
+     *
+     * @return
+     */
+    public Set<String> getDependencies() {
+        return dependencies;
     }
 }

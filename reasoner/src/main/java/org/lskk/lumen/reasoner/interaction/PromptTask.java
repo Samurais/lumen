@@ -57,7 +57,7 @@ public class PromptTask extends InteractionTask {
     private List<QuestionTemplate> askSsmls = new ArrayList<>();
     private List<UtterancePattern> utterancePatterns = new ArrayList<>();
     private String property;
-    private Map<String, String> expectedTypes;
+    private Map<String, String> outSlots;
     private String unit;
     private AffirmationTask affirmationTask;
 
@@ -113,7 +113,7 @@ public class PromptTask extends InteractionTask {
      * <p>Example:</p>
      *
      * <pre>
-     * "expectedTypes": {
+     * "outSlots": {
      *   "chapter": "xsd:string",
      *   "verse": "xsd:integer"
      * }
@@ -121,8 +121,8 @@ public class PromptTask extends InteractionTask {
      *
      * @return
      */
-    public Map<String, String> getExpectedTypes() {
-        return expectedTypes;
+    public Map<String, String> getOutSlots() {
+        return outSlots;
     }
 
     /**
@@ -194,6 +194,7 @@ public class PromptTask extends InteractionTask {
      *                  If PromptTask is active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#ANY}.
      * @return
      */
+    @Override
     public List<UtterancePattern> matchUtterance(Locale locale, String utterance, UtterancePattern.Scope scope) {
         final Pattern PLACEHOLDER_PATTERN = Pattern.compile("[{](?<slot>[a-z0-9_]+)[}]", Pattern.CASE_INSENSITIVE);
         final List<UtterancePattern> matches = utterancePatterns.stream()
@@ -216,11 +217,11 @@ public class PromptTask extends InteractionTask {
                             final String slot = placeholderMatcher.group("slot");
                             slots.add(slot);
 
-                            Preconditions.checkNotNull(expectedTypes.containsKey(slot),
-                                    "Utterance \"%s\" uses slot \"%s\" but not declared in expectedTypes. Declared expectedTypes are: %s",
-                                    it.getPattern(), slot, expectedTypes.keySet());
+                            Preconditions.checkNotNull(outSlots.containsKey(slot),
+                                    "Utterance \"%s\" uses slot \"%s\" but not declared in outSlots. Declared outSlots are: %s",
+                                    it.getPattern(), slot, outSlots.keySet());
                             final String slotStringPattern;
-                            switch (expectedTypes.get(slot)) {
+                            switch (outSlots.get(slot)) {
                                 case "xsd:string":
                                     slotStringPattern = ".+";
                                     break;
@@ -238,7 +239,7 @@ public class PromptTask extends InteractionTask {
                                     slotStringPattern = "[a-z '-]+";
                                     break;
                                 default:
-                                    throw new ReasonerException("Slot '" + slot + "' uses unsupported type: " + expectedTypes);
+                                    throw new ReasonerException("Slot '" + slot + "' uses unsupported type: " + outSlots);
                             }
 
                             real += "(?<" + slot + ">" + slotStringPattern + ")";
@@ -274,7 +275,7 @@ public class PromptTask extends InteractionTask {
                         for (final String slot : slots) {
                             final String slotString = realMatcher.group(slot);
                             matched.getSlotStrings().put(slot, slotString);
-                            switch (expectedTypes.get(slot)) {
+                            switch (outSlots.get(slot)) {
                                 case "xsd:string":
                                     break;
                                 case "xsd:integer":
@@ -284,12 +285,12 @@ public class PromptTask extends InteractionTask {
                                 case "yago:wordnet_sex_105006898":
                                 case "yago:wordnet_religion_105946687":
                                     if (!isValidStringValue(matched.getInLanguage(), slotString, matched.getStyle())) {
-                                        log.debug("Regex matched {} but no enum of {} has this label", matched, expectedTypes);
+                                        log.debug("Regex matched {} but no enum of {} has this label", matched, outSlots);
                                         allValid = false;
                                     }
                                     break;
                                 default:
-                                    throw new ReasonerException("Unsupported type: " + expectedTypes);
+                                    throw new ReasonerException("Unsupported type: " + outSlots);
                             }
                         }
                         if (allValid) {
@@ -298,7 +299,7 @@ public class PromptTask extends InteractionTask {
                                 final String slotString = realMatcher.group(slot);
                                 matched.getSlotStrings().put(slot, slotString);
                                 // convert to target value
-                                matched.getSlotValues().put(slot, toTargetValue(expectedTypes.get(slot), matched.getInLanguage(), slotString, matched.getStyle()));
+                                matched.getSlotValues().put(slot, toTargetValue(outSlots.get(slot), matched.getInLanguage(), slotString, matched.getStyle()));
                             }
                             log.debug("Matched {} multipliers: language={} scope={} plainPart={}({})", matched,
                                     languageMultiplier, scopeMultiplier, plainPartMultiplier, plainPartLength);
@@ -357,7 +358,7 @@ public class PromptTask extends InteractionTask {
                 final LocalDate localDate = DateTimeFormat.longDate().withLocale(Locale.forLanguageTag(inLanguage)).parseLocalDate(value);
                 return localDate;
             default:
-                throw new ReasonerException("Unsupported type: " + expectedTypes);
+                throw new ReasonerException("Unsupported type: " + outSlots);
         }
     }
 
