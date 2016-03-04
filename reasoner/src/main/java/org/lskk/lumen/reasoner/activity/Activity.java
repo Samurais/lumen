@@ -2,12 +2,10 @@ package org.lskk.lumen.reasoner.activity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
-import org.joda.time.DateTime;
 import org.lskk.lumen.core.CommunicateAction;
-import org.lskk.lumen.persistence.neo4j.Literal;
-import org.lskk.lumen.persistence.neo4j.ThingLabel;
-import org.lskk.lumen.reasoner.expression.Proposition;
 import org.lskk.lumen.reasoner.intent.Slot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
@@ -30,11 +28,14 @@ import java.util.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Activity implements Serializable {
 
+    protected final Logger log = LoggerFactory.getLogger(getClass());
+
     private String id;
     private String description;
     private ActivityState state = ActivityState.PENDING;
     private InteractionSession parent;
     private Boolean enabled;
+    private List<Slot> inSlots = new ArrayList<>();
 
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
@@ -107,7 +108,7 @@ public abstract class Activity implements Serializable {
      * @param locale Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
      * @param session
      */
-    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) {
+    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
 
     }
 
@@ -143,5 +144,9 @@ public abstract class Activity implements Serializable {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "#" + getId();
+    }
+
+    public List<Slot> getInSlots() {
+        return inSlots;
     }
 }

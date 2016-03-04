@@ -21,7 +21,6 @@ public abstract class Task extends Activity {
     private Queue<Literal> literalsToAssert = new ArrayDeque<>();
     private Queue<Proposition> pendingPropositions = new ArrayDeque<>();
     private Queue<CommunicateAction> pendingCommunicateActions = new ArrayDeque<>();
-    private List<Slot> inSlots = new ArrayList<>();
 
     /**
      * Used by {@link PromptTask}.
@@ -69,7 +68,4 @@ public abstract class Task extends Activity {
         return pendingCommunicateActions;
     }
 
-    public List<Slot> getInSlots() {
-        return inSlots;
-    }
 }

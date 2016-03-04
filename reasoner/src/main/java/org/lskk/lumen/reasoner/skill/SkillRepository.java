@@ -35,10 +35,9 @@ public class SkillRepository {
 
     @PostConstruct
     public void init() throws IOException {
-        // PromptTasks
-        final Resource[] promptResources = new PathMatchingResourcePatternResolver(SkillRepository.class.getClassLoader())
+        final Resource[] skillResources = new PathMatchingResourcePatternResolver(SkillRepository.class.getClassLoader())
                 .getResources("classpath*:org/lskk/lumen/reasoner/skill/*.Skill.json");
-        for (final Resource res : promptResources) {
+        for (final Resource res : skillResources) {
             final String id = StringUtils.substringBefore(res.getFilename(), ".");
             log.debug("Loading '{}' from {} ...", id, res);
             final Skill skill = mapper.readValue(res.getURL(), Skill.class);

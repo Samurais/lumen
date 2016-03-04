@@ -1,0 +1,11 @@
+{
+  "name": "Convert Unit",
+  "description": "Actual script for unitConversion skill.",
+  "inSlots": [
+    {"id": "measure", "thingTypes": ["yago:yagoQuantity"], "required": true},
+    {"id": "unit", "thingTypes": ["yago:wordnet_unit_of_measurement_113583724"], "required": true}
+  ],
+  "outSlots": [
+    {"id": "converted", "thingTypes": ["yago:yagoQuantity"]}
+  ]
+}

@@ -26,7 +26,7 @@ public class AffirmationTask extends Task {
     }
 
     @Override
-    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) {
+    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
         if (ActivityState.PENDING == previous && ActivityState.ACTIVE == current) {
             final List<UtterancePattern> localizedExpressions = expressions.stream()
                     .filter(it -> null == it.getInLanguage() || locale.equals(Locale.forLanguageTag(it.getInLanguage())))

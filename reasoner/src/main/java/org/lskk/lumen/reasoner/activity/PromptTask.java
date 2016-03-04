@@ -375,7 +375,7 @@ public class PromptTask extends Task {
     }
 
     @Override
-    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) {
+    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
         super.onStateChanged(previous, current, locale, session);
         if (ActivityState.ACTIVE == current) {
             // if we don't yet have the info, express the question

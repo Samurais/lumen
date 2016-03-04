@@ -23,7 +23,6 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Soon this will be replaced by {@link org.kie.internal.runtime.StatefulKnowledgeSession},
@@ -102,7 +101,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
             log.debug("Deactivating {} for {} ...", this.activeTask, nextTask);
             final ActivityState previous = this.activeTask.getState();
             this.activeTask.setState(ActivityState.PENDING);
-            this.activeTask.onStateChanged(previous, this.activeTask.getState(), locale, this);
+            try {
+                this.activeTask.onStateChanged(previous, this.activeTask.getState(), locale, this);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             pollTaskActions(this.activeTask);
         }
         this.activeTask = nextTask;
@@ -110,7 +113,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
             final ActivityState previous = this.activeTask.getState();
             log.debug("Activating from {}: {} ...", previous, nextTask);
             this.activeTask.setState(ActivityState.ACTIVE);
-            this.activeTask.onStateChanged(previous, this.activeTask.getState(), locale, this);
+            try {
+                this.activeTask.onStateChanged(previous, this.activeTask.getState(), locale, this);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             pollTaskActions(this.activeTask);
         }
     }
@@ -300,7 +307,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
         if (activity == this.activeTask) {
             this.activeTask = null;
         }
-        activity.onStateChanged(previous, activity.getState(), locale, this);
+        try {
+            activity.onStateChanged(previous, activity.getState(), locale, this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if (activity instanceof Task) {
             pollTaskActions((Task) activity);
         }

@@ -20,9 +20,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * We provide minimum syntax sugar, to ensure maximum portability and similar APIs between JavaScript, MVEL/DRL, and
- * ClojureScript intent behaviors.
+ * We try not to provide any syntax sugar, to ensure maximum portability and similar APIs between JavaScript, MVEL/DRL,
+ * ClojureScript, and Scala intent behaviors.
  * Created by ceefour on 17/02/2016.
+ * @see org.lskk.lumen.reasoner.activity.Script
  */
 public class JavaScriptIntentBehavior extends IntentBehavior {
 
