@@ -2,7 +2,6 @@ package org.lskk.lumen.reasoner.activity;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
@@ -42,7 +41,11 @@ import java.util.stream.Collectors;
 })
 public class PromptTask extends Task {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    /**
+     * Minimum matched {@link UtterancePattern#getConfidence()} before the captured value
+     * will be accepted to complete the {@link PromptTask} and {@link Slot#send(Object)} a packet to the out-slot.
+     */
+    public static final float COMPLETE_MIN_CONFIDENCE = 0.8f;
 
     protected static final TokenizerME TOKENIZER_ENGLISH;
 
@@ -150,9 +153,9 @@ public class PromptTask extends Task {
     }
 
     @Override
-    public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session) {
+    public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session, Task focusedTask) {
         final List<UtterancePattern> matchedUtterancePatterns = matchUtterance(communicateAction.getInLanguage(), communicateAction.getObject(),
-                isActive() ? UtterancePattern.Scope.ANY : UtterancePattern.Scope.GLOBAL);
+                focusedTask == this ? UtterancePattern.Scope.ANY : UtterancePattern.Scope.GLOBAL);
         getMatchedUtterancePatterns().clear();
         getMatchedUtterancePatterns().addAll(matchedUtterancePatterns);
         // add to queue
@@ -162,7 +165,14 @@ public class PromptTask extends Task {
         getLiteralsToAssert().addAll(literalsToAssert);
         final Locale realLocale = Optional.ofNullable(communicateAction.getInLanguage()).orElse(session.getLastLocale());
 
-        session.complete(this, realLocale);
+        final Optional<UtterancePattern> best = matchedUtterancePatterns.stream().filter(it -> it.getConfidence() >= COMPLETE_MIN_CONFIDENCE)
+                .sorted(new IConfidence.Comparator()).findFirst();
+        if (best.isPresent()) {
+            log.info("{} '{}' will be completed with confidence {} and sending out-slots {}",
+                    getClass().getSimpleName(), getPath(), best.get().getConfidence(), best.get().getSlotValues());
+            best.get().getSlotValues().forEach((slotId, value) -> getOutSlot(slotId).send(value));
+            session.complete(this, realLocale);
+        }
     }
 
     /**

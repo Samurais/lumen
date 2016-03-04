@@ -97,11 +97,11 @@ public class SkillTest {
 
             session.receiveUtterance(LumenLocale.INDONESIAN, "baca Quran", factService, taskRepo);
             session.update(mockChannel);
-            assertThat(session.getTask("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.ACTIVE));
+            assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.ACTIVE));
 
             session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo);
             session.update(mockChannel);
-            assertThat(session.getTask("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
+            assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
 
             verify(mockChannel, times(2)).express(any(), any(), any());
         }

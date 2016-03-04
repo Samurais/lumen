@@ -8,6 +8,7 @@ import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.persistence.service.FactService;
+import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.skill.Skill;
 import org.lskk.lumen.reasoner.skill.SkillRepository;
 import org.lskk.lumen.reasoner.skill.TaskRef;
@@ -22,6 +23,7 @@ import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -65,9 +67,9 @@ public class InteractionSession implements Serializable, AutoCloseable {
     private long id = SEQ_ID.incrementAndGet();
     private List<Locale> activeLocales = new ArrayList<>();
     private Locale lastLocale;
-    private Task activeTask;
-    private List<Task> tasks = new ArrayList<>();
-    private Queue<Task> pendingActivations = new ArrayDeque<>();
+    private Task focusedTask;
+    private List<Activity> activities = new ArrayList<>();
+    private Queue<Activity> pendingActivations = new ArrayDeque<>();
 
     public void open() {
         Preconditions.checkState(!activeLocales.isEmpty(),
@@ -88,50 +90,56 @@ public class InteractionSession implements Serializable, AutoCloseable {
      *
      * @return
      */
-    public Task getActiveTask() {
-        return activeTask;
+    public Task getFocusedTask() {
+        return focusedTask;
     }
 
     public long getId() {
         return id;
     }
 
-    public void activate(Task nextTask, Locale locale) {
-        if (null != this.activeTask && ActivityState.ACTIVE == this.activeTask.getState()) {
-            log.debug("Deactivating {} for {} ...", this.activeTask, nextTask);
-            final ActivityState previous = this.activeTask.getState();
-            this.activeTask.setState(ActivityState.PENDING);
-            try {
-                this.activeTask.onStateChanged(previous, this.activeTask.getState(), locale, this);
-            } catch (Exception e) {
-                e.printStackTrace();
+    public void activate(Activity activity, Locale locale) {
+        Preconditions.checkNotNull(activity, "activity parameter must be provided");
+        Preconditions.checkState(activity.isReady(), "Activity '%s' cannot be activated because it is not ready", activity.getPath());
+
+        if (activity instanceof Task) {
+            if (null != this.focusedTask && ActivityState.ACTIVE == this.focusedTask.getState()) {
+                log.debug("Deactivating {} for {} ...", this.focusedTask, activity);
+                final ActivityState previous = this.focusedTask.getState();
+                this.focusedTask.setState(ActivityState.PENDING);
+                try {
+                    this.focusedTask.onStateChanged(previous, this.focusedTask.getState(), locale, this);
+                } catch (Exception e) {
+                    throw new ReasonerException(e, "Error while deactivating %s", activity);
+                }
+                pollActions(locale);
             }
-            pollTaskActions(this.activeTask);
         }
-        this.activeTask = nextTask;
-        if (null != this.activeTask && ActivityState.PENDING == this.activeTask.getState()) {
-            final ActivityState previous = this.activeTask.getState();
-            log.debug("Activating from {}: {} ...", previous, nextTask);
-            this.activeTask.setState(ActivityState.ACTIVE);
+
+        if (ActivityState.PENDING == activity.getState()) {
+            final ActivityState previous = activity.getState();
+            log.debug("Activating from {}: {} ...", previous, activity);
+            activity.setState(ActivityState.ACTIVE);
             try {
-                this.activeTask.onStateChanged(previous, this.activeTask.getState(), locale, this);
+                activity.onStateChanged(previous, activity.getState(), locale, this);
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new ReasonerException(e, "Error while activating %s", activity);
             }
-            pollTaskActions(this.activeTask);
+
+            pollActions(locale);
         }
     }
 
     /**
-     * Background tasks can only match {@link UtterancePattern}
+     * Background activities can only match {@link UtterancePattern}
      * with scope {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#GLOBAL}.
      * You can't modify this! Use {@link #add(Activity)}.
      * FIXME: this shouldn't be "InteractionTask" behavior but a stateful DTO, i.e. TaskExec
      *
      * @return
      */
-    public List<Activity> getTasks() {
-        return ImmutableList.copyOf(tasks);
+    public List<Activity> getActivities() {
+        return ImmutableList.copyOf(activities);
     }
 
     public List<Locale> getActiveLocales() {
@@ -139,7 +147,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     /**
-     * If the task (usually {@link #getActiveTask()} has pending actions, poll them:
+     * If the task (usually {@link #getFocusedTask()} has pending actions, poll them:
      * <p>
      * <ol>
      * <li>{@link Task#getLabelsToAssert()}</li>
@@ -148,31 +156,40 @@ public class InteractionSession implements Serializable, AutoCloseable {
      * <li>{@link Task#getPendingPropositions()}</li>
      * </ol>
      *
-     * @param task
+     * @param locale
+     * @see #update(Channel)
      */
-    protected void pollTaskActions(Task task) {
-        while (!task.getLabelsToAssert().isEmpty()) {
-            final ThingLabel label = task.getLabelsToAssert().poll();
-            if (label.getConfidence() >= ASSERT_LABEL_MIN_CONFIDENCE) {
-                log.info("Asserting {}", label);
-                factService.assertLabel(label.getThingQName(), label.getPropertyQName(),
-                        label.getValue(), label.getInLanguage(),
-                        new float[]{1f, label.getConfidence(), 0}, new DateTime(), null);
-            } else {
-                log.info("Skipped low confidence {}", label);
+    protected void pollActions(Locale locale) {
+        activities.forEach(activity -> {
+            activity.pollActions(this, locale);
+
+            if (activity instanceof Task) {
+                // TODO: replace with SyncLiteralTask/SyncLabelTask/SyncStatementTask
+                final Task task = (Task) activity;
+                while (!task.getLabelsToAssert().isEmpty()) {
+                    final ThingLabel label = task.getLabelsToAssert().poll();
+                    if (label.getConfidence() >= ASSERT_LABEL_MIN_CONFIDENCE) {
+                        log.info("Asserting {}", label);
+                        factService.assertLabel(label.getThingQName(), label.getPropertyQName(),
+                                label.getValue(), label.getInLanguage(),
+                                new float[]{1f, label.getConfidence(), 0}, new DateTime(), null);
+                    } else {
+                        log.info("Skipped low confidence {}", label);
+                    }
+                }
+                while (!task.getLiteralsToAssert().isEmpty()) {
+                    final Literal literal = task.getLiteralsToAssert().poll();
+                    if (literal.getConfidence() >= ASSERT_LITERAL_MIN_CONFIDENCE) {
+                        log.info("Asserting {}", literal);
+                        factService.assertPropertyToLiteral(literal.getSubject().getNn(), literal.getPredicate().getNn(),
+                                literal.getType(), literal.getValue(),
+                                new float[]{1f, literal.getConfidence(), 0}, new DateTime(), null);
+                    } else {
+                        log.info("Skipped low confidence {}", literal);
+                    }
+                }
             }
-        }
-        while (!task.getLiteralsToAssert().isEmpty()) {
-            final Literal literal = task.getLiteralsToAssert().poll();
-            if (literal.getConfidence() >= ASSERT_LITERAL_MIN_CONFIDENCE) {
-                log.info("Asserting {}", literal);
-                factService.assertPropertyToLiteral(literal.getSubject().getNn(), literal.getPredicate().getNn(),
-                        literal.getType(), literal.getValue(),
-                        new float[]{1f, literal.getConfidence(), 0}, new DateTime(), null);
-            } else {
-                log.info("Skipped low confidence {}", literal);
-            }
-        }
+        });
     }
 
     // TODO: should parameters replaced by CommunicateAction?
@@ -180,53 +197,46 @@ public class InteractionSession implements Serializable, AutoCloseable {
         lastLocale = locale;
         final CommunicateAction communicateAction = new CommunicateAction(locale, text, null);
 
-        // Check active task first
-        boolean handled = false;
-        if (null != activeTask) {
-            final Task executing = activeTask;
-            log.info("Executing receiveUtterance for {}: {}", executing, communicateAction);
-            executing.receiveUtterance(communicateAction, this);
-            pollTaskActions(executing);
-            handled = true;
-        } else {
-            log.info("No active task to receiveUtterance for {} (will consult skills)", communicateAction);
-            handled = false;
-        }
+        // Check child activities first
+        activities.stream().filter(it -> ActivityState.ACTIVE == it.getState()).forEach(activity -> {
+            log.trace("Executing receiveUtterance for '{}': {}", activity.getPath(), communicateAction);
+            activity.receiveUtterance(communicateAction, this, focusedTask);
+        });
+        pollActions(locale);
 
-        if (!handled) {
-            final List<Skill> enabledSkills = skillRepo.getSkills().values().stream()
-                    .filter(Skill::getEnabled).collect(Collectors.toList());
-            final List<UtterancePattern> totalMatches = enabledSkills.stream().flatMap(skill -> {
-                final List<UtterancePattern> skillMatches = skill.getIntents().stream().flatMap(intent -> {
-                    final List<UtterancePattern> matches = intent.matchUtterance(locale, text, UtterancePattern.Scope.GLOBAL);
-                    matches.forEach(match -> {
-                        match.setIntent(intent);
-                        match.setSkill(skill);
-                    });
-                    if (!matches.isEmpty()) {
-                        log.debug("Skill '{}' intent '{}' returned {} matches for utterance '{}'@{}",
-                                skill.getId(), intent.getId(), matches.size(), text, locale.toLanguageTag());
-                    }
-                    return matches.stream();
-                }).collect(Collectors.toList());
-                log.debug("Skill '{}' with {} intents {} returned {} matches for '{}'@{}",
-                        skill.getId(), skill.getIntents().size(), skill.getIntents().stream().map(Activity::getId).toArray(), skillMatches.size(),
-                        text, locale.toLanguageTag());
-                return skillMatches.stream();
-            }).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
-            log.info("Total {} matches for '{}'@{} from {} enabled skills:\n{}",
-                    totalMatches.size(), text, locale.toLanguageTag(), enabledSkills.size(),
-                    totalMatches.stream().limit(10)
-                            .map(m -> String.format("* %s/%s: %s", m.getSkill().getId(), m.getIntent().getId(), m))
-                            .collect(Collectors.joining("\n")));
+        // consult daemon skills
+        final List<Skill> enabledSkills = skillRepo.getSkills().values().stream()
+                .filter(Skill::getEnabled).collect(Collectors.toList());
+        final List<UtterancePattern> totalMatches = enabledSkills.stream().flatMap(skill -> {
+            final List<UtterancePattern> skillMatches = skill.getIntents().stream().flatMap(intent -> {
+                final List<UtterancePattern> matches = intent.matchUtterance(locale, text, UtterancePattern.Scope.GLOBAL);
+                matches.forEach(match -> {
+                    match.setIntent(intent);
+                    match.setSkill(skill);
+                });
+                if (!matches.isEmpty()) {
+                    log.debug("Skill '{}' intent '{}' returned {} matches for utterance '{}'@{}",
+                            skill.getId(), intent.getId(), matches.size(), text, locale.toLanguageTag());
+                }
+                return matches.stream();
+            }).collect(Collectors.toList());
+            log.debug("Skill '{}' with {} intents {} returned {} matches for '{}'@{}",
+                    skill.getId(), skill.getIntents().size(), skill.getIntents().stream().map(Activity::getId).toArray(), skillMatches.size(),
+                    text, locale.toLanguageTag());
+            return skillMatches.stream();
+        }).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
+        log.info("Total {} matches for '{}'@{} from {} enabled skills:\n{}",
+                totalMatches.size(), text, locale.toLanguageTag(), enabledSkills.size(),
+                totalMatches.stream().limit(10)
+                        .map(m -> String.format("* %s/%s: %s", m.getSkill().getId(), m.getIntent().getId(), m))
+                        .collect(Collectors.joining("\n")));
 
-            final Optional<UtterancePattern> best = totalMatches.stream().findFirst();
-            if (best.isPresent() && best.get().getConfidence() >= INTENT_MIN_CONFIDENCE) {
-                launchSkill(best.get(), taskRepo);
-            } else if (best.isPresent()) {
-                log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
-                        best.get().getSkill().getId(), best.get().getIntent().getId());
-            }
+        final Optional<UtterancePattern> best = totalMatches.stream().findFirst();
+        if (best.isPresent() && best.get().getConfidence() >= INTENT_MIN_CONFIDENCE) {
+            launchSkill(best.get(), taskRepo);
+        } else if (best.isPresent()) {
+            log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
+                    best.get().getSkill().getId(), best.get().getIntent().getId());
         }
     }
 
@@ -257,19 +267,35 @@ public class InteractionSession implements Serializable, AutoCloseable {
      * @param avatarId
      */
     protected void expressAll(Channel<?> channel, String avatarId) {
-        for (final Task task : tasks) {
-            while (true) {
-                final CommunicateAction pendingCommunicateAction = task.getPendingCommunicateActions().poll();
-                if (null == pendingCommunicateAction) {
-                    break;
+        visitFirst(activity -> {
+            log.trace("expressAll() visiting activity '{}'", activity.getPath());
+            if (activity instanceof Task) {
+                final Task task = (Task) activity;
+                while (true) {
+                    final CommunicateAction pendingCommunicateAction = task.getPendingCommunicateActions().poll();
+                    if (null == pendingCommunicateAction) {
+                        break;
+                    }
+                    channel.express(avatarId, pendingCommunicateAction, null);
                 }
-                channel.express(avatarId, pendingCommunicateAction, null);
             }
-        }
+            return null;
+        });
     }
 
     /**
-     * Call this to fire pending scheduled tasks.
+     * Visits all enabled descendants and return first non-null value.
+     * @param visitor
+     * @param <R>
+     * @return
+     */
+    public <R> R visitFirst(Function<Activity, R> visitor) {
+        return activities.stream().filter(Activity::getEnabled).map(it -> it.visitFirst(visitor))
+                .filter(Objects::nonNull).findFirst().orElse(null);
+    }
+
+    /**
+     * Call this to fire pending scheduled activities.
      *
      * @param channel
      */
@@ -277,9 +303,9 @@ public class InteractionSession implements Serializable, AutoCloseable {
         final String avatarId = null;
         expressAll(channel, avatarId); // pre-activation express
 
-        final Task nextTask = pendingActivations.poll();
-        if (null != nextTask) {
-            activate(nextTask, getLastLocale());
+        final Activity nextActivity = pendingActivations.poll();
+        if (null != nextActivity) {
+            activate(nextActivity, getLastLocale());
         }
 
         expressAll(channel, avatarId); // post-activation express
@@ -289,7 +315,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
         return lastLocale;
     }
 
-    public Queue<Task> getPendingActivations() {
+    public Queue<Activity> getPendingActivations() {
         return pendingActivations;
     }
 
@@ -304,8 +330,8 @@ public class InteractionSession implements Serializable, AutoCloseable {
         log.debug("Completing from {}: {} ...", activity.getState(), activity);
         final ActivityState previous = activity.getState();
         activity.setState(ActivityState.COMPLETED);
-        if (activity == this.activeTask) {
-            this.activeTask = null;
+        if (activity == this.focusedTask) {
+            this.focusedTask = null;
         }
         try {
             activity.onStateChanged(previous, activity.getState(), locale, this);
@@ -313,25 +339,23 @@ public class InteractionSession implements Serializable, AutoCloseable {
             e.printStackTrace();
         }
         if (activity instanceof Task) {
-            pollTaskActions((Task) activity);
+            pollActions(locale);
         }
     }
 
-    public void schedule(Task task) {
-        getPendingActivations().add(task);
+    public void schedule(Activity activity) {
+        getPendingActivations().add(activity);
     }
 
-    public Task getTask(String taskId) {
-        return Preconditions.checkNotNull(tasks.stream().filter(it -> taskId.equals(it.getId())).findAny().orElse(null),
-                "Cannot find task '%s' in session %s. %s available tasks are: %s",
-                taskId, getId(), getTasks().size(), getTasks().stream().map(Activity::getId).toArray());
+    public Activity get(String path) {
+        return Preconditions.checkNotNull(activities.stream().filter(it -> path.equals(it.getId())).findAny().orElse(null),
+                "Cannot find task '%s' in session %s. %s available activities are: %s",
+                path, getId(), getActivities().size(), getActivities().stream().map(Activity::getId).toArray());
     }
 
     public Activity add(Activity activity) {
-        activity.setParent(this);
-        if (activity instanceof Task) {
-            tasks.add((Task) activity);
-        }
+        //activity.setParent(this);
+        activities.add(activity);
         return activity;
     }
 }

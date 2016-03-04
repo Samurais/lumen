@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * Base class for natural interaction pattern that is readily usable.
@@ -33,13 +34,23 @@ public abstract class Activity implements Serializable {
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
     private String id;
+    private String name;
     private String description;
     private ActivityState state = ActivityState.PENDING;
-    private InteractionSession parent;
+    private Activity parent;
     private Boolean enabled;
     private List<Slot> inSlots = new ArrayList<>();
     private Boolean autoPoll;
     private List<Slot> outSlots = new ArrayList<>();
+    private List<Activity> activities = new ArrayList<>();
+    private Boolean autoStart;
+
+    public Activity() {
+    }
+
+    public Activity(String id) {
+        this.id = id;
+    }
 
     /**
      * After this {@link Activity} is completed, the assigned out-slots will be polled
@@ -78,6 +89,14 @@ public abstract class Activity implements Serializable {
         this.id = id;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     /**
      * Helpful description for skill creator.
      * @return
@@ -91,7 +110,7 @@ public abstract class Activity implements Serializable {
     }
 
     /**
-     * If {@link InteractionSession#getActiveTask()} is this one then true, else false.
+     * If {@link InteractionSession#getFocusedTask()} is this one then true, else false.
      * @return
      */
     public boolean isActive() {
@@ -99,11 +118,30 @@ public abstract class Activity implements Serializable {
     }
 
     /**
+     * An auto-start activity will be {@link InteractionSession#activate(Activity, Locale)}-d automatically
+     * when its parent is activated. A shortcut to creating a {@code Start} activity and connecting its control flow
+     * to this activity. Note: auto-start has no effect if this activity has any required in-slots.
+     * @return
+     */
+    public Boolean getAutoStart() {
+        return autoStart;
+    }
+
+    public void setAutoStart(Boolean autoStart) {
+        this.autoStart = autoStart;
+    }
+
+    /**
      * You must override this to handle user's input.
      * @param communicateAction
      * @param session
+     * @param focusedTask
      */
-    public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session) {
+    public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session, Task focusedTask) {
+        activities.stream().filter(it -> ActivityState.ACTIVE == it.getState()).forEach(activity -> {
+            log.trace("Executing receiveUtterance for '{}': {}", activity.getPath(), communicateAction);
+            activity.receiveUtterance(communicateAction, session, focusedTask);
+        });
     }
 
     public ActivityState getState() {
@@ -149,11 +187,11 @@ public abstract class Activity implements Serializable {
         }
     }
 
-    public InteractionSession getParent() {
+    public Activity getParent() {
         return parent;
     }
 
-    public void setParent(InteractionSession parent) {
+    public void setParent(Activity parent) {
         this.parent = parent;
     }
 
@@ -177,8 +215,11 @@ public abstract class Activity implements Serializable {
     public void initialize() {
         this.enabled = Optional.ofNullable(this.enabled).orElse(true);
         this.autoPoll = Optional.ofNullable(this.autoPoll).orElse(false);
+        this.autoStart = Optional.ofNullable(this.autoStart).orElse(false);
         inSlots.forEach(it -> it.initialize(Slot.Direction.IN));
         outSlots.forEach(it -> it.initialize(Slot.Direction.OUT));
+
+        activities.forEach(Activity::initialize);
     }
 
     @Override
@@ -220,5 +261,55 @@ public abstract class Activity implements Serializable {
 
     public void setAutoPoll(Boolean autoPoll) {
         this.autoPoll = autoPoll;
+    }
+
+    public List<Activity> getActivities() {
+        return activities;
+    }
+
+    public Activity add(Activity activity) {
+        activity.setParent(this);
+        activities.add(activity);
+        return activity;
+    }
+
+    /**
+     * An activity is ready if it can be transitioned into {@link ActivityState#ACTIVE},
+     * meaning that all required {@link #getInSlots()}s has packets waiting in the queue.
+     * @return
+     */
+    public boolean isReady() {
+        return getInSlots().stream().filter(Slot::isRequired)
+                .allMatch(slot -> slot.hasNext());
+    }
+
+    /**
+     * Do necessary actions in this state, such as polling in-slots.
+     * @param session
+     * @param locale
+     */
+    public void pollActions(InteractionSession session, Locale locale) {
+        activities.forEach(act -> act.pollActions(session, locale));
+    }
+
+    public <T extends Activity> T get(String relativePath) {
+        return (T) activities.stream().filter(it -> relativePath.equals(it.getId())).findAny()
+                .orElseThrow(() -> new ReasonerException(String.format("Cannot find Activity '%s' in '%s'", relativePath, getPath())));
+    }
+
+    /**
+     * Visits all enabled descendants and return first non-null value.
+     * @param visitor
+     * @param <R>
+     * @return
+     */
+    public <R> R visitFirst(Function<Activity, R> visitor) {
+        final R result = visitor.apply(this);
+        if (null != result) {
+            return result;
+        } else {
+            return activities.stream().filter(Activity::getEnabled).map(it -> it.visitFirst(visitor))
+                    .filter(Objects::nonNull).findFirst().orElse(null);
+        }
     }
 }

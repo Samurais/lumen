@@ -20,5 +20,8 @@
     {"inLanguage": "en-US", "pattern": "Okay.", "style": "CASUAL"},
     {"inLanguage": "en-US", "pattern": "OK.", "style": "CASUAL"},
     {"inLanguage": "en-US", "pattern": "Got it.", "style": "CASUAL"}
+  ],
+  "inSlots": [
+    {"id": "any", "required": true, "thingTypes": ["xsd:anyType"]}
   ]
 }

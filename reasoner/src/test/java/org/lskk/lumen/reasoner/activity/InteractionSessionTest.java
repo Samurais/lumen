@@ -1,12 +1,16 @@
 package org.lskk.lumen.reasoner.activity;
 
 import org.apache.camel.spring.boot.CamelAutoConfiguration;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.lskk.lumen.core.LumenCoreConfig;
 import org.lskk.lumen.core.LumenLocale;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
+import org.lskk.lumen.reasoner.skill.Connection;
+import org.lskk.lumen.reasoner.skill.Skill;
 import org.lskk.lumen.reasoner.skill.SkillRepository;
 import org.lskk.lumen.reasoner.ux.Channel;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Locale;
 
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -77,18 +82,27 @@ public class InteractionSessionTest {
             session.getActiveLocales().add(Locale.US);
             session.open();
 
+            final Skill skill = new Skill("askNameThenAssert");
             final PromptTask promptName = taskRepo.createPrompt("promptName");
+            promptName.setAutoStart(true);
             final AffirmationTask affirmationTask = taskRepo.createAffirmation("affirmSimple");
-            session.add(affirmationTask);
+            skill.add(affirmationTask);
+            skill.add(promptName);
+            skill.getConnections().add(new Connection("promptName.name", "affirmSimple.any"));
+            session.add(skill);
+            //session.add(affirmationTask);
             //promptName.setAffirmationTask(affirmationTask);
-            session.add(promptName);
+            //session.add(promptName);
 
-            session.activate(promptName, LumenLocale.INDONESIAN);
+            skill.initialize();
+
+            session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel);
 
             session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo);
-            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
-            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
+            assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
+//            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
+//            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
 
             session.update(mockChannel);
             verify(mockChannel, times(2)).express(any(), any(), any());

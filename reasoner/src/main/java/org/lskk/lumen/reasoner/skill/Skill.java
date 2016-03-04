@@ -3,51 +3,29 @@ package org.lskk.lumen.reasoner.skill;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
-import org.lskk.lumen.reasoner.activity.Activity;
-import org.lskk.lumen.reasoner.activity.TaskRepository;
-import org.lskk.lumen.reasoner.activity.PromptTask;
+import org.lskk.lumen.reasoner.activity.*;
+import org.lskk.lumen.reasoner.intent.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by ceefour on 03/03/2016.
  */
 public class Skill extends Activity {
-    private static final Logger log = LoggerFactory.getLogger(Skill.class);
 
-    private String id;
-    private String name;
-    private String description;
     private List<TaskRef> tasks = new ArrayList<>();
     private List<Activity> intents = new ArrayList<>();
     private List<Connection> connections = new ArrayList<>();
 
-    public String getId() {
-        return id;
+    public Skill() {
+        super();
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public Skill(String id) {
+        super(id);
     }
 
     public List<TaskRef> getTasks() {
@@ -75,6 +53,48 @@ public class Skill extends Activity {
 
     public List<Connection> getConnections() {
         return connections;
+    }
+
+    @Override
+    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
+        super.onStateChanged(previous, current, locale, session);
+        if (ActivityState.ACTIVE == current) {
+            // Activate first auto-start and ready child activity
+            final Optional<Activity> child = getActivities().stream()
+                    .filter(act -> act.isReady() && act.getAutoStart()).findFirst();
+            if (child.isPresent()) {
+                session.activate(child.get(), locale);
+            }
+        }
+    }
+
+    @Override
+    public void pollActions(InteractionSession session, Locale locale) {
+        super.pollActions(session, locale);
+        // pass connected slots
+        connections.forEach(conn -> {
+            final Activity source = get(conn.getSourceActivity());
+            final Queue<Object> sourceQueue = source.getOutSlot(conn.getSourceSlot()).getOutQueue();
+            final Activity sink = get(conn.getSinkActivity());
+            final Slot sinkSlot = sink.getInSlot(conn.getSinkSlot());
+            if (!sourceQueue.isEmpty()) {
+                final List<Object> flows = new ArrayList<>();
+                while (!sourceQueue.isEmpty()) {
+                    final Object obj = sourceQueue.poll();
+                    flows.add(obj);
+                    sinkSlot.add(obj);
+                }
+                log.debug("Moved {}({}) {} -[{}]-> {} {}({}): {}",
+                        source.getPath(), source.getClass().getSimpleName(), conn.getSourceSlot(),
+                        flows.size(), sinkSlot.getId(), sink.getPath(), sink.getClass().getSimpleName(), flows);
+            }
+        });
+        // activate PENDING and ready activities
+        getActivities().stream().filter(act -> ActivityState.PENDING == act.getState() && act.isReady())
+                .forEach(act -> {
+                    log.debug("{} '{}' requesting activation of pending and ready activity '{}'", getClass().getSimpleName(), getPath(), act.getId());
+                    session.activate(act, locale);
+                });
     }
 
     protected enum SyntaxKind {

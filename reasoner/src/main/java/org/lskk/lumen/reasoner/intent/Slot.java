@@ -17,7 +17,7 @@ public class Slot implements Serializable {
     public enum Direction {
         IN,
         OUT
-    };
+    }
 
     private String id;
     private boolean required;
@@ -127,6 +127,14 @@ public class Slot implements Serializable {
 
     public Queue<Object> getOutQueue() {
         return outQueue;
+    }
+
+    /**
+     * Returns whether there's a packet waiting in the in-queue.
+     * @return
+     */
+    public boolean hasNext() {
+        return !inQueue.isEmpty();
     }
 
 }

@@ -2,7 +2,9 @@ package org.lskk.lumen.reasoner.skill;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.StringUtils;
+import org.lskk.lumen.reasoner.activity.Activity;
 
 import java.io.Serializable;
 
@@ -14,6 +16,11 @@ import java.io.Serializable;
 public class Connection implements Serializable {
     private String source;
     private String sink;
+
+    public Connection(@JsonProperty("source") String source, @JsonProperty("sink") String sink) {
+        this.source = source;
+        this.sink = sink;
+    }
 
     /**
      * Source out slot, using [activity].[slot] syntax, e.g. {@code promptMeasurementToUnit.measure}.
