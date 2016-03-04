@@ -80,7 +80,8 @@ public class Slot implements Serializable {
     }
 
     /**
-     * Shortcut for creating {@link ThingEntityType} then linking to it.
+     * Shortcut for creating {@link ThingEntityType} then linking to it,
+     * e.g. {@code xs:date}, {@code yago:wordnet_person_100007846}.
      * @return
      */
     public Set<String> getThingTypes() {

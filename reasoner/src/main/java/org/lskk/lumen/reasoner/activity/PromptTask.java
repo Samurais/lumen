@@ -15,6 +15,7 @@ import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.ReasonerException;
+import org.lskk.lumen.reasoner.intent.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,9 +58,7 @@ public class PromptTask extends Task {
     private List<QuestionTemplate> askSsmls = new ArrayList<>();
     private List<UtterancePattern> utterancePatterns = new ArrayList<>();
     private String property;
-    private Map<String, String> outSlots;
     private String unit;
-    private AffirmationTask affirmationTask;
 
     /**
      * e.g. to ask birth date:
@@ -104,25 +103,6 @@ public class PromptTask extends Task {
 
     public void setProperty(String property) {
         this.property = property;
-    }
-
-    /**
-     * Key is slot name, e.g. <tt>{chapter}</tt>
-     * Value is type QName, e.g. {@code xs:date}, {@code yago:wordnet_person_100007846}
-     *
-     * <p>Example:</p>
-     *
-     * <pre>
-     * "outSlots": {
-     *   "chapter": "xsd:string",
-     *   "verse": "xsd:integer"
-     * }
-     * </pre>
-     *
-     * @return
-     */
-    public Map<String, String> getOutSlots() {
-        return outSlots;
     }
 
     /**
@@ -214,14 +194,15 @@ public class PromptTask extends Task {
                             String plainPart = it.getPattern().substring(lastPlainOffset, placeholderMatcher.start());
                             real += plainToRegex(plainPart);
                             plainPartLength += plainPart.length();
-                            final String slot = placeholderMatcher.group("slot");
-                            slots.add(slot);
+                            final String slotId = placeholderMatcher.group("slot");
+                            slots.add(slotId);
 
-                            Preconditions.checkNotNull(outSlots.containsKey(slot),
-                                    "Utterance \"%s\" uses slot \"%s\" but not declared in outSlots. Declared outSlots are: %s",
-                                    it.getPattern(), slot, outSlots.keySet());
+                            final Slot slot = getOutSlot(slotId);
+//                            Preconditions.checkNotNull(outSlotsLegacy.containsKey(slotId),
+//                                    "Utterance \"%s\" uses slot \"%s\" but not declared in outSlots. Declared outSlots are: %s",
+//                                    it.getPattern(), slotId, outSlotsLegacy.keySet());
                             final String slotStringPattern;
-                            switch (outSlots.get(slot)) {
+                            switch (slot.getThingTypes().iterator().next()) {
                                 case "xsd:string":
                                     slotStringPattern = ".+";
                                     break;
@@ -239,10 +220,11 @@ public class PromptTask extends Task {
                                     slotStringPattern = "[a-z '-]+";
                                     break;
                                 default:
-                                    throw new ReasonerException(String.format("Slot '%s.%s' uses unsupported type '%s'", getId(), slot, outSlots.get(slot)));
+                                    throw new ReasonerException(String.format("Slot '%s.%s' uses unsupported type '%s'",
+                                            getPath(), slotId, slot.getThingTypes()));
                             }
 
-                            real += "(?<" + slot + ">" + slotStringPattern + ")";
+                            real += "(?<" + slotId + ">" + slotStringPattern + ")";
                             lastPlainOffset = placeholderMatcher.end();
                         } else {
                             String plainPart = it.getPattern().substring(lastPlainOffset, it.getPattern().length());
@@ -272,10 +254,11 @@ public class PromptTask extends Task {
 
                         // for each slot, check if the captured slot value is valid in valid format for conversion to target value
                         boolean allValid = true;
-                        for (final String slot : slots) {
-                            final String slotString = realMatcher.group(slot);
-                            matched.getSlotStrings().put(slot, slotString);
-                            switch (outSlots.get(slot)) {
+                        for (final String slotId : slots) {
+                            final String slotString = realMatcher.group(slotId);
+                            matched.getSlotStrings().put(slotId, slotString);
+                            final Slot slot = getOutSlot(slotId);
+                            switch (slot.getThingTypes().iterator().next()) {
                                 case "xsd:string":
                                     break;
                                 case "xsd:integer":
@@ -285,21 +268,23 @@ public class PromptTask extends Task {
                                 case "yago:wordnet_sex_105006898":
                                 case "yago:wordnet_religion_105946687":
                                     if (!isValidStringValue(matched.getInLanguage(), slotString, matched.getStyle())) {
-                                        log.debug("Regex matched {} but no enum of {} has this label", matched, outSlots);
+                                        log.debug("Regex matched {} but no enum of {} has this label", matched, slot.getThingTypes());
                                         allValid = false;
                                     }
                                     break;
                                 default:
-                                    throw new ReasonerException("Unsupported type: " + outSlots);
+                                    throw new ReasonerException("Unsupported type: " + slot.getThingTypes());
                             }
                         }
                         if (allValid) {
                             // for each slot, convert string values into target values
-                            for (final String slot : slots) {
-                                final String slotString = realMatcher.group(slot);
-                                matched.getSlotStrings().put(slot, slotString);
+                            for (final String slotId : slots) {
+                                final String slotString = realMatcher.group(slotId);
+                                matched.getSlotStrings().put(slotId, slotString);
                                 // convert to target value
-                                matched.getSlotValues().put(slot, toTargetValue(outSlots.get(slot), matched.getInLanguage(), slotString, matched.getStyle()));
+                                final Slot slot = getOutSlot(slotId);
+                                matched.getSlotValues().put(slotId, toTargetValue(slot.getThingTypes().iterator().next(),
+                                        matched.getInLanguage(), slotString, matched.getStyle()));
                             }
                             log.debug("Matched {} multipliers: language={} scope={} plainPart={}({})", matched,
                                     languageMultiplier, scopeMultiplier, plainPartMultiplier, plainPartLength);
@@ -358,20 +343,8 @@ public class PromptTask extends Task {
                 final LocalDate localDate = DateTimeFormat.longDate().withLocale(Locale.forLanguageTag(inLanguage)).parseLocalDate(value);
                 return localDate;
             default:
-                throw new ReasonerException("Unsupported type: " + outSlots);
+                throw new ReasonerException("Unsupported type: " + expectedType);
         }
-    }
-
-    /**
-     * After this PromptTask is completed, the assigned UnderstoodTask will be used to express the collected information.
-     * @return
-     */
-    public AffirmationTask getAffirmationTask() {
-        return affirmationTask;
-    }
-
-    public void setAffirmationTask(AffirmationTask affirmationTask) {
-        this.affirmationTask = affirmationTask;
     }
 
     @Override
@@ -395,9 +368,10 @@ public class PromptTask extends Task {
             initiative.setConversationStyle(questionTemplate.getStyle());
             getPendingCommunicateActions().add(initiative);
         } else if (ActivityState.COMPLETED == current) {
-            if (null != getAffirmationTask()) {
-                session.schedule(getAffirmationTask());
-            }
+            // FIXME: send the outSlots!
+//            if (null != getAffirmationTask()) {
+//                session.schedule(getAffirmationTask());
+//            }
         }
     }
 }

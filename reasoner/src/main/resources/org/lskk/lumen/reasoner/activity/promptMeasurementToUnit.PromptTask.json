@@ -41,8 +41,8 @@
     {"inLanguage": "en-US", "pattern": "Convert {measure} to {unit}", "scope": "GLOBAL"},
     {"inLanguage": "en-US", "pattern": "Convert {measure} as {unit}", "scope": "GLOBAL"}
   ],
-  "outSlots": {
-    "measure": "yago:yagoQuantity",
-    "unit": "yago:wordnet_unit_of_measurement_113583724"
-  }
+  "outSlots": [
+    {"id": "measure", "thingTypes": ["yago:yagoQuantity"]},
+    {"id": "unit", "thingTypes": ["yago:wordnet_unit_of_measurement_113583724"]}
+  ]
 }

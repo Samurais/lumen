@@ -18,18 +18,6 @@ import java.util.*;
  */
 public class Script extends Activity {
 
-    private List<Slot> outSlots = new ArrayList<>();
-
-    public List<Slot> getOutSlots() {
-        return outSlots;
-    }
-
-    @Override
-    public void initialize() {
-        super.initialize();
-        outSlots.forEach(it -> it.initialize(Slot.Direction.OUT));
-    }
-
     @Override
     public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
         super.onStateChanged(previous, current, locale, session);

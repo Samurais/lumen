@@ -62,7 +62,7 @@ public class PromptTaskTest {
         assertThat(promptBirthdate.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptBirthdate.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptBirthdate.getProperty(), equalTo("yago:wasBornOnDate"));
-        assertThat(promptBirthdate.getOutSlots(), hasEntry("birthdate", "xs:date"));
+        assertThat(promptBirthdate.getOutSlot("birthdate").getThingTypes(), contains("xs:date"));
 
 //        assertThat(promptBirthdate.getPendingPropositions(LumenLocale.INDONESIAN).peek().getObject(), containsString("lahir"));
 //        assertThat(promptBirthdate.getPendingPropositions(Locale.US).get().getObject(), containsString("born"));
@@ -84,7 +84,7 @@ public class PromptTaskTest {
         assertThat(promptName.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptName.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptName.getProperty(), equalTo("rdfs:label"));
-        assertThat(promptName.getOutSlots(), hasEntry("name", "xsd:string"));
+        assertThat(promptName.getOutSlot("name").getThingTypes(), contains("xsd:string"));
 
 //        assertThat(promptName.getPendingPropositions(LumenLocale.INDONESIAN).get().getObject(), containsString("nama"));
 //        assertThat(promptName.getPendingPropositions(Locale.US).get().getObject(), containsString("name"));
@@ -180,7 +180,7 @@ public class PromptTaskTest {
         assertThat(promptGender.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptGender.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptGender.getProperty(), equalTo("yago:hasGender"));
-        assertThat(promptGender.getOutSlots(), hasEntry("gender", "yago:wordnet_sex_105006898"));
+        assertThat(promptGender.getOutSlot("gender").getThingTypes(), contains("yago:wordnet_sex_105006898"));
 
 //        assertThat(promptGender.getProposition(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
 //        assertThat(promptGender.getProposition(Locale.US).getObject(), containsString("name"));
@@ -258,7 +258,7 @@ public class PromptTaskTest {
         assertThat(promptReligion.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptReligion.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptReligion.getProperty(), equalTo("lumen:hasReligion"));
-        assertThat(promptReligion.getOutSlots(), hasEntry("religion", "yago:wordnet_religion_105946687"));
+        assertThat(promptReligion.getOutSlot("religion").getThingTypes(), contains("yago:wordnet_religion_105946687"));
 
 //        assertThat(promptGender.getProposition(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
 //        assertThat(promptGender.getProposition(Locale.US).getObject(), containsString("name"));
@@ -304,7 +304,7 @@ public class PromptTaskTest {
         assertThat(promptAge.getAskSsmls(), hasSize(greaterThan(1)));
         assertThat(promptAge.getUtterancePatterns(), hasSize(greaterThan(1)));
         assertThat(promptAge.getProperty(), equalTo("lumen:hasBirthYear"));
-        assertThat(promptAge.getOutSlots(), hasEntry("age", "xsd:integer"));
+        assertThat(promptAge.getOutSlot("age").getThingTypes(), contains("xsd:integer"));
 
 //        assertThat(promptGender.getProposition(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
 //        assertThat(promptGender.getProposition(Locale.US).getObject(), containsString("name"));
@@ -358,8 +358,8 @@ public class PromptTaskTest {
         assertThat(promptQuranChapterVerse.getAskSsmls(), hasSize(greaterThanOrEqualTo(2)));
         assertThat(promptQuranChapterVerse.getUtterancePatterns(), hasSize(greaterThanOrEqualTo(2)));
         //assertThat(promptQuranChapterVerse.getProperty(), equalTo("lumen:hasBirthYear"));
-        assertThat(promptQuranChapterVerse.getOutSlots(), hasEntry("chapter", "xsd:string"));
-        assertThat(promptQuranChapterVerse.getOutSlots(), hasEntry("verse", "xsd:integer"));
+        assertThat(promptQuranChapterVerse.getOutSlot("chapter").getThingTypes(), contains("xsd:string"));
+        assertThat(promptQuranChapterVerse.getOutSlot("verse").getThingTypes(), contains("xsd:integer"));
 
 //        assertThat(promptGender.getProposition(LumenLocale.INDONESIAN).getObject(), containsString("nama"));
 //        assertThat(promptGender.getProposition(Locale.US).getObject(), containsString("name"));

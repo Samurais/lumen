@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.intent.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,31 @@ public abstract class Activity implements Serializable {
     private Boolean enabled;
     private List<Slot> inSlots = new ArrayList<>();
     private Boolean autoPoll;
+    private List<Slot> outSlots = new ArrayList<>();
+
+    /**
+     * After this {@link Activity} is completed, the assigned out-slots will be polled
+     * and sent to be in-slots of the sink activity.
+     *
+     * <p>Example:</p>
+     *
+     * <pre>
+     *     "outSlots": [
+     *      {"id": "chapter", "thingTypes": ["xsd:string"]},
+     *      {"id": "verse", "thingTypes": ["xsd:integer"]}
+     *     ]
+     </pre>
+     * @return
+     */
+    public List<Slot> getOutSlots() {
+        return outSlots;
+    }
+
+    public Slot getOutSlot(String slotId) {
+        return outSlots.stream().filter(it -> slotId.equals(it.getId())).findAny()
+                .orElseThrow(() -> new ReasonerException(String.format("Cannot find out-slot %s.%s, %s available out-slots are: %s",
+                        getPath(), slotId, outSlots.size(), outSlots.stream().map(Slot::getId).toArray())));
+    }
 
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
@@ -152,6 +178,7 @@ public abstract class Activity implements Serializable {
         this.enabled = Optional.ofNullable(this.enabled).orElse(true);
         this.autoPoll = Optional.ofNullable(this.autoPoll).orElse(false);
         inSlots.forEach(it -> it.initialize(Slot.Direction.IN));
+        outSlots.forEach(it -> it.initialize(Slot.Direction.OUT));
     }
 
     @Override
@@ -159,8 +186,26 @@ public abstract class Activity implements Serializable {
         return getClass().getSimpleName() + "#" + getId();
     }
 
+    /**
+     * <p>Example:</p>
+     *
+     * <pre>
+     * "autoPoll": true,
+     * "inSlots": [
+     *     {"id": "measure", "thingTypes": ["yago:yagoQuantity"], "required": true},
+     *     {"id": "unit", "thingTypes": ["yago:wordnet_unit_of_measurement_113583724"], "required": true}
+     * ],
+     * </pre>
+     * @return
+     */
     public List<Slot> getInSlots() {
         return inSlots;
+    }
+
+    public Slot getInSlot(String slotId) {
+        return inSlots.stream().filter(it -> slotId.equals(it.getId())).findAny()
+                .orElseThrow(() -> new ReasonerException(String.format("Cannot find in-slot %s.%s, %s available in-slots are: %s",
+                        getPath(), slotId, inSlots.size(), inSlots.stream().map(Slot::getId).toArray())));
     }
 
     /**

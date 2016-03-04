@@ -17,7 +17,7 @@
     {"inLanguage": "en-US", "pattern": "I'm {name}"}
   ],
   "property": "rdfs:label",
-  "outSlots": {
-    "name": "xsd:string"
-  }
+  "outSlots": [
+    {"id": "name", "thingTypes": ["xsd:string"]}
+  ]
 }

@@ -12,7 +12,7 @@
     {"inLanguage": "en-US", "pattern": "I was born on {birthdate}"}
   ],
   "property": "yago:wasBornOnDate",
-  "outSlots": {
-    "birthdate": "xs:date"
-  }
+  "outSlots": [
+    {"id": "birthdate", "thingTypes": ["xs:date"]}
+  ]
 }

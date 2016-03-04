@@ -80,7 +80,7 @@ public class InteractionSessionTest {
             final PromptTask promptName = taskRepo.createPrompt("promptName");
             final AffirmationTask affirmationTask = taskRepo.createAffirmation("affirmSimple");
             session.add(affirmationTask);
-            promptName.setAffirmationTask(affirmationTask);
+            //promptName.setAffirmationTask(affirmationTask);
             session.add(promptName);
 
             session.activate(promptName, LumenLocale.INDONESIAN);

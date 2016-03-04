@@ -4,11 +4,11 @@ with(new JavaImporter(org.lskk.lumen.reasoner.activity)) {
      * Before onActivate is called, all required slots are guaranteed to be set.
      */
     function onActivate() {
-        // need to get() first because slots are bounded queues
-        var measure = inSlots.measure.get();
-        var unit = inSlots.unit.get();
+        // Important: to use .last, we need to set Script.autoPoll = true in the Script.json descriptor file
+        var measure = inSlots.measure.last;
+        var unit = inSlots.unit.last;
         var converted = measure.to(unit);
-        log.info("Converted {} to {} = {}", measure, unit, converted);
+        log.debug("Converted {} to {} -> {}", measure, unit, converted);
         outSlots.converted.send(converted);
     }
 

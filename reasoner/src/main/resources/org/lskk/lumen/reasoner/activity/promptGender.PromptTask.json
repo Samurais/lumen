@@ -28,7 +28,7 @@
     {"inLanguage": "en-US", "pattern": "I'm {gender}", "style": "CASUAL"}
   ],
   "property": "yago:hasGender",
-  "outSlots": {
-    "gender": "yago:wordnet_sex_105006898"
-  }
+  "outSlots": [
+    {"id": "gender", "thingTypes": ["yago:wordnet_sex_105006898"]}
+  ]
 }

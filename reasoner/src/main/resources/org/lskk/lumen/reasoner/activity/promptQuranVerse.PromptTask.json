@@ -14,7 +14,7 @@
 
     {"inLanguage": "en-US", "pattern": "Verse {verse}", "scope": "LOCAL"}
   ],
-  "outSlots": {
-    "verse": "xsd:integer"
-  }
+  "outSlots": [
+    {"id": "verse", "thingTypes": ["xsd:integer"]}
+  ]
 }

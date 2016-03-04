@@ -31,7 +31,7 @@
     {"inLanguage": "en-US", "pattern": "Koran {chapter}", "scope": "LOCAL"},
     {"inLanguage": "en-US", "pattern": "Koran chapter {chapter}", "scope": "LOCAL"}
   ],
-  "outSlots": {
-    "chapter": "xsd:string"
-  }
+  "outSlots": [
+    {"id": "chapter", "thingTypes": ["xsd:string"]}
+  ]
 }

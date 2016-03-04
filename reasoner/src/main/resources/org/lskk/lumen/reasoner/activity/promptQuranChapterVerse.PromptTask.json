@@ -111,8 +111,8 @@
     {"inLanguage": "en-US", "pattern": "Read QS. chapter {chapter}:{verse}"},
     {"inLanguage": "en-US", "pattern": "Read QS. chapter {chapter} : {verse}"}
   ],
-  "outSlots": {
-    "chapter": "xsd:string",
-    "verse": "xsd:integer"
-  }
+  "outSlots": [
+    {"id": "chapter", "thingTypes": ["xsd:string"]},
+    {"id": "verse", "thingTypes": ["xsd:integer"]}
+  ]
 }
