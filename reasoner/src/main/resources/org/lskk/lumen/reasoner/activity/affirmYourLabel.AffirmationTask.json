@@ -1,26 +1,30 @@
 {
   "@type": "AffirmationTask",
-  "description": "Affirmation for a user's label where the subject is 'you'.",
+  "description": "Affirmation for current user's name, i.e. subject is 'you'.",
+  "autoPoll": true,
   "expressions": [
-    {"inLanguage": "id-ID", "pattern": "Oh nama kamu {label} ya.", "style": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Jadi nama kamu {label}.", "style": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Ya, {label}.", "style": "FORMAL"},
-    {"inLanguage": "id-ID", "pattern": "Baik, {label}.", "style": "FORMAL"},
-    {"inLanguage": "id-ID", "pattern": "Baiklah, {label}.", "style": "FORMAL"},
-    {"inLanguage": "id-ID", "pattern": "Saya mengerti, {label}.", "style": "FORMAL"},
-    {"inLanguage": "id-ID", "pattern": "Oke {label}.", "style": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Sip {label}.", "style": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Yup {label}.", "style": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Oh begitu, {label}.", "style": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Oh gitu ya, {label}.", "style": "CASUAL"},
-    {"inLanguage": "id-ID", "pattern": "Iya {label}.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh nama kamu {name} ya.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Jadi nama kamu {name}.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Ya, {name}.", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Baik, {name}.", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Baiklah, {name}.", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Saya mengerti, {name}.", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Oke {name}.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Sip {name}.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Yup {name}.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh begitu, {name}.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Oh gitu ya, {name}.", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Iya {name}.", "style": "CASUAL"},
 
-    {"inLanguage": "en-US", "pattern": "So your name is {label}.", "style": "FORMAL"},
-    {"inLanguage": "en-US", "pattern": "I see, {label}.", "style": "FORMAL"},
-    {"inLanguage": "en-US", "pattern": "I understand, {label}.", "style": "FORMAL"},
-    {"inLanguage": "en-US", "pattern": "Oh I see, {label}.", "style": "FORMAL"},
-    {"inLanguage": "en-US", "pattern": "Okay, {label}.", "style": "CASUAL"},
-    {"inLanguage": "en-US", "pattern": "OK, {label}.", "style": "CASUAL"},
-    {"inLanguage": "en-US", "pattern": "{label}. Got it.", "style": "CASUAL"}
+    {"inLanguage": "en-US", "pattern": "So your name is {name}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "I see, {name}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "I understand, {name}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Oh I see, {name}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Okay, {name}.", "style": "CASUAL"},
+    {"inLanguage": "en-US", "pattern": "OK, {name}.", "style": "CASUAL"},
+    {"inLanguage": "en-US", "pattern": "{name}. Got it.", "style": "CASUAL"}
+  ],
+  "inSlots": [
+    {"id": "name", "thingTypes": ["xsd:string"], "required": true}
   ]
 }

@@ -75,20 +75,55 @@ public class InteractionSessionTest {
     private Provider<InteractionSession> sessionProvider;
 
     @Test
-    public void askNameThenAssert() {
+    public void askNameThenAffirmSimple() {
         reset(factService, mockChannel);
         try (final InteractionSession session = sessionProvider.get()) {
             session.getActiveLocales().add(LumenLocale.INDONESIAN);
             session.getActiveLocales().add(Locale.US);
             session.open();
 
-            final Skill skill = new Skill("askNameThenAssert");
+            final Skill skill = new Skill("askNameThenAffirmSimple");
             final PromptTask promptName = taskRepo.createPrompt("promptName");
             promptName.setAutoStart(true);
             final AffirmationTask affirmationTask = taskRepo.createAffirmation("affirmSimple");
             skill.add(affirmationTask);
             skill.add(promptName);
             skill.getConnections().add(new Connection("promptName.name", "affirmSimple.any"));
+            session.add(skill);
+            //session.add(affirmationTask);
+            //promptName.setAffirmationTask(affirmationTask);
+            //session.add(promptName);
+
+            skill.initialize();
+
+            session.activate(skill, LumenLocale.INDONESIAN);
+            session.update(mockChannel);
+
+            session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo);
+            assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
+//            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
+//            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
+
+            session.update(mockChannel);
+            verify(mockChannel, times(2)).express(any(), any(), any());
+        }
+    }
+
+    @Test
+    public void askNameThenAffirmYourLabel() {
+        reset(factService, mockChannel);
+        try (final InteractionSession session = sessionProvider.get()) {
+            session.getActiveLocales().add(LumenLocale.INDONESIAN);
+            session.getActiveLocales().add(Locale.US);
+            session.open();
+
+            final Skill skill = new Skill("askNameThenAffirmYourLabel");
+            final PromptTask promptName = taskRepo.createPrompt("promptName");
+            promptName.setAutoStart(true);
+            final AffirmationTask affirmationTask = taskRepo.createAffirmation("affirmYourLabel");
+            skill.add(affirmationTask);
+            skill.add(promptName);
+            skill.getConnections().add(new Connection("promptName.name", "affirmYourLabel.name"));
             session.add(skill);
             //session.add(affirmationTask);
             //promptName.setAffirmationTask(affirmationTask);

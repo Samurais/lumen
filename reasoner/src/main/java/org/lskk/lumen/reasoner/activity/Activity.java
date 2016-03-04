@@ -13,6 +13,7 @@ import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Base class for natural interaction pattern that is readily usable.
@@ -73,7 +74,7 @@ public abstract class Activity implements Serializable {
     public Slot getOutSlot(String slotId) {
         return outSlots.stream().filter(it -> slotId.equals(it.getId())).findAny()
                 .orElseThrow(() -> new ReasonerException(String.format("Cannot find out-slot %s.%s, %s available out-slots are: %s",
-                        getPath(), slotId, outSlots.size(), outSlots.stream().map(Slot::getId).toArray())));
+                        getPath(), slotId, outSlots.size(), outSlots.stream().map(Slot::getId).collect(Collectors.toList()))));
     }
 
     /**
@@ -246,7 +247,7 @@ public abstract class Activity implements Serializable {
     public Slot getInSlot(String slotId) {
         return inSlots.stream().filter(it -> slotId.equals(it.getId())).findAny()
                 .orElseThrow(() -> new ReasonerException(String.format("Cannot find in-slot %s.%s, %s available in-slots are: %s",
-                        getPath(), slotId, inSlots.size(), inSlots.stream().map(Slot::getId).toArray())));
+                        getPath(), slotId, inSlots.size(), inSlots.stream().map(Slot::getId).collect(Collectors.toList()))));
     }
 
     /**
