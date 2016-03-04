@@ -27,6 +27,7 @@ public class Script extends Activity {
     @Override
     public void initialize() {
         super.initialize();
+        outSlots.forEach(it -> it.initialize(Slot.Direction.OUT));
     }
 
     @Override

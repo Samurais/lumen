@@ -1,6 +1,7 @@
 package org.lskk.lumen.reasoner.activity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.reasoner.intent.Slot;
@@ -36,6 +37,7 @@ public abstract class Activity implements Serializable {
     private InteractionSession parent;
     private Boolean enabled;
     private List<Slot> inSlots = new ArrayList<>();
+    private Boolean autoPoll;
 
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
@@ -109,7 +111,16 @@ public abstract class Activity implements Serializable {
      * @param session
      */
     public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
-
+        if (ActivityState.ACTIVE == current) {
+            if (getAutoPoll()) {
+                getInSlots().forEach(slot -> {
+                    final Object value = slot.poll();
+                    Preconditions.checkState(!slot.isRequired() || null != value,
+                            "Slot %s.%s [%s] is required but a packet was not received",
+                            getPath(), slot.getId(), slot.getThingTypes());
+                });
+            }
+        }
     }
 
     public InteractionSession getParent() {
@@ -121,7 +132,7 @@ public abstract class Activity implements Serializable {
     }
 
     public String getPath() {
-        return parent.getId() + "/" + getId();
+        return (parent != null ? parent.getId() + "/" : "") + getId();
     }
 
     /**
@@ -139,6 +150,8 @@ public abstract class Activity implements Serializable {
     @PostConstruct
     public void initialize() {
         this.enabled = Optional.ofNullable(this.enabled).orElse(true);
+        this.autoPoll = Optional.ofNullable(this.autoPoll).orElse(false);
+        inSlots.forEach(it -> it.initialize(Slot.Direction.IN));
     }
 
     @Override
@@ -148,5 +161,19 @@ public abstract class Activity implements Serializable {
 
     public List<Slot> getInSlots() {
         return inSlots;
+    }
+
+    /**
+     * If {@code true}, all in-slots will be polled automatically before the {@link org.lskk.lumen.reasoner.activity.Activity}
+     * transitions to {@link org.lskk.lumen.reasoner.activity.ActivityState#ACTIVE}, so {@link Slot#getLast()}
+     * can be directly called. This makes the programming model much simpler, like synchronous, but less flexible.
+     * @return
+     */
+    public Boolean getAutoPoll() {
+        return autoPoll;
+    }
+
+    public void setAutoPoll(Boolean autoPoll) {
+        this.autoPoll = autoPoll;
     }
 }

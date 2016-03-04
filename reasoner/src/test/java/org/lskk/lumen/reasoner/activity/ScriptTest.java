@@ -7,8 +7,8 @@ import org.junit.runner.RunWith;
 import org.lskk.lumen.core.LumenCoreConfig;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.intent.Slot;
-import org.lskk.lumen.reasoner.nlp.WordNetConfig;
-import org.lskk.lumen.reasoner.ux.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -22,6 +22,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
+import javax.measure.Measure;
+import javax.measure.quantity.Length;
+import javax.measure.unit.SI;
 import java.util.Locale;
 
 import static org.hamcrest.Matchers.*;
@@ -36,6 +39,7 @@ import static org.mockito.Mockito.withSettings;
 @SpringApplicationConfiguration(ScriptTest.Config.class)
 @ActiveProfiles("ScriptTest")
 public class ScriptTest {
+    private static final Logger log = LoggerFactory.getLogger(ScriptTest.class);
 
     @Profile("ScriptTest")
     @SpringBootApplication(scanBasePackageClasses = {ScriptRepository.class/*, WordNetConfig.class*/},
@@ -80,7 +84,14 @@ public class ScriptTest {
         assertThat(convertUnitScript.getId(), equalTo("convertUnit"));
         assertThat(convertUnitScript.getInSlots().stream().map(Slot::getId).toArray(), Matchers.arrayContaining("measure", "unit"));
         assertThat(convertUnitScript.getOutSlots().stream().map(Slot::getId).toArray(), Matchers.arrayContaining("converted"));
+
+        convertUnitScript.getInSlots().get(0).add(Measure.valueOf(5, SI.METRE));
+        convertUnitScript.getInSlots().get(1).add(SI.CENTIMETRE);
+
         convertUnitScript.onStateChanged(ActivityState.PENDING, ActivityState.ACTIVE, Locale.forLanguageTag("id-ID"), null);
+        final Measure<Length> converted = (Measure<Length>) convertUnitScript.getOutSlots().get(0).getOutQueue().poll();
+        log.info("Converted: {}", converted);
+        assertThat(converted, comparesEqualTo(Measure.valueOf(500, SI.CENTIMETRE)));
     }
 
 }
