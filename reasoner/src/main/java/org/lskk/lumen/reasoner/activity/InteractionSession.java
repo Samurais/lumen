@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -8,6 +8,7 @@ import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.persistence.service.FactService;
+import org.lskk.lumen.reasoner.skill.Skill;
 import org.lskk.lumen.reasoner.skill.SkillRepository;
 import org.lskk.lumen.reasoner.skill.TaskRef;
 import org.lskk.lumen.reasoner.ux.Channel;
@@ -22,11 +23,12 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Soon this will be replaced by {@link org.kie.internal.runtime.StatefulKnowledgeSession},
  * but for now I'll use this to prototype the intended behavior.
- *
+ * <p>
  * <p>Serializable, state is stored. So either use Spring to create this prototype bean using {@link javax.inject.Provider}
  * or pass service beans in methods.</p>
  * <p>
@@ -64,9 +66,9 @@ public class InteractionSession implements Serializable, AutoCloseable {
     private long id = SEQ_ID.incrementAndGet();
     private List<Locale> activeLocales = new ArrayList<>();
     private Locale lastLocale;
-    private InteractionTask activeTask;
-    private List<InteractionTask> tasks = new ArrayList<>();
-    private Queue<InteractionTask> pendingActivations = new ArrayDeque<>();
+    private Task activeTask;
+    private List<Task> tasks = new ArrayList<>();
+    private Queue<Task> pendingActivations = new ArrayDeque<>();
 
     public void open() {
         Preconditions.checkState(!activeLocales.isEmpty(),
@@ -82,12 +84,12 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
     /**
      * Currently active task will be able to match {@link UtterancePattern}
-     * with {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#LOCAL}.
+     * with {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#LOCAL}.
      * FIXME: this shouldn't be "InteractionTask" behavior but a stateful DTO, i.e. TaskExec
      *
      * @return
      */
-    public InteractionTask getActiveTask() {
+    public Task getActiveTask() {
         return activeTask;
     }
 
@@ -95,19 +97,19 @@ public class InteractionSession implements Serializable, AutoCloseable {
         return id;
     }
 
-    public void activate(InteractionTask nextTask, Locale locale) {
-        if (null != this.activeTask && InteractionTaskState.ACTIVE == this.activeTask.getState()) {
+    public void activate(Task nextTask, Locale locale) {
+        if (null != this.activeTask && ActivityState.ACTIVE == this.activeTask.getState()) {
             log.debug("Deactivating {} for {} ...", this.activeTask, nextTask);
-            final InteractionTaskState previous = this.activeTask.getState();
-            this.activeTask.setState(InteractionTaskState.PENDING);
+            final ActivityState previous = this.activeTask.getState();
+            this.activeTask.setState(ActivityState.PENDING);
             this.activeTask.onStateChanged(previous, this.activeTask.getState(), locale, this);
             pollTaskActions(this.activeTask);
         }
         this.activeTask = nextTask;
-        if (null != this.activeTask && InteractionTaskState.PENDING == this.activeTask.getState()) {
-            final InteractionTaskState previous = this.activeTask.getState();
+        if (null != this.activeTask && ActivityState.PENDING == this.activeTask.getState()) {
+            final ActivityState previous = this.activeTask.getState();
             log.debug("Activating from {}: {} ...", previous, nextTask);
-            this.activeTask.setState(InteractionTaskState.ACTIVE);
+            this.activeTask.setState(ActivityState.ACTIVE);
             this.activeTask.onStateChanged(previous, this.activeTask.getState(), locale, this);
             pollTaskActions(this.activeTask);
         }
@@ -115,13 +117,13 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
     /**
      * Background tasks can only match {@link UtterancePattern}
-     * with scope {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#GLOBAL}.
-     * You can't modify this! Use {@link #add(InteractionTask)}.
+     * with scope {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#GLOBAL}.
+     * You can't modify this! Use {@link #add(Activity)}.
      * FIXME: this shouldn't be "InteractionTask" behavior but a stateful DTO, i.e. TaskExec
      *
      * @return
      */
-    public List<InteractionTask> getTasks() {
+    public List<Activity> getTasks() {
         return ImmutableList.copyOf(tasks);
     }
 
@@ -133,15 +135,15 @@ public class InteractionSession implements Serializable, AutoCloseable {
      * If the task (usually {@link #getActiveTask()} has pending actions, poll them:
      * <p>
      * <ol>
-     * <li>{@link InteractionTask#getLabelsToAssert()}</li>
-     * <li>{@link InteractionTask#getLiteralsToAssert()}</li>
-     * <li>{@link InteractionTask#getPendingCommunicateActions()}</li>
-     * <li>{@link InteractionTask#getPendingPropositions()}</li>
+     * <li>{@link Task#getLabelsToAssert()}</li>
+     * <li>{@link Task#getLiteralsToAssert()}</li>
+     * <li>{@link Task#getPendingCommunicateActions()}</li>
+     * <li>{@link Task#getPendingPropositions()}</li>
      * </ol>
      *
      * @param task
      */
-    protected void pollTaskActions(InteractionTask task) {
+    protected void pollTaskActions(Task task) {
         while (!task.getLabelsToAssert().isEmpty()) {
             final ThingLabel label = task.getLabelsToAssert().poll();
             if (label.getConfidence() >= ASSERT_LABEL_MIN_CONFIDENCE) {
@@ -167,14 +169,14 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     // TODO: should parameters replaced by CommunicateAction?
-    public void receiveUtterance(Locale locale, String text, FactService factService, InteractionTaskRepository taskRepo) {
+    public void receiveUtterance(Locale locale, String text, FactService factService, TaskRepository taskRepo) {
         lastLocale = locale;
         final CommunicateAction communicateAction = new CommunicateAction(locale, text, null);
 
         // Check active task first
         boolean handled = false;
         if (null != activeTask) {
-            final InteractionTask executing = activeTask;
+            final Task executing = activeTask;
             log.info("Executing receiveUtterance for {}: {}", executing, communicateAction);
             executing.receiveUtterance(communicateAction, this);
             pollTaskActions(executing);
@@ -185,7 +187,9 @@ public class InteractionSession implements Serializable, AutoCloseable {
         }
 
         if (!handled) {
-            final List<UtterancePattern> totalMatches = skillRepo.getSkills().values().stream().flatMap(skill -> {
+            final List<Skill> enabledSkills = skillRepo.getSkills().values().stream()
+                    .filter(Skill::getEnabled).collect(Collectors.toList());
+            final List<UtterancePattern> totalMatches = enabledSkills.stream().flatMap(skill -> {
                 final List<UtterancePattern> skillMatches = skill.getIntents().stream().flatMap(intent -> {
                     final List<UtterancePattern> matches = intent.matchUtterance(locale, text, UtterancePattern.Scope.GLOBAL);
                     matches.forEach(match -> {
@@ -199,12 +203,12 @@ public class InteractionSession implements Serializable, AutoCloseable {
                     return matches.stream();
                 }).collect(Collectors.toList());
                 log.debug("Skill '{}' with {} intents {} returned {} matches for '{}'@{}",
-                        skill.getId(), skill.getIntents().size(), skill.getIntents().stream().map(InteractionTask::getId).toArray(), skillMatches.size(),
+                        skill.getId(), skill.getIntents().size(), skill.getIntents().stream().map(Activity::getId).toArray(), skillMatches.size(),
                         text, locale.toLanguageTag());
                 return skillMatches.stream();
             }).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
-            log.info("Total {} matches for '{}'@{} from {} skills:\n{}",
-                    totalMatches.size(), text, locale.toLanguageTag(), skillRepo.getSkills().size(),
+            log.info("Total {} matches for '{}'@{} from {} enabled skills:\n{}",
+                    totalMatches.size(), text, locale.toLanguageTag(), enabledSkills.size(),
                     totalMatches.stream().limit(10)
                             .map(m -> String.format("* %s/%s: %s", m.getSkill().getId(), m.getIntent().getId(), m))
                             .collect(Collectors.joining("\n")));
@@ -220,13 +224,14 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     /**
-     * Create all {@link InteractionTask}s of a {@link org.lskk.lumen.reasoner.skill.Skill} based
+     * Create all {@link Activity}s of a {@link org.lskk.lumen.reasoner.skill.Skill} based
      * on matched {@link UtterancePattern}.
+     *
      * @param utterancePattern
      */
-    protected void launchSkill(UtterancePattern utterancePattern, InteractionTaskRepository taskRepo) {
+    protected void launchSkill(UtterancePattern utterancePattern, TaskRepository taskRepo) {
         log.info("Launching {}/{} ...", utterancePattern.getSkill().getId(), utterancePattern.getIntent().getId());
-        InteractionTask theIntent = null;
+        Task theIntent = null;
         for (final TaskRef taskRef : utterancePattern.getSkill().getTasks()) {
             final PromptTask promptTask = taskRepo.createPrompt(taskRef.getId());
             if (utterancePattern.getIntent().getId().equals(taskRef.getId())) {
@@ -240,11 +245,12 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
     /**
      * Used by {@link #update(Channel)} to express all pending propositions.
+     *
      * @param channel
      * @param avatarId
      */
     protected void expressAll(Channel<?> channel, String avatarId) {
-        for (final InteractionTask task : tasks) {
+        for (final Task task : tasks) {
             while (true) {
                 final CommunicateAction pendingCommunicateAction = task.getPendingCommunicateActions().poll();
                 if (null == pendingCommunicateAction) {
@@ -257,13 +263,14 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
     /**
      * Call this to fire pending scheduled tasks.
+     *
      * @param channel
      */
     public void update(Channel<?> channel) {
         final String avatarId = null;
         expressAll(channel, avatarId); // pre-activation express
 
-        final InteractionTask nextTask = pendingActivations.poll();
+        final Task nextTask = pendingActivations.poll();
         if (null != nextTask) {
             activate(nextTask, getLastLocale());
         }
@@ -275,41 +282,45 @@ public class InteractionSession implements Serializable, AutoCloseable {
         return lastLocale;
     }
 
-    public Queue<InteractionTask> getPendingActivations() {
+    public Queue<Task> getPendingActivations() {
         return pendingActivations;
     }
 
     /**
-     * Mark specified task as {@link InteractionTaskState#COMPLETED}.
+     * Mark specified activity as {@link ActivityState#COMPLETED}.
      *
-     * @param task
+     * @param activity
      */
-    public void complete(InteractionTask task, Locale locale) {
-        Preconditions.checkArgument(InteractionTaskState.ACTIVE == task.getState(),
-                "Can only complete an ACTIVE task, but got %s", task);
-        log.debug("Completing from {}: {} ...", task.getState(), task);
-        final InteractionTaskState previous = task.getState();
-        task.setState(InteractionTaskState.COMPLETED);
-        if (task == this.activeTask) {
+    public void complete(Activity activity, Locale locale) {
+        Preconditions.checkArgument(ActivityState.ACTIVE == activity.getState(),
+                "Can only complete an ACTIVE activity, but got %s", activity);
+        log.debug("Completing from {}: {} ...", activity.getState(), activity);
+        final ActivityState previous = activity.getState();
+        activity.setState(ActivityState.COMPLETED);
+        if (activity == this.activeTask) {
             this.activeTask = null;
         }
-        task.onStateChanged(previous, task.getState(), locale, this);
-        pollTaskActions(task);
+        activity.onStateChanged(previous, activity.getState(), locale, this);
+        if (activity instanceof Task) {
+            pollTaskActions((Task) activity);
+        }
     }
 
-    public void schedule(InteractionTask task) {
+    public void schedule(Task task) {
         getPendingActivations().add(task);
     }
 
-    public InteractionTask getTask(String taskId) {
+    public Task getTask(String taskId) {
         return Preconditions.checkNotNull(tasks.stream().filter(it -> taskId.equals(it.getId())).findAny().orElse(null),
                 "Cannot find task '%s' in session %s. %s available tasks are: %s",
-                taskId, getId(), getTasks().size(), getTasks().stream().map(InteractionTask::getId).toArray());
+                taskId, getId(), getTasks().size(), getTasks().stream().map(Activity::getId).toArray());
     }
 
-    public InteractionTask add(InteractionTask task) {
-        task.setParent(this);
-        tasks.add(task);
-        return task;
+    public Activity add(Activity activity) {
+        activity.setParent(this);
+        if (activity instanceof Task) {
+            tasks.add((Task) activity);
+        }
+        return activity;
     }
 }

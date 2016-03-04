@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -21,14 +21,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Provides ready-made {@link PromptTask}s from {@code classpath:/org/lskk/lumen/reasoner/interaction/*.PromptTask.json}
+ * Provides ready-made {@link PromptTask}s from {@code classpath:/org/lskk/lumen/reasoner/activity/*.PromptTask.json}
  * Created by ceefour on 25/02/2016.
  */
 @Repository
-public class InteractionTaskRepository {
+public class TaskRepository {
 
-    private static final Logger log = LoggerFactory.getLogger(InteractionTaskRepository.class);
-    private Map<String, InteractionTask> taskProtos = new LinkedHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(TaskRepository.class);
+    private Map<String, Activity> taskProtos = new LinkedHashMap<>();
 
     @Inject
     private ObjectMapper mapper;
@@ -36,8 +36,8 @@ public class InteractionTaskRepository {
     @PostConstruct
     public void init() throws IOException {
         // PromptTasks
-        final Resource[] promptResources = new PathMatchingResourcePatternResolver(InteractionTaskRepository.class.getClassLoader())
-                .getResources("classpath*:org/lskk/lumen/reasoner/interaction/*.PromptTask.json");
+        final Resource[] promptResources = new PathMatchingResourcePatternResolver(TaskRepository.class.getClassLoader())
+                .getResources("classpath*:org/lskk/lumen/reasoner/activity/*.PromptTask.json");
         for (final Resource res : promptResources) {
             final String id = StringUtils.substringBefore(res.getFilename(), ".");
             log.debug("Loading '{}' from {} ...", id, res);
@@ -45,12 +45,12 @@ public class InteractionTaskRepository {
             promptTaskProto.setId(id);
             taskProtos.put(id, promptTaskProto);
         }
-        final List<InteractionTask> promptTasks = taskProtos.values().stream().filter(it -> it instanceof PromptTask).collect(Collectors.toList());
-        log.info("Loaded {} PromptTasks: {}", promptTasks.size(), promptTasks.stream().map(InteractionTask::getId).toArray());
+        final List<Activity> promptTasks = taskProtos.values().stream().filter(it -> it instanceof PromptTask).collect(Collectors.toList());
+        log.info("Loaded {} PromptTasks: {}", promptTasks.size(), promptTasks.stream().map(Activity::getId).toArray());
 
         // AffirmationTasks
-        final Resource[] affirmationResources = new PathMatchingResourcePatternResolver(InteractionTaskRepository.class.getClassLoader())
-                .getResources("classpath*:org/lskk/lumen/reasoner/interaction/*.AffirmationTask.json");
+        final Resource[] affirmationResources = new PathMatchingResourcePatternResolver(TaskRepository.class.getClassLoader())
+                .getResources("classpath*:org/lskk/lumen/reasoner/activity/*.AffirmationTask.json");
         for (final Resource res : affirmationResources) {
             final String id = StringUtils.substringBefore(res.getFilename(), ".");
             log.debug("Loading '{}' from {} ...", id, res);
@@ -58,48 +58,48 @@ public class InteractionTaskRepository {
             proto.setId(id);
             taskProtos.put(id, proto);
         }
-        final List<InteractionTask> affirmationTasks = taskProtos.values().stream().filter(it -> it instanceof AffirmationTask).collect(Collectors.toList());
+        final List<Activity> affirmationTasks = taskProtos.values().stream().filter(it -> it instanceof AffirmationTask).collect(Collectors.toList());
         log.info("Loaded {} AffirmationTasks: {}",
-                affirmationTasks.size(), affirmationTasks.stream().map(InteractionTask::getId).toArray());
+                affirmationTasks.size(), affirmationTasks.stream().map(Activity::getId).toArray());
     }
 
     /**
-     * Create a new instance, this will load the task descriptor from {@code classpath*:org/lskk/lumen/reasoner/interaction/ID.PromptTask.json}
+     * Create a new instance, this will load the task descriptor from {@code classpath*:org/lskk/lumen/reasoner/activity/ID.PromptTask.json}
      * so it is JRebel-friendly.
      * @param id
      * @return
      */
     public PromptTask createPrompt(String id) {
-        final URL res = InteractionTaskRepository.class.getResource("/org/lskk/lumen/reasoner/interaction/" + id + ".PromptTask.json");
+        final URL res = TaskRepository.class.getResource("/org/lskk/lumen/reasoner/activity/" + id + ".PromptTask.json");
         try {
             final PromptTask task = mapper.readValue(res, PromptTask.class);
             task.setId(id);
             return task;
         } catch (IOException e) {
-            final Stream<InteractionTask> promptTasks = taskProtos.values().stream().filter(it -> it instanceof PromptTask);
+            final Stream<Activity> promptTasks = taskProtos.values().stream().filter(it -> it instanceof PromptTask);
             throw new ReasonerException(e, "Cannot create PromptTask '%s'. %s available PromptTasks: %s",
-                    id, promptTasks.count(), promptTasks.map(InteractionTask::getId).toArray());
+                    id, promptTasks.count(), promptTasks.map(Activity::getId).toArray());
         }
     }
 
     /**
-     * Create a new instance, this will load the task descriptor from {@code classpath*:org/lskk/lumen/reasoner/interaction/ID.AffirmationTask.json}
+     * Create a new instance, this will load the task descriptor from {@code classpath*:org/lskk/lumen/reasoner/activity/ID.AffirmationTask.json}
      * so it is JRebel-friendly.
      * @param id
      * @return
      */
     public AffirmationTask createAffirmation(String id) {
-        final String url = "/org/lskk/lumen/reasoner/interaction/" + id + ".AffirmationTask.json";
-        final URL res = Preconditions.checkNotNull(InteractionTaskRepository.class.getResource(url),
+        final String url = "/org/lskk/lumen/reasoner/activity/" + id + ".AffirmationTask.json";
+        final URL res = Preconditions.checkNotNull(TaskRepository.class.getResource(url),
                 "Affirmation '%s' not found in classpath: %s", id, url);
         try {
             final AffirmationTask task = mapper.readValue(res, AffirmationTask.class);
             task.setId(id);
             return task;
         } catch (IOException e) {
-            final Stream<InteractionTask> affirmationTasks = taskProtos.values().stream().filter(it -> it instanceof AffirmationTask);
+            final Stream<Activity> affirmationTasks = taskProtos.values().stream().filter(it -> it instanceof AffirmationTask);
             throw new ReasonerException(e, "Cannot create AffirmationTask '%s'. %s available AffirmationTasks: %s",
-                    id, affirmationTasks.count(), affirmationTasks.map(InteractionTask::getId).toArray());
+                    id, affirmationTasks.count(), affirmationTasks.map(Activity::getId).toArray());
         }
     }
 
@@ -107,7 +107,7 @@ public class InteractionTaskRepository {
      * These are only prototypes that are immutable, do not use them as is!
      * @return
      */
-    public Map<String, InteractionTask> getTaskProtos() {
+    public Map<String, Activity> getTaskProtos() {
         return taskProtos;
     }
 }

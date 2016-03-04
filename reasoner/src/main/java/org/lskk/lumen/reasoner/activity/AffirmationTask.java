@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -13,11 +13,11 @@ import java.util.stream.Collectors;
 /**
  * Used after {@link PromptTask} to reply answer user has given information.
  * affirming: to express agreement with or commitment to; uphold; support.
- * When state changes to {@link InteractionTaskState#ACTIVE}, it will express provided {@link CommunicateAction}.
+ * When state changes to {@link ActivityState#ACTIVE}, it will express provided {@link CommunicateAction}.
  * Created by ceefour on 28/02/2016.
  * @todo Maybe merge with {@link CollectTask}.
  */
-public class AffirmationTask extends InteractionTask {
+public class AffirmationTask extends Task {
 
     private List<UtterancePattern> expressions = new ArrayList<>();
 
@@ -26,8 +26,8 @@ public class AffirmationTask extends InteractionTask {
     }
 
     @Override
-    public void onStateChanged(InteractionTaskState previous, InteractionTaskState current, Locale locale, InteractionSession session) {
-        if (InteractionTaskState.PENDING == previous && InteractionTaskState.ACTIVE == current) {
+    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) {
+        if (ActivityState.PENDING == previous && ActivityState.ACTIVE == current) {
             final List<UtterancePattern> localizedExpressions = expressions.stream()
                     .filter(it -> null == it.getInLanguage() || locale.equals(Locale.forLanguageTag(it.getInLanguage())))
                     .collect(Collectors.toList());

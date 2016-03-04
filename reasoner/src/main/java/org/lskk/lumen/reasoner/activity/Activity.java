@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
@@ -9,6 +9,7 @@ import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.expression.Proposition;
 import org.lskk.lumen.reasoner.intent.Slot;
 
+import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.*;
 
@@ -27,18 +28,13 @@ import java.util.*;
  * Created by ceefour on 17/02/2016.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class InteractionTask implements Serializable {
+public abstract class Activity implements Serializable {
 
     private String id;
     private String description;
-    private InteractionTaskState state = InteractionTaskState.PENDING;
-    private List<UtterancePattern> matchedUtterancePatterns = new ArrayList<>();
-    private Queue<ThingLabel> labelsToAssert = new ArrayDeque<>();
-    private Queue<Literal> literalsToAssert = new ArrayDeque<>();
-    private Queue<Proposition> pendingPropositions = new ArrayDeque<>();
-    private Queue<CommunicateAction> pendingCommunicateActions = new ArrayDeque<>();
+    private ActivityState state = ActivityState.PENDING;
     private InteractionSession parent;
-    private List<Slot> inSlots = new ArrayList<>();
+    private Boolean enabled;
 
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
@@ -70,16 +66,9 @@ public abstract class InteractionTask implements Serializable {
      * @return
      */
     public boolean isActive() {
-        return InteractionTaskState.ACTIVE == state;
+        return ActivityState.ACTIVE == state;
     }
 
-    /**
-     * Used by {@link PromptTask}.
-     * @return
-     */
-    public List<UtterancePattern> getMatchedUtterancePatterns() {
-        return matchedUtterancePatterns;
-    }
     /**
      * You must override this to handle user's input.
      * @param communicateAction
@@ -88,41 +77,23 @@ public abstract class InteractionTask implements Serializable {
     public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session) {
     }
 
-    /**
-     * Assertable {@link ThingLabel}s, they will be {@link Queue#poll()}-ed by {@link InteractionSession}
-     * and asserted to Persistence using {@link org.lskk.lumen.persistence.service.FactService#assertLabel(String, String, String, String, float[], DateTime, String)}.
-     * @return
-     */
-    public Queue<ThingLabel> getLabelsToAssert() {
-        return labelsToAssert;
-    }
-
-    /**
-     * Assertable {@link Literal}s, they will be {@link Queue#poll()}-ed by {@link InteractionSession}
-     * and asserted to Persistence using {@link org.lskk.lumen.persistence.service.FactService#assertPropertyToLiteral(String, String, String, Object, float[], DateTime, String)}.
-     * @return
-     */
-    public Queue<Literal> getLiteralsToAssert() {
-        return literalsToAssert;
-    }
-
-    public InteractionTaskState getState() {
+    public ActivityState getState() {
         return state;
     }
 
-    public void setState(InteractionTaskState state) {
+    public void setState(ActivityState state) {
         this.state = state;
     }
 
     /**
-     * Checks whether an utterance matched the defined patterns for this {@link InteractionTask}.
+     * Checks whether an utterance matched the defined patterns for this {@link Activity}.
      * IMPORTANT: This method must be strictly stateless.
      *
      * @param locale
      * @param utterance
-     * @param scope     If {@link InteractionTask} is not active or is used as a {@link org.lskk.lumen.reasoner.skill.Skill}'s intent,
-     *                  use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#GLOBAL}.
-     *                  If {@link InteractionTask} is active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#ANY}.
+     * @param scope     If {@link Activity} is not active or is used as a {@link org.lskk.lumen.reasoner.skill.Skill}'s intent,
+     *                  use {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#GLOBAL}.
+     *                  If {@link Activity} is active, use {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#ANY}.
      * @return
      */
     public List<UtterancePattern> matchUtterance(Locale locale, String utterance, UtterancePattern.Scope scope) {
@@ -136,28 +107,8 @@ public abstract class InteractionTask implements Serializable {
      * @param locale Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
      * @param session
      */
-    public void onStateChanged(InteractionTaskState previous, InteractionTaskState current, Locale locale, InteractionSession session) {
+    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) {
 
-    }
-
-    /**
-     * Will be {@link Queue#poll()}-ed by {@link InteractionSession} to {@link org.lskk.lumen.reasoner.ux.Channel#express(String, Proposition, boolean, Object)}
-     * back to the user.
-     * @return
-     */
-    public Queue<Proposition> getPendingPropositions() {
-        return pendingPropositions;
-    }
-
-    /**
-     * Given Task state, returns the proposition that Lumen wants to express
-     * to the user (if any).
-     * Will be {@link Queue#poll()}-ed by {@link InteractionSession} to {@link org.lskk.lumen.reasoner.ux.Channel#express(String, CommunicateAction, Object)}
-     * back to the user.
-     * @return
-     */
-    public Queue<CommunicateAction> getPendingCommunicateActions() {
-        return pendingCommunicateActions;
     }
 
     public InteractionSession getParent() {
@@ -172,8 +123,21 @@ public abstract class InteractionTask implements Serializable {
         return parent.getId() + "/" + getId();
     }
 
-    public List<Slot> getInSlots() {
-        return inSlots;
+    /**
+     * At runtime after {@link #initialize()} is called, this will be default to true.
+     * @return
+     */
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    @PostConstruct
+    public void initialize() {
+        this.enabled = Optional.ofNullable(this.enabled).orElse(true);
     }
 
     @Override

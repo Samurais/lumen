@@ -1,7 +1,7 @@
 package org.lskk.lumen.reasoner.skill;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.lang3.StringUtils;
+import org.lskk.lumen.reasoner.activity.Activity;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -32,10 +32,10 @@ public class TaskRef implements Serializable {
     }
 
     /**
-     * An intent-capturing {@link org.lskk.lumen.reasoner.interaction.InteractionTask} can match
-     * {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#GLOBAL} utterances
-     * even when the {@link org.lskk.lumen.reasoner.interaction.InteractionTask} is not yet asserted
-     * in the {@link org.lskk.lumen.reasoner.interaction.InteractionSession}.
+     * An intent-capturing {@link Activity} can match
+     * {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#GLOBAL} utterances
+     * even when the {@link Activity} is not yet asserted
+     * in the {@link org.lskk.lumen.reasoner.activity.InteractionSession}.
      * @return
      */
     public Boolean getIntentCapturing() {

@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import com.google.common.collect.ImmutableList;
 import org.lskk.lumen.core.ConversationStyle;

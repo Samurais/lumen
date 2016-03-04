@@ -2,6 +2,7 @@
   "@type": "Skill",
   "name": "Unit Conversion",
   "description": "Converts a measurement to another unit.",
+  "enabled": "false",
   "tasks": [
     {
       "href": "prompt:promptMeasurementToUnit",

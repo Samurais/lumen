@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.lskk.lumen.core.ConversationStyle;
@@ -40,7 +40,7 @@ public class UtterancePattern implements Serializable, IConfidence {
     private String actual;
     private Map<String, String> slotStrings = new LinkedHashMap<>();
     private Map<String, Object> slotValues = new LinkedHashMap<>();
-    private transient InteractionTask intent;
+    private transient Activity intent;
     private transient Skill skill;
 
     /**
@@ -125,20 +125,20 @@ public class UtterancePattern implements Serializable, IConfidence {
     }
 
     /**
-     * Only used by {@link InteractionSession#receiveUtterance(Locale, String, FactService, InteractionTaskRepository)}.
+     * Only used by {@link InteractionSession#receiveUtterance(Locale, String, FactService, TaskRepository)}.
      * @return
      */
     @JsonIgnore
-    public InteractionTask getIntent() {
+    public Activity getIntent() {
         return intent;
     }
 
-    public void setIntent(InteractionTask intent) {
+    public void setIntent(Activity intent) {
         this.intent = intent;
     }
 
     /**
-     * Only used by {@link InteractionSession#receiveUtterance(Locale, String, FactService, InteractionTaskRepository)}.
+     * Only used by {@link InteractionSession#receiveUtterance(Locale, String, FactService, TaskRepository)}.
      * @return
      */
     public Skill getSkill() {

@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
     @JsonSubTypes.Type(name = "PromptReligionTask", value = PromptReligionTask.class),
     @JsonSubTypes.Type(name = "PromptAgeTask", value = PromptAgeTask.class)
 })
-public class PromptTask extends InteractionTask {
+public class PromptTask extends Task {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -190,8 +190,8 @@ public class PromptTask extends InteractionTask {
      *
      * @param locale
      * @param utterance
-     * @param scope     If PromptTask is not active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#GLOBAL}.
-     *                  If PromptTask is active, use {@link org.lskk.lumen.reasoner.interaction.UtterancePattern.Scope#ANY}.
+     * @param scope     If PromptTask is not active, use {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#GLOBAL}.
+     *                  If PromptTask is active, use {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#ANY}.
      * @return
      */
     @Override
@@ -239,7 +239,7 @@ public class PromptTask extends InteractionTask {
                                     slotStringPattern = "[a-z '-]+";
                                     break;
                                 default:
-                                    throw new ReasonerException("Slot '" + slot + "' uses unsupported type: " + outSlots);
+                                    throw new ReasonerException(String.format("Slot '%s.%s' uses unsupported type '%s'", getId(), slot, outSlots.get(slot)));
                             }
 
                             real += "(?<" + slot + ">" + slotStringPattern + ")";
@@ -375,9 +375,9 @@ public class PromptTask extends InteractionTask {
     }
 
     @Override
-    public void onStateChanged(InteractionTaskState previous, InteractionTaskState current, Locale locale, InteractionSession session) {
+    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) {
         super.onStateChanged(previous, current, locale, session);
-        if (InteractionTaskState.ACTIVE == current) {
+        if (ActivityState.ACTIVE == current) {
             // if we don't yet have the info, express the question
             // Get appropriate question for target language, if possible.
             // If not, returns first question.
@@ -394,7 +394,7 @@ public class PromptTask extends InteractionTask {
                     questionTemplate.getObject(), null);
             initiative.setConversationStyle(questionTemplate.getStyle());
             getPendingCommunicateActions().add(initiative);
-        } else if (InteractionTaskState.COMPLETED == current) {
+        } else if (ActivityState.COMPLETED == current) {
             if (null != getAffirmationTask()) {
                 session.schedule(getAffirmationTask());
             }

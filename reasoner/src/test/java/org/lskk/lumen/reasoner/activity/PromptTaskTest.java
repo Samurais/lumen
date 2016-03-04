@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import org.apache.camel.spring.boot.CamelAutoConfiguration;
 import org.joda.time.LocalDate;
@@ -53,7 +53,7 @@ public class PromptTaskTest {
     }
 
     @Inject
-    private InteractionTaskRepository promptTaskRepo;
+    private TaskRepository promptTaskRepo;
 
     @Test
     public void promptBirthDate() {

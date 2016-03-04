@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import org.kie.api.runtime.process.ProcessInstance;
 
@@ -6,7 +6,7 @@ import org.kie.api.runtime.process.ProcessInstance;
  * Inspired by {@link ProcessInstance#getState()}.
  * Created by ceefour on 28/02/2016.
  */
-public enum InteractionTaskState {
+public enum ActivityState {
     PENDING,
     ACTIVE,
     COMPLETED,

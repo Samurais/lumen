@@ -3,29 +3,27 @@ package org.lskk.lumen.reasoner.skill;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
-import org.lskk.lumen.reasoner.ReasonerException;
-import org.lskk.lumen.reasoner.interaction.InteractionTask;
-import org.lskk.lumen.reasoner.interaction.InteractionTaskRepository;
-import org.lskk.lumen.reasoner.interaction.PromptTask;
+import org.lskk.lumen.reasoner.activity.Activity;
+import org.lskk.lumen.reasoner.activity.TaskRepository;
+import org.lskk.lumen.reasoner.activity.PromptTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by ceefour on 03/03/2016.
  */
-public class Skill implements Serializable {
+public class Skill extends Activity {
     private static final Logger log = LoggerFactory.getLogger(Skill.class);
 
     private String id;
     private String name;
     private String description;
     private List<TaskRef> tasks = new ArrayList<>();
-    private List<InteractionTask> intents = new ArrayList<>();
+    private List<Activity> intents = new ArrayList<>();
     private List<Connection> connections = new ArrayList<>();
 
     public String getId() {
@@ -56,16 +54,16 @@ public class Skill implements Serializable {
         return tasks;
     }
 
-    public List<InteractionTask> getIntents() {
+    public List<Activity> getIntents() {
         return intents;
     }
 
     /**
      * Resolve {@link TaskRef}s with {@link TaskRef#getIntentCapturing()} of {@code true}, to
-     * {@link org.lskk.lumen.reasoner.interaction.InteractionTask}s.
+     * {@link Activity}s.
      * @param taskRepo
      */
-    public void resolveIntents(InteractionTaskRepository taskRepo) {
+    public void resolveIntents(TaskRepository taskRepo) {
         intents.clear();
         tasks.stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing())).forEach(taskRef -> {
             final String taskId = StringUtils.substringAfter(taskRef.getHref(), ":");

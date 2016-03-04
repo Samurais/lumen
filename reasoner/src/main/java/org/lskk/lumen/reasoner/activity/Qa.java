@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 /**
  * <p><strong>Q & A</strong></p>
@@ -8,5 +8,5 @@ package org.lskk.lumen.reasoner.interaction;
  *
  * Created by ceefour on 17/02/2016.
  */
-public class Qa extends InteractionTask {
+public class Qa extends Task {
 }

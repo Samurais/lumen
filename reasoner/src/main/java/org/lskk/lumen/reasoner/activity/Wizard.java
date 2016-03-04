@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 /**
  * <p><strong>Wizard</strong></p>
@@ -7,5 +7,5 @@ package org.lskk.lumen.reasoner.interaction;
  *
  * Created by ceefour on 17/02/2016.
  */
-public class Wizard extends InteractionTask {
+public class Wizard extends Task {
 }

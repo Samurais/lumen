@@ -3,7 +3,7 @@ package org.lskk.lumen.reasoner.skill;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
-import org.lskk.lumen.reasoner.interaction.InteractionTaskRepository;
+import org.lskk.lumen.reasoner.activity.TaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -43,6 +43,7 @@ public class SkillRepository {
             log.debug("Loading '{}' from {} ...", id, res);
             final Skill skill = mapper.readValue(res.getURL(), Skill.class);
             skill.setId(id);
+            skill.initialize();
             skills.put(id, skill);
             log.debug("Skill '{}' contains {} tasks: {}", skill.getId(),
                     skill.getTasks().size(), skill.getTasks().stream().map(TaskRef::getHref).toArray());
@@ -55,7 +56,7 @@ public class SkillRepository {
                 "Cannot get skill '%s'. %s available skills: %s", id, skills.size(), skills.keySet());
     }
 
-    public void resolveIntents(InteractionTaskRepository taskRepo) {
+    public void resolveIntents(TaskRepository taskRepo) {
         skills.forEach((k, v) -> v.resolveIntents(taskRepo));
     }
 }

@@ -1,19 +1,14 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import com.google.common.collect.ImmutableList;
 import org.joda.time.LocalDate;
-import org.lskk.lumen.core.ConversationStyle;
 import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.PartitionKey;
 import org.lskk.lumen.persistence.neo4j.SemanticProperty;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Prompts for age or birth year.

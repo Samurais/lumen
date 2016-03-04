@@ -1,4 +1,4 @@
-package org.lskk.lumen.reasoner.interaction;
+package org.lskk.lumen.reasoner.activity;
 
 import org.lskk.lumen.core.IConfidence;
 import org.lskk.lumen.persistence.neo4j.PartitionKey;
