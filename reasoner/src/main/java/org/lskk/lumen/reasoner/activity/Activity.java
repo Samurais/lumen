@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.activity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -264,6 +265,7 @@ public abstract class Activity implements Serializable {
         this.autoPoll = autoPoll;
     }
 
+    @JsonIgnore
     public List<Activity> getActivities() {
         return activities;
     }
@@ -295,7 +297,9 @@ public abstract class Activity implements Serializable {
 
     public <T extends Activity> T get(String relativePath) {
         return (T) activities.stream().filter(it -> relativePath.equals(it.getId())).findAny()
-                .orElseThrow(() -> new ReasonerException(String.format("Cannot find Activity '%s' in '%s'", relativePath, getPath())));
+                .orElseThrow(() -> new ReasonerException(String.format("Cannot find Activity '%s' in %s '%s'. %s children are: %s",
+                        relativePath, getClass().getSimpleName(), getPath(),
+                        activities.size(), activities.stream().map(Activity::getId).collect(Collectors.toList()))));
     }
 
     /**

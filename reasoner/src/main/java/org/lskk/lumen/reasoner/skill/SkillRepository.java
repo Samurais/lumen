@@ -3,6 +3,7 @@ package org.lskk.lumen.reasoner.skill;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
+import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.activity.TaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -39,13 +41,7 @@ public class SkillRepository {
                 .getResources("classpath*:org/lskk/lumen/reasoner/skill/*.Skill.json");
         for (final Resource res : skillResources) {
             final String id = StringUtils.substringBefore(res.getFilename(), ".");
-            log.debug("Loading '{}' from {} ...", id, res);
-            final Skill skill = mapper.readValue(res.getURL(), Skill.class);
-            skill.setId(id);
-            skill.initialize();
-            skills.put(id, skill);
-            log.debug("Skill '{}' contains {} tasks: {}", skill.getId(),
-                    skill.getTasks().size(), skill.getTasks().stream().map(TaskRef::getHref).toArray());
+            createAndInitialize(id, res.getURL());
         }
         log.info("Loaded {} Skills: {}", skills.size(), skills.keySet());
     }
@@ -53,6 +49,28 @@ public class SkillRepository {
     public Skill get(String id) {
         return Preconditions.checkNotNull(skills.get(id),
                 "Cannot get skill '%s'. %s available skills: %s", id, skills.size(), skills.keySet());
+    }
+
+    public Skill createAndInitialize(String id) {
+        final String path = "/org/lskk/lumen/reasoner/skill/" + id + ".Skill.json";
+        final URL url = Preconditions.checkNotNull(SkillRepository.class.getResource(path),
+                "Cannot find Skill '%s' descriptor in classpath: %s", id, path);
+        return createAndInitialize(id, url);
+    }
+
+    protected Skill createAndInitialize(String id, URL url) {
+        log.debug("Loading '{}' from {} ...", id, url);
+        try {
+            final Skill skill = mapper.readValue(url, Skill.class);
+            skill.setId(id);
+            skill.initialize();
+            skills.put(id, skill);
+            log.debug("Skill '{}' contains {} tasks: {}", skill.getId(),
+                    skill.getActivityRefs().size(), skill.getActivityRefs().stream().map(TaskRef::getHref).toArray());
+            return skill;
+        } catch (Exception e) {
+            throw new ReasonerException(e, "Error loading skill '%s' from '%s'", id, url);
+        }
     }
 
     public void resolveIntents(TaskRepository taskRepo) {

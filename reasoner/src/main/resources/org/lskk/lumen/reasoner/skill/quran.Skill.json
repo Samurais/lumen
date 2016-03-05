@@ -2,10 +2,17 @@
   "@type": "Skill",
   "name": "Quran",
   "description": "Reads Quran from specific chapter and verse.",
-  "tasks": [
+  "activities": [
     {
       "href": "prompt:promptQuranChapterVerse",
       "intentCapturing": true
+    },
+    {
+      "href": "affirmation:affirmQuranVerse"
     }
+  ],
+  "connections": [
+    {"source": "promptQuranChapterVerse.chapter", "sink": "affirmQuranVerse.chapter"},
+    {"source": "promptQuranChapterVerse.verse", "sink": "affirmQuranVerse.verse"}
   ]
 }

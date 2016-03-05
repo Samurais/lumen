@@ -1,0 +1,13 @@
+{
+  "@type": "AffirmationTask",
+  "description": "Affirm quran chapter and verse.",
+  "autoPoll": true,
+  "expressions": [
+    {"inLanguage": "id-ID", "pattern": "Saya akan membaca Al-Quran surat {chapter} ayat {verse}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "I will read Al-Quran chapter {chapter} verse {verse}.", "style": "FORMAL"}
+  ],
+  "inSlots": [
+    {"id": "chapter", "required": true, "thingTypes": ["xsd:string"]},
+    {"id": "verse", "required": true, "thingTypes": ["xsd:integer"]}
+  ]
+}

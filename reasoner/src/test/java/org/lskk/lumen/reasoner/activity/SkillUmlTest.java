@@ -83,7 +83,7 @@ public class SkillUmlTest {
     public void quranSkill() {
         final Skill quranSkill = skillRepo.get("quran");
 //        assertThat(quranSkill.getId(), equalTo("quran"));
-//        assertThat(quranSkill.getTasks(), hasSize(greaterThanOrEqualTo(1)));
+//        assertThat(quranSkill.getActivityRefs(), hasSize(greaterThanOrEqualTo(1)));
 //        assertThat(quranSkill.getIntents(), hasSize(1));
     }
 

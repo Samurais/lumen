@@ -2,6 +2,7 @@ package org.lskk.lumen.reasoner.activity;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.lskk.lumen.core.CommunicateAction;
 import org.lskk.lumen.core.IConfidence;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import java.io.Serializable;
@@ -102,17 +104,10 @@ public class InteractionSession implements Serializable, AutoCloseable {
         Preconditions.checkNotNull(activity, "activity parameter must be provided");
         Preconditions.checkState(activity.isReady(), "Activity '%s' cannot be activated because it is not ready", activity.getPath());
 
-        if (activity instanceof Task) {
+        if (activity instanceof PromptTask) {
             if (null != this.focusedTask && ActivityState.ACTIVE == this.focusedTask.getState()) {
-                log.debug("Deactivating {} for {} ...", this.focusedTask, activity);
-                final ActivityState previous = this.focusedTask.getState();
-                this.focusedTask.setState(ActivityState.PENDING);
-                try {
-                    this.focusedTask.onStateChanged(previous, this.focusedTask.getState(), locale, this);
-                } catch (Exception e) {
-                    throw new ReasonerException(e, "Error while deactivating %s", activity);
-                }
-                pollActions(locale);
+                log.debug("Defocusing {} for {} ...", this.focusedTask, activity);
+                this.focusedTask = null;
             }
         }
 
@@ -124,6 +119,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
                 activity.onStateChanged(previous, activity.getState(), locale, this);
             } catch (Exception e) {
                 throw new ReasonerException(e, "Error while activating %s", activity);
+            }
+
+            if (activity instanceof PromptTask) {
+                log.debug("Focusing {} ...", activity);
+                this.focusedTask = (Task) activity;
             }
 
             pollActions(locale);
@@ -233,7 +233,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
         final Optional<UtterancePattern> best = totalMatches.stream().findFirst();
         if (best.isPresent() && best.get().getConfidence() >= INTENT_MIN_CONFIDENCE) {
-            launchSkill(best.get(), taskRepo);
+            launchSkill(best.get(), skillRepo, taskRepo);
         } else if (best.isPresent()) {
             log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
                     best.get().getSkill().getId(), best.get().getIntent().getId());
@@ -245,19 +245,34 @@ public class InteractionSession implements Serializable, AutoCloseable {
      * on matched {@link UtterancePattern}.
      *
      * @param utterancePattern
+     * @param skillRepo
      */
-    protected void launchSkill(UtterancePattern utterancePattern, TaskRepository taskRepo) {
-        log.info("Launching {}/{} ...", utterancePattern.getSkill().getId(), utterancePattern.getIntent().getId());
-        Task theIntent = null;
-        for (final TaskRef taskRef : utterancePattern.getSkill().getTasks()) {
-            final PromptTask promptTask = taskRepo.createPrompt(taskRef.getId());
-            if (utterancePattern.getIntent().getId().equals(taskRef.getId())) {
-                theIntent = promptTask;
-            }
-            promptTask.setId(utterancePattern.getSkill().getId() + "." + promptTask.getId());
-            add(promptTask);
+    protected void launchSkill(UtterancePattern utterancePattern, SkillRepository skillRepo, TaskRepository taskRepo) {
+        // Sanity check: Make sure you don't already have this skill in the session
+        final Optional<Activity> existing = activities.stream().filter(it -> it instanceof Skill && utterancePattern.getSkill().getId().equals(it.getId()))
+                .findAny();
+        if (existing.isPresent()) {
+            throw new ReasonerException(String.format(
+                "Invalid attempt to launch already added skill '%s' from %s", existing.get().getPath(), utterancePattern));
         }
-        activate(theIntent, Locale.forLanguageTag(utterancePattern.getInLanguage()));
+
+        log.info("Launching {}/{} ...", utterancePattern.getSkill().getId(), utterancePattern.getIntent().getId());
+        final Skill skill = skillRepo.createAndInitialize(utterancePattern.getSkill().getId());
+        // instantiate Skill's child Activities from TaskRef-s
+        for (final TaskRef taskRef : skill.getActivityRefs()) {
+            final Task task;
+            if ("prompt".equals(taskRef.getScheme())) {
+                task = taskRepo.createPrompt(taskRef.getId());
+            } else if ("affirmation".equals(taskRef.getScheme())) {
+                task = taskRepo.createAffirmation(taskRef.getId());
+            } else {
+                throw new ReasonerException(String.format("Cannot launch skill '%s', unsupported task reference '%s'",
+                        utterancePattern.getSkill().getId(), taskRef.getHref()));
+            }
+            skill.add(task);
+        }
+        add(skill);
+        activate(skill, Locale.forLanguageTag(utterancePattern.getInLanguage()));
     }
 
     /**
@@ -347,10 +362,18 @@ public class InteractionSession implements Serializable, AutoCloseable {
         getPendingActivations().add(activity);
     }
 
-    public Activity get(String path) {
-        return Preconditions.checkNotNull(activities.stream().filter(it -> path.equals(it.getId())).findAny().orElse(null),
+    public <T extends Activity> T get(String path) {
+        final String firstId = StringUtils.substringBefore(path, ".");
+        @Nullable
+        final String rest = StringUtils.substringAfter(path, ".");
+        final Activity first = Preconditions.checkNotNull(activities.stream().filter(it -> firstId.equals(it.getId())).findAny().orElse(null),
                 "Cannot find task '%s' in session %s. %s available activities are: %s",
-                path, getId(), getActivities().size(), getActivities().stream().map(Activity::getId).toArray());
+                firstId, getId(), getActivities().size(), getActivities().stream().map(Activity::getId).collect(Collectors.toList()));
+        if (null == rest) {
+            return (T) first;
+        } else {
+            return first.get(rest);
+        }
     }
 
     public Activity add(Activity activity) {

@@ -70,7 +70,9 @@ public class TaskRepository {
      * @return
      */
     public PromptTask createPrompt(String id) {
-        final URL res = TaskRepository.class.getResource("/org/lskk/lumen/reasoner/activity/" + id + ".PromptTask.json");
+        final String taskPath = "/org/lskk/lumen/reasoner/activity/" + id + ".PromptTask.json";
+        final URL res = Preconditions.checkNotNull(TaskRepository.class.getResource(taskPath),
+                "Prompt task '%s' not found in classpath: %s", id, taskPath);
         try {
             final PromptTask task = mapper.readValue(res, PromptTask.class);
             task.setId(id);

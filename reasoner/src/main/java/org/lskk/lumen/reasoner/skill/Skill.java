@@ -1,12 +1,12 @@
 package org.lskk.lumen.reasoner.skill;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
+import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.activity.*;
 import org.lskk.lumen.reasoner.intent.Slot;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
@@ -16,7 +16,7 @@ import java.util.*;
  */
 public class Skill extends Activity {
 
-    private List<TaskRef> tasks = new ArrayList<>();
+    private List<TaskRef> activityRefs = new ArrayList<>();
     private List<Activity> intents = new ArrayList<>();
     private List<Connection> connections = new ArrayList<>();
 
@@ -28,8 +28,9 @@ public class Skill extends Activity {
         super(id);
     }
 
-    public List<TaskRef> getTasks() {
-        return tasks;
+    @JsonProperty("activities")
+    public List<TaskRef> getActivityRefs() {
+        return activityRefs;
     }
 
     public List<Activity> getIntents() {
@@ -43,11 +44,19 @@ public class Skill extends Activity {
      */
     public void resolveIntents(TaskRepository taskRepo) {
         intents.clear();
-        tasks.stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing())).forEach(taskRef -> {
+        activityRefs.stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing())).forEach(taskRef -> {
             final String taskId = StringUtils.substringAfter(taskRef.getHref(), ":");
-            log.info("Skill '{}' resolving intent-capturing PromptTask '{}'", getId(), taskId);
-            final PromptTask promptTask = taskRepo.createPrompt(taskId);
-            intents.add(promptTask);
+            log.info("Skill '{}' resolving intent-capturing {} task '{}'", getPath(), taskRef.getScheme(), taskRef.getId());
+            final Task task;
+            if ("prompt".equals(taskRef.getScheme())) {
+                task = taskRepo.createPrompt(taskId);
+            } else if ("affirmation".equals(taskRef.getScheme())) {
+                task = taskRepo.createAffirmation(taskId);
+            } else {
+                throw new ReasonerException(String.format("Cannot resolve skill '%s', unsupported task reference '%s'",
+                        getPath(), taskRef.getHref()));
+            }
+            intents.add(task);
         });
     }
 
@@ -135,7 +144,7 @@ public class Skill extends Activity {
     public String renderUml() {
         // convert to syntax/railroad diagram
         final List<Syntax> syntaxGraph = new ArrayList<>();
-        getTasks().stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing()))
+        getActivityRefs().stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing()))
                 .forEach(it -> {
                     syntaxGraph.add(new Syntax(SyntaxKind.START, null));
                     syntaxGraph.add(new Syntax(SyntaxKind.RECEIVE, it.getId()));
