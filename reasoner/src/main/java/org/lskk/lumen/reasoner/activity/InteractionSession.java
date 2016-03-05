@@ -32,7 +32,10 @@ import java.util.stream.Collectors;
 /**
  * Soon this will be replaced by {@link org.kie.internal.runtime.StatefulKnowledgeSession},
  * but for now I'll use this to prototype the intended behavior.
- * <p>
+ *
+ * <p>TO REPEAT: This can NOT extend {@link Activity}, for the simple reason that it will be replaced by
+ * Drools's {@link org.kie.internal.runtime.StatefulKnowledgeSession}!</p>
+ *
  * <p>Serializable, state is stored. So either use Spring to create this prototype bean using {@link javax.inject.Provider}
  * or pass service beans in methods.</p>
  * <p>
