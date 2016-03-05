@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.quran;
 
+import com.google.common.base.MoreObjects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -127,19 +129,19 @@ public class Literal implements Serializable {
 
     @Override
     public String toString() {
-        return "Literal{" +
-                "id='" + id + '\'' +
-                ", description='" + description + '\'' +
-                ", descriptionHtml='" + descriptionHtml + '\'' +
-                ", adoc='" + adoc + '\'' +
-                ", html='" + html + '\'' +
-                ", inLanguage='" + inLanguage + '\'' +
-                ", normalized='" + normalized + '\'' +
-                ", numeronym='" + numeronym + '\'' +
-                ", translator='" + translator + '\'' +
-                ", creativeWork_id='" + creativeWork_id + '\'' +
-                ", articleBodies_thing_id='" + articleBodies_thing_id + '\'' +
-                ", names_thing_id='" + names_thing_id + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this).omitNullValues()
+                .add("id", id)
+                .add("description", description)
+                .add("descriptionHtml", descriptionHtml)
+                .add("adoc", adoc)
+                .add("html", html)
+                .add("inLanguage", inLanguage)
+                .add("normalized", normalized)
+                .add("numeronym", numeronym)
+                .add("translator", translator)
+                .add("creativeWork_id", creativeWork_id)
+                .add("articleBodies_thing_id", articleBodies_thing_id)
+                .add("names_thing_id", names_thing_id)
+                .toString();
     }
 }

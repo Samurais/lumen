@@ -1,10 +1,7 @@
-package org.lskk.lumen.reasoner;
+package org.lskk.lumen.reasoner.quran;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.lskk.lumen.reasoner.aiml.AimlService;
-import org.lskk.lumen.reasoner.nlp.WordNetConfig;
-import org.lskk.lumen.reasoner.quran.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -13,6 +10,7 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.orm.jpa.EntityScan;
 import org.springframework.context.annotation.*;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -22,11 +20,13 @@ import javax.inject.Inject;
  * Created by aina on 18/11/2015.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = QuranTest.Config.class)
-public class QuranTest {
+@ContextConfiguration(classes = Quran1Test.Config.class)
+@ActiveProfiles("Quran1Test")
+public class Quran1Test {
 
-    private static final Logger log = LoggerFactory.getLogger(QuranTest.class);
+    private static final Logger log = LoggerFactory.getLogger(Quran1Test.class);
 
+    @Profile("Quran1Test")
     @Configuration
     @Import({JacksonAutoConfiguration.class, DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
     @EntityScan(basePackageClasses = QuranChapter.class)

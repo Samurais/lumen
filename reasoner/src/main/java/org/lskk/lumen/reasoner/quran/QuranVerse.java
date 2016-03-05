@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.quran;
 
+import com.google.common.base.MoreObjects;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
@@ -116,18 +118,18 @@ public class QuranVerse implements Serializable {
 
     @Override
     public String toString() {
-        return "QuranVerse{" +
-                "id='" + id + '\'' +
-                ", canonicalSlug='" + canonicalSlug + '\'' +
-                ", name='" + name + '\'' +
-                ", slug='" + slug + '\'' +
-                ", author='" + author + '\'' +
-                ", inLanguage='" + inLanguage + '\'' +
-                ", verseNum=" + verseNum +
-                ", chapter_id='" + chapter_id + '\'' +
-                ", text_id='" + text_id + '\'' +
-                ", textWithoutTashkeel_id='" + textWithoutTashkeel_id + '\'' +
-                ", transliteration_id='" + transliteration_id + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this).omitNullValues()
+                .add("id", id)
+                .add("canonicalSlug", canonicalSlug)
+                .add("name", name)
+                .add("slug", slug)
+                .add("author", author)
+                .add("inLanguage", inLanguage)
+                .add("verseNum", verseNum)
+                .add("chapter_id", chapter_id)
+                .add("text_id", text_id)
+                .add("textWithoutTashkeel_id", textWithoutTashkeel_id)
+                .add("transliteration_id", transliteration_id)
+                .toString();
     }
 }
