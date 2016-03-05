@@ -8,6 +8,7 @@ import org.lskk.lumen.core.LumenLocale;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.activity.ActivityState;
 import org.lskk.lumen.reasoner.activity.InteractionSession;
+import org.lskk.lumen.reasoner.activity.ScriptRepository;
 import org.lskk.lumen.reasoner.activity.TaskRepository;
 import org.lskk.lumen.reasoner.nlp.WordNetConfig;
 import org.lskk.lumen.reasoner.skill.Skill;
@@ -72,6 +73,8 @@ public class QuranSkillTest {
     @Inject
     private TaskRepository taskRepo;
     @Inject
+    private ScriptRepository scriptRepo;
+    @Inject
     private Channel<Void> mockChannel;
     @Inject
     private FactService factService;
@@ -107,11 +110,11 @@ public class QuranSkillTest {
             session.getActiveLocales().add(Locale.US);
             session.open();
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "baca Quran", factService, taskRepo);
+            session.receiveUtterance(LumenLocale.INDONESIAN, "baca Quran", factService, taskRepo, scriptRepo);
             session.update(mockChannel);
             assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.ACTIVE));
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo);
+            session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo, scriptRepo);
             session.update(mockChannel);
             assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
 

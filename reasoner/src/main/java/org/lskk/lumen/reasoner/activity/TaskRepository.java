@@ -76,7 +76,6 @@ public class TaskRepository {
         try {
             final PromptTask task = mapper.readValue(res, PromptTask.class);
             task.setId(id);
-            task.initialize();
             return task;
         } catch (IOException e) {
             final Stream<Activity> promptTasks = taskProtos.values().stream().filter(it -> it instanceof PromptTask);
@@ -98,7 +97,6 @@ public class TaskRepository {
         try {
             final AffirmationTask task = mapper.readValue(res, AffirmationTask.class);
             task.setId(id);
-            task.initialize();
             return task;
         } catch (IOException e) {
             final Stream<Activity> affirmationTasks = taskProtos.values().stream().filter(it -> it instanceof AffirmationTask);

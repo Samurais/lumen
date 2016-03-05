@@ -67,6 +67,8 @@ public class SkillTest {
     @Inject
     private TaskRepository taskRepo;
     @Inject
+    private ScriptRepository scriptRepo;
+    @Inject
     private Channel<Void> mockChannel;
     @Inject
     private FactService factService;
@@ -95,11 +97,11 @@ public class SkillTest {
             session.getActiveLocales().add(Locale.US);
             session.open();
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "baca Quran", factService, taskRepo);
+            session.receiveUtterance(LumenLocale.INDONESIAN, "baca Quran", factService, taskRepo, scriptRepo);
             session.update(mockChannel);
             assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.ACTIVE));
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo);
+            session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo, scriptRepo);
             session.update(mockChannel);
             assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
 

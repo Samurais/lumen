@@ -3,6 +3,8 @@ package org.lskk.lumen.reasoner.activity;
 import jdk.nashorn.api.scripting.URLReader;
 import org.apache.commons.beanutils.BeanUtils;
 import org.lskk.lumen.reasoner.intent.Slot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.script.Invocable;
 import javax.script.ScriptContext;

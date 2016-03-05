@@ -3,6 +3,7 @@ package org.lskk.lumen.reasoner.skill;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.activity.*;
@@ -16,7 +17,7 @@ import java.util.*;
  */
 public class Skill extends Activity {
 
-    private List<TaskRef> activityRefs = new ArrayList<>();
+    private List<ActivityRef> activityRefs = new ArrayList<>();
     private List<Activity> intents = new ArrayList<>();
     private List<Connection> connections = new ArrayList<>();
 
@@ -29,7 +30,7 @@ public class Skill extends Activity {
     }
 
     @JsonProperty("activities")
-    public List<TaskRef> getActivityRefs() {
+    public List<ActivityRef> getActivityRefs() {
         return activityRefs;
     }
 
@@ -38,7 +39,7 @@ public class Skill extends Activity {
     }
 
     /**
-     * Resolve {@link TaskRef}s with {@link TaskRef#getIntentCapturing()} of {@code true}, to
+     * Resolve {@link ActivityRef}s with {@link ActivityRef#getIntentCapturing()} of {@code true}, to
      * {@link Activity}s.
      * @param taskRepo
      */
@@ -80,24 +81,37 @@ public class Skill extends Activity {
     @Override
     public void pollActions(InteractionSession session, Locale locale) {
         super.pollActions(session, locale);
-        // pass connected slots
+        // Pass 1: scan connections and group by source
+        final ArrayListMultimap<String, Connection> connectionsBySource = ArrayListMultimap.create();
         connections.forEach(conn -> {
-            final Activity source = get(conn.getSourceActivity());
-            final Queue<Object> sourceQueue = source.getOutSlot(conn.getSourceSlot()).getOutQueue();
-            final Activity sink = get(conn.getSinkActivity());
-            final Slot sinkSlot = sink.getInSlot(conn.getSinkSlot());
+            connectionsBySource.put(conn.getSource(), conn);
+        });
+        // Pass 2: move packets. we do this in separate phase because one source may be connected to multiple sinks
+        // (a deviation from classical flow-based programming)
+        connectionsBySource.asMap().forEach((source, conns) -> {
+            final Connection firstConn = conns.iterator().next();
+            final Activity sourceActivity = get(firstConn.getSourceActivity());
+            final Queue<Object> sourceQueue = sourceActivity.getOutSlot(firstConn.getSourceSlot()).getOutQueue();
             if (!sourceQueue.isEmpty()) {
                 final List<Object> flows = new ArrayList<>();
                 while (!sourceQueue.isEmpty()) {
                     final Object obj = sourceQueue.poll();
                     flows.add(obj);
-                    sinkSlot.add(obj);
+                    conns.forEach(sink -> {
+                        final Activity sinkActivity = get(sink.getSinkActivity());
+                        final Slot sinkSlot = sinkActivity.getInSlot(sink.getSinkSlot());
+                        sinkSlot.add(obj);
+                    });
                 }
-                log.debug("Moved {}({}) {} -[{}]-> {} {}({}): {}",
-                        source.getPath(), source.getClass().getSimpleName(), conn.getSourceSlot(),
-                        flows.size(), sinkSlot.getId(), sink.getPath(), sink.getClass().getSimpleName(), flows);
+                conns.forEach(sink -> {
+                    final Activity sinkActivity = get(sink.getSinkActivity());
+                    log.debug("Moved {}({}) {} -[{}]-> {} {}({}): {}",
+                            sourceActivity.getPath(), sourceActivity.getClass().getSimpleName(), firstConn.getSourceSlot(),
+                            flows.size(), sink.getSinkSlot(), sinkActivity.getPath(), sinkActivity.getClass().getSimpleName(), flows);
+                });
             }
         });
+
         // activate PENDING and ready activities
         getActivities().stream().filter(act -> ActivityState.PENDING == act.getState() && act.isReady())
                 .forEach(act -> {

@@ -12,7 +12,7 @@ import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.skill.Skill;
 import org.lskk.lumen.reasoner.skill.SkillRepository;
-import org.lskk.lumen.reasoner.skill.TaskRef;
+import org.lskk.lumen.reasoner.skill.ActivityRef;
 import org.lskk.lumen.reasoner.ux.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,7 +193,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     // TODO: should parameters replaced by CommunicateAction?
-    public void receiveUtterance(Locale locale, String text, FactService factService, TaskRepository taskRepo) {
+    public void receiveUtterance(Locale locale, String text, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
         lastLocale = locale;
         final CommunicateAction communicateAction = new CommunicateAction(locale, text, null);
 
@@ -233,7 +233,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
         final Optional<UtterancePattern> best = totalMatches.stream().findFirst();
         if (best.isPresent() && best.get().getConfidence() >= INTENT_MIN_CONFIDENCE) {
-            launchSkill(best.get(), skillRepo, taskRepo);
+            launchSkill(best.get(), skillRepo, taskRepo, scriptRepo);
         } else if (best.isPresent()) {
             log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
                     best.get().getSkill().getId(), best.get().getIntent().getId());
@@ -243,11 +243,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
     /**
      * Create all {@link Activity}s of a {@link org.lskk.lumen.reasoner.skill.Skill} based
      * on matched {@link UtterancePattern}.
-     *
-     * @param utterancePattern
+     *  @param utterancePattern
      * @param skillRepo
+     * @param scriptRepo
      */
-    protected void launchSkill(UtterancePattern utterancePattern, SkillRepository skillRepo, TaskRepository taskRepo) {
+    protected void launchSkill(UtterancePattern utterancePattern, SkillRepository skillRepo, TaskRepository taskRepo, ScriptRepository scriptRepo) {
         // Sanity check: Make sure you don't already have this skill in the session
         final Optional<Activity> existing = activities.stream().filter(it -> it instanceof Skill && utterancePattern.getSkill().getId().equals(it.getId()))
                 .findAny();
@@ -257,21 +257,24 @@ public class InteractionSession implements Serializable, AutoCloseable {
         }
 
         log.info("Launching {}/{} ...", utterancePattern.getSkill().getId(), utterancePattern.getIntent().getId());
-        final Skill skill = skillRepo.createAndInitialize(utterancePattern.getSkill().getId());
+        final Skill skill = skillRepo.createOnly(utterancePattern.getSkill().getId());
         // instantiate Skill's child Activities from TaskRef-s
-        for (final TaskRef taskRef : skill.getActivityRefs()) {
-            final Task task;
-            if ("prompt".equals(taskRef.getScheme())) {
-                task = taskRepo.createPrompt(taskRef.getId());
-            } else if ("affirmation".equals(taskRef.getScheme())) {
-                task = taskRepo.createAffirmation(taskRef.getId());
+        for (final ActivityRef activityRef : skill.getActivityRefs()) {
+            final Activity child;
+            if ("prompt".equals(activityRef.getScheme())) {
+                child = taskRepo.createPrompt(activityRef.getId());
+            } else if ("affirmation".equals(activityRef.getScheme())) {
+                child = taskRepo.createAffirmation(activityRef.getId());
+            } else if ("script".equals(activityRef.getScheme())) {
+                child = scriptRepo.createScript(activityRef.getId());
             } else {
-                throw new ReasonerException(String.format("Cannot launch skill '%s', unsupported task reference '%s'",
-                        utterancePattern.getSkill().getId(), taskRef.getHref()));
+                throw new ReasonerException(String.format("Cannot launch skill '%s', unsupported activity reference '%s'",
+                        utterancePattern.getSkill().getId(), activityRef.getHref()));
             }
-            skill.add(task);
+            skill.add(child);
         }
         add(skill);
+        skill.initialize();
         activate(skill, Locale.forLanguageTag(utterancePattern.getInLanguage()));
     }
 

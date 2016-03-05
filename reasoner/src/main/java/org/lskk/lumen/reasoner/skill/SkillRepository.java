@@ -41,9 +41,11 @@ public class SkillRepository {
                 .getResources("classpath*:org/lskk/lumen/reasoner/skill/*.Skill.json");
         for (final Resource res : skillResources) {
             final String id = StringUtils.substringBefore(res.getFilename(), ".");
-            createAndInitialize(id, res.getURL());
+            createOnly(id, res.getURL());
         }
         log.info("Loaded {} Skills: {}", skills.size(), skills.keySet());
+
+        skills.values().forEach(Skill::initialize);
     }
 
     public Skill get(String id) {
@@ -51,22 +53,21 @@ public class SkillRepository {
                 "Cannot get skill '%s'. %s available skills: %s", id, skills.size(), skills.keySet());
     }
 
-    public Skill createAndInitialize(String id) {
+    public Skill createOnly(String id) {
         final String path = "/org/lskk/lumen/reasoner/skill/" + id + ".Skill.json";
         final URL url = Preconditions.checkNotNull(SkillRepository.class.getResource(path),
                 "Cannot find Skill '%s' descriptor in classpath: %s", id, path);
-        return createAndInitialize(id, url);
+        return createOnly(id, url);
     }
 
-    protected Skill createAndInitialize(String id, URL url) {
+    protected Skill createOnly(String id, URL url) {
         log.debug("Loading '{}' from {} ...", id, url);
         try {
             final Skill skill = mapper.readValue(url, Skill.class);
             skill.setId(id);
-            skill.initialize();
             skills.put(id, skill);
             log.debug("Skill '{}' contains {} tasks: {}", skill.getId(),
-                    skill.getActivityRefs().size(), skill.getActivityRefs().stream().map(TaskRef::getHref).toArray());
+                    skill.getActivityRefs().size(), skill.getActivityRefs().stream().map(ActivityRef::getHref).toArray());
             return skill;
         } catch (Exception e) {
             throw new ReasonerException(e, "Error loading skill '%s' from '%s'", id, url);

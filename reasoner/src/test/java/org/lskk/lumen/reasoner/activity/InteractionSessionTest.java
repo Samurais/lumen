@@ -2,7 +2,6 @@ package org.lskk.lumen.reasoner.activity;
 
 import org.apache.camel.spring.boot.CamelAutoConfiguration;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.lskk.lumen.core.LumenCoreConfig;
@@ -99,7 +98,7 @@ public class InteractionSessionTest {
             session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel);
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo);
+            session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
@@ -134,7 +133,7 @@ public class InteractionSessionTest {
             session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel);
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo);
+            session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());

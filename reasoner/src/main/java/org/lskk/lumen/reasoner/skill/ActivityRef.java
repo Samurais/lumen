@@ -9,7 +9,7 @@ import java.net.URI;
 /**
  * Created by ceefour on 03/03/2016.
  */
-public class TaskRef implements Serializable {
+public class ActivityRef implements Serializable {
     private String href;
     private Boolean intentCapturing;
 

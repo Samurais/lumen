@@ -9,10 +9,15 @@
     },
     {
       "href": "affirmation:affirmQuranVerse"
+    },
+    {
+      "href": "script:reciteQuranVerse"
     }
   ],
   "connections": [
     {"source": "promptQuranChapterVerse.chapter", "sink": "affirmQuranVerse.chapter"},
-    {"source": "promptQuranChapterVerse.verse", "sink": "affirmQuranVerse.verse"}
+    {"source": "promptQuranChapterVerse.verse", "sink": "affirmQuranVerse.verse"},
+    {"source": "promptQuranChapterVerse.chapter", "sink": "reciteQuranVerse.chapter"},
+    {"source": "promptQuranChapterVerse.verse", "sink": "reciteQuranVerse.verse"}
   ]
 }

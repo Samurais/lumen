@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.intent;
 
+import com.google.common.base.Preconditions;
+
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.ArrayDeque;
@@ -134,6 +136,7 @@ public class Slot implements Serializable {
      * @return
      */
     public boolean hasNext() {
+        Preconditions.checkNotNull(inQueue, "inQueue for in-slot %s %s is null, have you called initialize()?", getId(), getThingTypes());
         return !inQueue.isEmpty();
     }
 

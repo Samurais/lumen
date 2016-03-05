@@ -33,7 +33,10 @@ import java.util.stream.Collectors;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Activity implements Serializable {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    /**
+     * Will be overwritten in {@link #initialize()}.
+     */
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     private String id;
     private String name;
@@ -215,6 +218,8 @@ public abstract class Activity implements Serializable {
 
     @PostConstruct
     public void initialize() {
+        this.log = LoggerFactory.getLogger(getClass().getName() + "." + getId());
+
         this.enabled = Optional.ofNullable(this.enabled).orElse(true);
         this.autoPoll = Optional.ofNullable(this.autoPoll).orElse(false);
         this.autoStart = Optional.ofNullable(this.autoStart).orElse(false);
