@@ -49,6 +49,7 @@ public abstract class Activity implements Serializable {
     private List<Slot> outSlots = new ArrayList<>();
     private List<Activity> activities = new ArrayList<>();
     private Boolean autoStart;
+    private Queue<CommunicateAction> pendingCommunicateActions = new ArrayDeque<>();
 
     public Activity() {
     }
@@ -321,5 +322,16 @@ public abstract class Activity implements Serializable {
             return activities.stream().filter(Activity::getEnabled).map(it -> it.visitFirst(visitor))
                     .filter(Objects::nonNull).findFirst().orElse(null);
         }
+    }
+
+    /**
+     * Given Task state, returns the proposition that Lumen wants to express
+     * to the user (if any).
+     * Will be {@link Queue#poll()}-ed by {@link InteractionSession} to {@link org.lskk.lumen.reasoner.ux.Channel#express(String, CommunicateAction, Object)}
+     * back to the user.
+     * @return
+     */
+    public Queue<CommunicateAction> getPendingCommunicateActions() {
+        return pendingCommunicateActions;
     }
 }

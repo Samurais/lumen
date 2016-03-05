@@ -29,6 +29,10 @@ public class Script extends Activity {
             engine.eval(new URLReader(scriptUrl, StandardCharsets.UTF_8));
             final Invocable invocable = (Invocable) engine;
 
+            log.debug("{}+ '{}' provides {} scriptables: {}", getClass().getSimpleName(), getPath(),
+                    session.getScriptables().size(), session.getScriptables().keySet());
+            engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(session.getScriptables());
+
             engine.getBindings(ScriptContext.ENGINE_SCOPE).put("log", log);
 //            engine.getBindings(ScriptContext.ENGINE_SCOPE).put("intent", intent);
 
@@ -38,6 +42,7 @@ public class Script extends Activity {
             getOutSlots().forEach(slot -> outSlotsVar.put(slot.getId(), slot));
             engine.getBindings(ScriptContext.ENGINE_SCOPE).put("inSlots", inSlotsVar);
             engine.getBindings(ScriptContext.ENGINE_SCOPE).put("outSlots", outSlotsVar);
+            engine.getBindings(ScriptContext.ENGINE_SCOPE).put("pendingCommunicateActions", getPendingCommunicateActions());
             invocable.invokeFunction("onActivate");
         }
     }

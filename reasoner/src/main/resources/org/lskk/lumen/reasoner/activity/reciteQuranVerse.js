@@ -8,6 +8,8 @@ with(new JavaImporter(org.lskk.lumen.reasoner.activity)) {
         var chapter  = inSlots.chapter.last;
         var verse = inSlots.verse.last;
         log.info("Reciting Al-Quran {} {}", chapter, verse);
+        var communicateAction = quranService.recite(chapter, verse, null);
+        pendingCommunicateActions.add(communicateAction);
     }
 
 }

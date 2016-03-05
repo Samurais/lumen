@@ -20,7 +20,6 @@ public abstract class Task extends Activity {
     private Queue<ThingLabel> labelsToAssert = new ArrayDeque<>();
     private Queue<Literal> literalsToAssert = new ArrayDeque<>();
     private Queue<Proposition> pendingPropositions = new ArrayDeque<>();
-    private Queue<CommunicateAction> pendingCommunicateActions = new ArrayDeque<>();
 
     /**
      * Used by {@link PromptTask}.
@@ -55,17 +54,6 @@ public abstract class Task extends Activity {
      */
     public Queue<Proposition> getPendingPropositions() {
         return pendingPropositions;
-    }
-
-    /**
-     * Given Task state, returns the proposition that Lumen wants to express
-     * to the user (if any).
-     * Will be {@link Queue#poll()}-ed by {@link InteractionSession} to {@link org.lskk.lumen.reasoner.ux.Channel#express(String, CommunicateAction, Object)}
-     * back to the user.
-     * @return
-     */
-    public Queue<CommunicateAction> getPendingCommunicateActions() {
-        return pendingCommunicateActions;
     }
 
 }

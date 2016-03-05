@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -61,6 +62,8 @@ public class InteractionSession implements Serializable, AutoCloseable {
     public static final float ASSERT_LITERAL_MIN_CONFIDENCE = 0.8f;
     private static final AtomicLong SEQ_ID = new AtomicLong(0);
 
+    @Inject @Scriptable
+    private Map<String, Object> scriptables;
     @Inject
     private FactService factService;
     @Inject
@@ -82,7 +85,15 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
     @PreDestroy
     public void close() {
+    }
 
+    /**
+     * @see Scriptable
+     * @see Script
+     * @return
+     */
+    public Map<String, Object> getScriptables() {
+        return scriptables;
     }
 
     /**
@@ -287,15 +298,12 @@ public class InteractionSession implements Serializable, AutoCloseable {
     protected void expressAll(Channel<?> channel, String avatarId) {
         visitFirst(activity -> {
             log.trace("expressAll() visiting activity '{}'", activity.getPath());
-            if (activity instanceof Task) {
-                final Task task = (Task) activity;
-                while (true) {
-                    final CommunicateAction pendingCommunicateAction = task.getPendingCommunicateActions().poll();
-                    if (null == pendingCommunicateAction) {
-                        break;
-                    }
-                    channel.express(avatarId, pendingCommunicateAction, null);
+            while (true) {
+                final CommunicateAction pendingCommunicateAction = activity.getPendingCommunicateActions().poll();
+                if (null == pendingCommunicateAction) {
+                    break;
                 }
+                channel.express(avatarId, pendingCommunicateAction, null);
             }
             return null;
         });

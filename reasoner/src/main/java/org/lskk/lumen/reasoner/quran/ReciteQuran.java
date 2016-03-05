@@ -1,7 +1,9 @@
 package org.lskk.lumen.reasoner.quran;
 
 import org.lskk.lumen.reasoner.intent.Intent;
+import org.lskk.lumen.reasoner.ux.Channel;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -15,6 +17,16 @@ public class ReciteQuran extends Intent {
     private String upVerses;
     private Integer chapterNumber;
     private List<Integer> verseNumbers;
+
+    public ReciteQuran() {
+    }
+
+    public ReciteQuran(String upChapter, int upVerse, @Nullable Channel<?> channel) {
+        super();
+        this.upChapter = upChapter;
+        this.upVerses = Integer.toString(upVerse);
+        this.setChannel(channel);
+    }
 
     /**
      * User-provided chapter name or number, free-form, e.g. "al-kahfi", "kahfi", "al kahfi", Arabic/Indonesian/English variants,
