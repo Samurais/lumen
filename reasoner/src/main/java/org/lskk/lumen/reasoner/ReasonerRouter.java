@@ -3,17 +3,16 @@ package org.lskk.lumen.reasoner;
 import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.rabbitmq.RabbitMQConstants;
-import org.joda.time.Duration;
 import org.lskk.lumen.core.AvatarChannel;
 import org.lskk.lumen.core.CommunicateAction;
-import org.lskk.lumen.core.SocialChannel;
 import org.lskk.lumen.core.Status;
 import org.lskk.lumen.core.util.AsError;
 import org.lskk.lumen.core.util.ToJson;
-import org.lskk.lumen.reasoner.aiml.AimlService;
-import org.lskk.lumen.reasoner.event.AgentResponse;
-import org.lskk.lumen.reasoner.expression.Proposition;
-import org.lskk.lumen.reasoner.social.SocialJournal;
+import org.lskk.lumen.persistence.service.FactService;
+import org.lskk.lumen.reasoner.activity.InteractionSession;
+import org.lskk.lumen.reasoner.activity.ScriptRepository;
+import org.lskk.lumen.reasoner.activity.SessionManager;
+import org.lskk.lumen.reasoner.activity.TaskRepository;
 import org.lskk.lumen.reasoner.social.SocialJournalRepository;
 import org.lskk.lumen.reasoner.ux.ChatChannel;
 import org.slf4j.Logger;
@@ -38,14 +37,22 @@ public class ReasonerRouter extends RouteBuilder {
     private ToJson toJson;
     @Inject
     private AsError asError;
-    @Inject
-    private AimlService aimlService;
+//    @Inject
+//    private AimlService aimlService;
     @Inject
     private ChatChannel chatChannel;
     @Inject
     private DroolsService droolsService;
     @Inject
     private SocialJournalRepository socialJournalRepo;
+    @Inject
+    private SessionManager sessionManager;
+    @Inject
+    private FactService factService;
+    @Inject
+    private ScriptRepository scriptRepo;
+    @Inject
+    private TaskRepository taskRepo;
 
     @Override
     public void configure() throws Exception {
@@ -75,23 +82,29 @@ public class ReasonerRouter extends RouteBuilder {
                     final Locale origLocale = Optional.ofNullable(inCommunicate.getInLanguage()).orElse(Locale.US);
                     final float[] speechTruthValue = Optional.ofNullable(inCommunicate.getSpeechTruthValue()).orElse(new float[]{0f, 0f, 0f});
                     final boolean speechInput = speechTruthValue.length >= 2 && speechTruthValue[1] > 0f;
-                    final AgentResponse agentResponse = aimlService.process(origLocale, inCommunicate.getObject(),
-                            chatChannel, inCommunicate.getAvatarId(), speechInput);
 
-                    if (!agentResponse.getCommunicateActions().isEmpty()) {
-                        for (final CommunicateAction communicateAction : agentResponse.getCommunicateActions()) {
-                            chatChannel.express(inCommunicate.getAvatarId(), communicateAction, null);
-                        }
-                    } else if (agentResponse.getUnrecognizedInput() != null) {
-                        chatChannel.express(inCommunicate.getAvatarId(), Proposition.I_DONT_UNDERSTAND, true, null);
-                    }
-                    droolsService.process(agentResponse);
+                    // AIML style
+//                    final AgentResponse agentResponse = aimlService.process(origLocale, inCommunicate.getObject(),
+//                            chatChannel, inCommunicate.getAvatarId(), speechInput);
+//                    if (!agentResponse.getCommunicateActions().isEmpty()) {
+//                        for (final CommunicateAction communicateAction : agentResponse.getCommunicateActions()) {
+//                            chatChannel.express(inCommunicate.getAvatarId(), communicateAction, null);
+//                        }
+//                    } else if (agentResponse.getUnrecognizedInput() != null) {
+//                        chatChannel.express(inCommunicate.getAvatarId(), Proposition.I_DONT_UNDERSTAND, true, null);
+//                    }
+//                    droolsService.process(agentResponse);
 
-                    final SocialJournal socialJournal = new SocialJournal();
-                    socialJournal.setFromResponse(origLocale, inCommunicate.getAvatarId(),
-                            inCommunicate.getObject(), SocialChannel.DIRECT,
-                            agentResponse, Duration.millis(System.currentTimeMillis() - startTime));
-                    socialJournalRepo.save(socialJournal);
+                    final InteractionSession session = sessionManager.getOrCreate(chatChannel, inCommunicate.getAvatarId());
+                    session.receiveUtterance(origLocale, inCommunicate.getObject(), factService, taskRepo, scriptRepo);
+                    session.update(chatChannel, inCommunicate.getAvatarId());
+
+                    // FIXME: re-implement SocialJournal
+//                    final SocialJournal socialJournal = new SocialJournal();
+//                    socialJournal.setFromResponse(origLocale, inCommunicate.getAvatarId(),
+//                            inCommunicate.getObject(), SocialChannel.DIRECT,
+//                            agentResponse, Duration.millis(System.currentTimeMillis() - startTime));
+//                    socialJournalRepo.save(socialJournal);
 
                     exchange.getIn().setBody(new Status());
                 })

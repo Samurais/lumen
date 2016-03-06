@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,7 +43,11 @@ import java.util.stream.Collectors;
  * Running -poke-> Running
  * Running -suspend-> Suspended
  * Suspended -resume-> Running
- * <p>
+ * </p>
+ *
+ * <p>Sessions can also be merged. For example, one opens a chat, and they also open a Twitter. Later on Lumen discovers
+ * that these are the same user, so the two sessions will be merged into one, enabling seamless interaction.</p>
+ *
  * Created by ceefour on 26/02/2016.
  */
 @Component
@@ -79,11 +82,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
     private List<Activity> activities = new ArrayList<>();
     private Queue<Activity> pendingActivations = new ArrayDeque<>();
 
-    public void open() {
+    public void open(Channel<?> channel, String avatarId) {
         Preconditions.checkState(!activeLocales.isEmpty(),
                 "Requires at least one active locale");
         lastLocale = activeLocales.get(0);
-        update(null);
+        update(channel, avatarId);
     }
 
     @PreDestroy
@@ -171,7 +174,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
      * </ol>
      *
      * @param locale
-     * @see #update(Channel)
+     * @see #update(Channel, String)
      */
     protected void pollActions(Locale locale) {
         activities.forEach(activity -> {
@@ -293,7 +296,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     /**
-     * Used by {@link #update(Channel)} to express all pending propositions.
+     * Used by {@link #update(Channel, String)} to express all pending propositions.
      *
      * @param channel
      * @param avatarId
@@ -327,9 +330,9 @@ public class InteractionSession implements Serializable, AutoCloseable {
      * Call this to fire pending scheduled activities.
      *
      * @param channel
+     * @param avatarId
      */
-    public void update(Channel<?> channel) {
-        final String avatarId = null;
+    public void update(Channel<?> channel, String avatarId) {
         expressAll(channel, avatarId); // pre-activation express
 
         final Activity nextActivity = pendingActivations.poll();

@@ -22,6 +22,7 @@ import org.lskk.lumen.reasoner.ux.Channel;
 import org.mvel2.templates.TemplateRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
@@ -38,9 +39,11 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 /**
+ * Experimental: Not being used now, we now use {@link org.lskk.lumen.reasoner.activity.UtterancePattern}.
  * Created by ceefour on 10/28/15.
  */
 @Service
+@Profile("aiml")
 public class AimlService {
     public static final Locale INDONESIAN = Locale.forLanguageTag("id-ID");
     private static final Logger log = LoggerFactory.getLogger(AimlService.class);

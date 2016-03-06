@@ -15,9 +15,11 @@ import javax.inject.Inject;
 
 /**
  * Created by ceefour on 10/2/15.
+ * @deprecated Now uses {@link ReasonerRouter}
  */
 @Component
 @Profile("reasonerApp")
+@Deprecated
 public class DroolsRouter extends RouteBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(DroolsRouter.class);

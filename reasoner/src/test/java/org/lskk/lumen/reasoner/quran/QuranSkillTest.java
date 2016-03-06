@@ -108,14 +108,14 @@ public class QuranSkillTest {
         try (final InteractionSession session = sessionProvider.get()) {
             session.getActiveLocales().add(LumenLocale.INDONESIAN);
             session.getActiveLocales().add(Locale.US);
-            session.open();
+            session.open(null, null);
 
             session.receiveUtterance(LumenLocale.INDONESIAN, "baca Quran", factService, taskRepo, scriptRepo);
-            session.update(mockChannel);
+            session.update(mockChannel, null);
             assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.ACTIVE));
 
             session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo, scriptRepo);
-            session.update(mockChannel);
+            session.update(mockChannel, null);
             assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
 
             verify(mockChannel, times(2)).express(any(), any(), any());

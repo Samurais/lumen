@@ -79,7 +79,7 @@ public class InteractionSessionTest {
         try (final InteractionSession session = sessionProvider.get()) {
             session.getActiveLocales().add(LumenLocale.INDONESIAN);
             session.getActiveLocales().add(Locale.US);
-            session.open();
+            session.open(null, null);
 
             final Skill skill = new Skill("askNameThenAffirmSimple");
             final PromptTask promptName = taskRepo.createPrompt("promptName");
@@ -96,14 +96,14 @@ public class InteractionSessionTest {
             skill.initialize();
 
             session.activate(skill, LumenLocale.INDONESIAN);
-            session.update(mockChannel);
+            session.update(mockChannel, null);
 
             session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
 
-            session.update(mockChannel);
+            session.update(mockChannel, null);
             verify(mockChannel, times(2)).express(any(), any(), any());
         }
     }
@@ -114,7 +114,7 @@ public class InteractionSessionTest {
         try (final InteractionSession session = sessionProvider.get()) {
             session.getActiveLocales().add(LumenLocale.INDONESIAN);
             session.getActiveLocales().add(Locale.US);
-            session.open();
+            session.open(null, null);
 
             final Skill skill = new Skill("askNameThenAffirmYourLabel");
             final PromptTask promptName = taskRepo.createPrompt("promptName");
@@ -131,14 +131,14 @@ public class InteractionSessionTest {
             skill.initialize();
 
             session.activate(skill, LumenLocale.INDONESIAN);
-            session.update(mockChannel);
+            session.update(mockChannel, null);
 
             session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
 
-            session.update(mockChannel);
+            session.update(mockChannel, null);
             verify(mockChannel, times(2)).express(any(), any(), any());
         }
     }
