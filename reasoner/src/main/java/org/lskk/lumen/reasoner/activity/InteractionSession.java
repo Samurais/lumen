@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Soon this will be replaced by {@link org.kie.internal.runtime.StatefulKnowledgeSession},
@@ -215,16 +216,22 @@ public class InteractionSession implements Serializable, AutoCloseable {
         final CommunicateAction communicateAction = new CommunicateAction(locale, text, null);
 
         // Check child activities first
-        activities.stream().filter(it -> ActivityState.ACTIVE == it.getState()).forEach(activity -> {
+        final List<Activity> activeActivities = activities.stream().filter(it -> ActivityState.ACTIVE == it.getState())
+                .collect(Collectors.toList());
+        log.trace("Executing receiveUtterance for {} active activities {}: {}", activeActivities.size(),
+                activeActivities.stream().map(Activity::getPath).collect(Collectors.toList()), communicateAction);
+        activeActivities.forEach(activity -> {
             log.trace("Executing receiveUtterance for '{}': {}", activity.getPath(), communicateAction);
             activity.receiveUtterance(communicateAction, this, focusedTask);
         });
         pollActions(locale);
 
-        // consult daemon skills
+        // consult daemon skills, only if enabled and only if not yet added to this session
+        final Set<String> addedSkills = activities.stream().filter(it -> it instanceof Skill).map(Activity::getId).collect(Collectors.toSet());
         final List<Skill> enabledSkills = skillRepo.getSkills().values().stream()
-                .filter(Skill::getEnabled).collect(Collectors.toList());
+                .filter(it -> it.getEnabled() && !addedSkills.contains(it.getId())).collect(Collectors.toList());
         final List<UtterancePattern> totalMatches = enabledSkills.stream().flatMap(skill -> {
+            skill.resolveIntents(taskRepo);
             final List<UtterancePattern> skillMatches = skill.getIntents().stream().flatMap(intent -> {
                 final List<UtterancePattern> matches = intent.matchUtterance(locale, text, UtterancePattern.Scope.GLOBAL);
                 matches.forEach(match -> {
@@ -242,7 +249,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
                     text, locale.toLanguageTag());
             return skillMatches.stream();
         }).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
-        log.info("Total {} matches for '{}'@{} from {} enabled skills:\n{}",
+        log.info("Total {} matches for '{}'@{} from {} enabled+unadded repository skills:\n{}",
                 totalMatches.size(), text, locale.toLanguageTag(), enabledSkills.size(),
                 totalMatches.stream().limit(10)
                         .map(m -> String.format("* %s/%s: %s", m.getSkill().getId(), m.getIntent().getId(), m))

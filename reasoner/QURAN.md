@@ -16,3 +16,4 @@
         \copy sanad.spellingproperty from 'spellingproperty-quran.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
         \copy sanad.authenticityproperty from 'authenticityproperty-quran.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
         \copy sanad.successionproperty from 'successionproperty-quran.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
+7. Download `versebyversequran_alafasy_ogg.zip` (1.24 GB. TODO: where?) and extract as `D:\versebyversequran_alafasy_ogg`

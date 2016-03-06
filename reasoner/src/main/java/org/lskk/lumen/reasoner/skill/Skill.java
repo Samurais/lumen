@@ -5,6 +5,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import org.apache.commons.lang3.StringUtils;
+import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.activity.*;
 import org.lskk.lumen.reasoner.intent.Slot;
@@ -18,7 +19,10 @@ import java.util.*;
 public class Skill extends Activity {
 
     private List<ActivityRef> activityRefs = new ArrayList<>();
-    private List<Activity> intents = new ArrayList<>();
+    /**
+     * Initially {@code null} until {@link #resolveIntents(TaskRepository)} is called by {@link InteractionSession#receiveUtterance(Locale, String, FactService, TaskRepository, ScriptRepository)}.
+     */
+    private List<Activity> intents;
     private List<Connection> connections = new ArrayList<>();
 
     public Skill() {
@@ -40,25 +44,27 @@ public class Skill extends Activity {
 
     /**
      * Resolve {@link ActivityRef}s with {@link ActivityRef#getIntentCapturing()} of {@code true}, to
-     * {@link Activity}s.
+     * {@link Activity}s. Only called once, further calls have no effect.
      * @param taskRepo
      */
     public void resolveIntents(TaskRepository taskRepo) {
-        intents.clear();
-        activityRefs.stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing())).forEach(taskRef -> {
-            final String taskId = StringUtils.substringAfter(taskRef.getHref(), ":");
-            log.info("Skill '{}' resolving intent-capturing {} task '{}'", getPath(), taskRef.getScheme(), taskRef.getId());
-            final Task task;
-            if ("prompt".equals(taskRef.getScheme())) {
-                task = taskRepo.createPrompt(taskId);
-            } else if ("affirmation".equals(taskRef.getScheme())) {
-                task = taskRepo.createAffirmation(taskId);
-            } else {
-                throw new ReasonerException(String.format("Cannot resolve skill '%s', unsupported task reference '%s'",
-                        getPath(), taskRef.getHref()));
-            }
-            intents.add(task);
-        });
+        if (null == intents) {
+            intents = new ArrayList<>();
+            activityRefs.stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing())).forEach(taskRef -> {
+                final String taskId = StringUtils.substringAfter(taskRef.getHref(), ":");
+                log.info("Skill '{}' resolving intent-capturing {} task '{}'", getPath(), taskRef.getScheme(), taskRef.getId());
+                final Task task;
+                if ("prompt".equals(taskRef.getScheme())) {
+                    task = taskRepo.createPrompt(taskId);
+                } else if ("affirmation".equals(taskRef.getScheme())) {
+                    task = taskRepo.createAffirmation(taskId);
+                } else {
+                    throw new ReasonerException(String.format("Cannot resolve skill '%s', unsupported task reference '%s'",
+                            getPath(), taskRef.getHref()));
+                }
+                intents.add(task);
+            });
+        }
     }
 
     public List<Connection> getConnections() {
