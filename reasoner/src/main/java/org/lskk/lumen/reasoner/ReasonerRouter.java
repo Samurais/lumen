@@ -4,8 +4,12 @@ import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.rabbitmq.RabbitMQConstants;
 import org.joda.time.Duration;
-import org.lskk.lumen.core.*;
+import org.lskk.lumen.core.AvatarChannel;
+import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.core.SocialChannel;
+import org.lskk.lumen.core.Status;
 import org.lskk.lumen.core.util.AsError;
+import org.lskk.lumen.core.util.ToJson;
 import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.expression.Proposition;
@@ -20,7 +24,6 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 10/2/15.
