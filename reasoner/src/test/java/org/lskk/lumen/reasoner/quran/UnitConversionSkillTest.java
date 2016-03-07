@@ -6,7 +6,6 @@ import org.junit.runner.RunWith;
 import org.lskk.lumen.core.LumenCoreConfig;
 import org.lskk.lumen.core.LumenLocale;
 import org.lskk.lumen.persistence.service.FactService;
-import org.lskk.lumen.reasoner.activity.ActivityState;
 import org.lskk.lumen.reasoner.activity.InteractionSession;
 import org.lskk.lumen.reasoner.activity.ScriptRepository;
 import org.lskk.lumen.reasoner.activity.TaskRepository;
@@ -21,12 +20,10 @@ import org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAuto
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.orm.jpa.EntityScan;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -107,7 +104,7 @@ public class UnitConversionSkillTest {
             session.getActiveLocales().add(Locale.US);
             session.open(null, null);
 
-            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "Berapa 5 km dalam cm?", factService, taskRepo, scriptRepo);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "Berapa 5 km dalam cm?", avatarId, factService, taskRepo, scriptRepo);
             session.update(mockChannel, null);
 //            assertThat(session.get("unitConversion.promptMeasurementToUnit").getState(), equalTo(ActivityState.COMPLETED));
 

@@ -96,7 +96,7 @@ public class ReasonerRouter extends RouteBuilder {
 //                    droolsService.process(agentResponse);
 
                     final InteractionSession session = sessionManager.getOrCreate(chatChannel, inCommunicate.getAvatarId());
-                    session.receiveUtterance(origLocale, inCommunicate.getObject(), factService, taskRepo, scriptRepo);
+                    session.receiveUtterance(origLocale, inCommunicate.getObject(), inCommunicate.getAvatarId(), factService, taskRepo, scriptRepo);
                     session.update(chatChannel, inCommunicate.getAvatarId());
 
                     // FIXME: re-implement SocialJournal

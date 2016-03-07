@@ -222,14 +222,13 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     // TODO: should parameters replaced by CommunicateAction?
-    // TODO: avatarId
-    public void receiveUtterance(@Nullable Optional<Locale> locale, String text, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
+    public void receiveUtterance(@Nullable Optional<Locale> locale, String text, String avatarId, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
         printAllStates();
 
         if (locale.isPresent()) {
             lastLocale = locale.get();
         }
-        final CommunicateAction communicateAction = new CommunicateAction(locale.orElse(null), text, null);
+        final CommunicateAction communicateAction = new CommunicateAction(locale.orElse(null), text, avatarId);
 
         // Check ACTIVE child activities first
         // Skill is different, it's consulted even if PENDING, as long as it's enabled
@@ -281,7 +280,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
         final Optional<UtterancePattern> best = totalMatches.stream().findFirst();
         if (best.isPresent() && best.get().getConfidence() >= INTENT_MIN_CONFIDENCE) {
             final Skill skill = launchSkill(best.get(), skillRepo, taskRepo, scriptRepo);
-            skill.receiveUtterance(new CommunicateAction(locale.orElse(null), text, null), this, focusedTask);
+            skill.receiveUtterance(new CommunicateAction(locale.orElse(null), text, avatarId), this, focusedTask);
         } else if (best.isPresent()) {
             log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
                     best.get().getSkill().getId(), best.get().getIntent().getId());
@@ -289,18 +288,15 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     /**
-     * TODO: Support avatarId.
      * @param locale
      * @param text
-     * @param factService
+     * @param avatarId
+     *@param factService
      * @param taskRepo
-     * @param scriptRepo
-     * @return
+     * @param scriptRepo    @return
      */
-    public AgentResponse receiveUtteranceForResponse(Optional<Locale> locale, String text, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
-        final String avatarId = "anime1";
-
-        receiveUtterance(locale, text, factService, taskRepo, scriptRepo);
+    public AgentResponse receiveUtteranceForResponse(Optional<Locale> locale, String text, String avatarId, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
+        receiveUtterance(locale, text, avatarId, factService, taskRepo, scriptRepo);
         final List<CommunicateAction> replies = expressAllForResponse(avatarId);// pre-activation express
 
         final Activity nextActivity = pendingActivations.poll();
@@ -392,7 +388,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
      *
      * @return
      * @see #expressAll(Channel, String)
-     * @see #receiveUtteranceForResponse(Optional, String, FactService, TaskRepository, ScriptRepository)
+     * @see #receiveUtteranceForResponse(Optional, String, String, FactService, TaskRepository, ScriptRepository)
      * @param avatarId
      */
     protected List<CommunicateAction> expressAllForResponse(String avatarId) {

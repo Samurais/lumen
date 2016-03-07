@@ -99,7 +99,7 @@ public class InteractionSessionTest {
             session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel, null);
 
-            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", factService, taskRepo, null);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", avatarId, factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
@@ -134,7 +134,7 @@ public class InteractionSessionTest {
             session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel, null);
 
-            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", factService, taskRepo, null);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", avatarId, factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());

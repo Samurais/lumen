@@ -124,7 +124,7 @@ public class UtterancePattern implements Serializable, IConfidence {
     }
 
     /**
-     * Only used by {@link InteractionSession#receiveUtterance(java.util.Optional, String, FactService, TaskRepository, ScriptRepository)}.
+     * Only used by {@link InteractionSession#receiveUtterance(java.util.Optional, String, String, FactService, TaskRepository, ScriptRepository)}.
      * @return
      */
     @JsonIgnore
@@ -137,7 +137,7 @@ public class UtterancePattern implements Serializable, IConfidence {
     }
 
     /**
-     * Only used by {@link InteractionSession#receiveUtterance(java.util.Optional, String, FactService, TaskRepository, ScriptRepository)}.
+     * Only used by {@link InteractionSession#receiveUtterance(java.util.Optional, String, String, FactService, TaskRepository, ScriptRepository)}.
      * @return
      */
     public Skill getSkill() {

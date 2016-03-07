@@ -8,8 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.joda.time.Duration;
 import org.lskk.lumen.core.CommunicateAction;
-import org.lskk.lumen.core.ImageObject;
-import org.lskk.lumen.core.SimpleTruthValue;
 import org.lskk.lumen.core.SocialChannel;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.DroolsService;
@@ -18,7 +16,6 @@ import org.lskk.lumen.reasoner.activity.InteractionSession;
 import org.lskk.lumen.reasoner.activity.ScriptRepository;
 import org.lskk.lumen.reasoner.activity.SessionManager;
 import org.lskk.lumen.reasoner.activity.TaskRepository;
-import org.lskk.lumen.reasoner.aiml.AimlService;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.nlp.NaturalLanguage;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
@@ -42,8 +39,6 @@ import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -142,7 +137,7 @@ public class ReasonerTwitterConfig {
 //                final AgentResponse resp = aimlService.process(origLocale, dm.getText(), twitterDmChannel, avatarId, false);
 //                droolsService.process(resp);
 
-                final AgentResponse resp = session.receiveUtteranceForResponse(Optional.empty(), dm.getText(), factService, taskRepo, scriptRepo);
+                final AgentResponse resp = session.receiveUtteranceForResponse(Optional.empty(), dm.getText(), avatarId, factService, taskRepo, scriptRepo);
                 String replyDm;
                 if (!resp.getCommunicateActions().isEmpty()) {
                     //final CommunicateAction communicateAction = resp.getCommunicateActions();
@@ -225,7 +220,7 @@ public class ReasonerTwitterConfig {
 //                final AgentResponse resp = aimlService.process(origLocale, realMessage, twitterMentionChannel, null, false);
 //                droolsService.process(resp);
 
-                final AgentResponse resp = session.receiveUtteranceForResponse(Optional.empty(), realMessage, factService, taskRepo, scriptRepo);
+                final AgentResponse resp = session.receiveUtteranceForResponse(Optional.empty(), realMessage, avatarId, factService, taskRepo, scriptRepo);
                 String replyDm;
 
                 //final CommunicateAction communicateAction = resp.getCommunicateAction();

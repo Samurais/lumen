@@ -21,7 +21,7 @@ public class Skill extends Activity {
 
     private List<ActivityRef> activityRefs = new ArrayList<>();
     /**
-     * Initially {@code null} until {@link #resolveIntents(TaskRepository)} is called by {@link InteractionSession#receiveUtterance(Optional, String, FactService, TaskRepository, ScriptRepository)}.
+     * Initially {@code null} until {@link #resolveIntents(TaskRepository)} is called by {@link InteractionSession#receiveUtterance(Optional, String, String, FactService, TaskRepository, ScriptRepository)}.
      */
     private List<Activity> intents;
     private List<Connection> connections = new ArrayList<>();
