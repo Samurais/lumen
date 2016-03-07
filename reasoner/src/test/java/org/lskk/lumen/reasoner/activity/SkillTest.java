@@ -41,6 +41,7 @@ import static org.mockito.Mockito.verify;
 @SpringApplicationConfiguration(SkillTest.Config.class)
 @ActiveProfiles("SkillTest")
 public class SkillTest {
+    public static final String AVATAR_ID = "anime1";
 
     @Profile("SkillTest")
     @SpringBootApplication(scanBasePackageClasses = {SkillRepository.class, TaskRepository.class, WordNetConfig.class},
@@ -98,11 +99,11 @@ public class SkillTest {
             session.getActiveLocales().add(Locale.US);
             session.open(null, null);
 
-            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "baca Quran", avatarId, factService, taskRepo, scriptRepo);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "baca Quran", AVATAR_ID, factService, taskRepo, scriptRepo);
             session.update(mockChannel, null);
             assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.ACTIVE));
 
-            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "Al-Kahfi:45", avatarId, factService, taskRepo, scriptRepo);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "Al-Kahfi:45", AVATAR_ID, factService, taskRepo, scriptRepo);
             session.update(mockChannel, null);
             assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
 

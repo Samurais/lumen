@@ -43,6 +43,7 @@ import static org.mockito.Mockito.*;
 @SpringApplicationConfiguration(InteractionSessionTest.Config.class)
 @ActiveProfiles("InteractionSessionTest")
 public class InteractionSessionTest {
+    public static final String AVATAR_ID = "anime1";
 
     @Profile("InteractionSessionTest")
     @SpringBootApplication(scanBasePackageClasses = {PromptTask.class, WordNetConfig.class, SkillRepository.class},
@@ -99,7 +100,7 @@ public class InteractionSessionTest {
             session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel, null);
 
-            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", avatarId, factService, taskRepo, null);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", AVATAR_ID, factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
@@ -134,7 +135,7 @@ public class InteractionSessionTest {
             session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel, null);
 
-            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", avatarId, factService, taskRepo, null);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", AVATAR_ID, factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());

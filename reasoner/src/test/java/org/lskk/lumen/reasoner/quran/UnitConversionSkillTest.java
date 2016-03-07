@@ -45,6 +45,7 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("UnitConversionSkillTest")
 public class UnitConversionSkillTest {
     private static final Logger log = LoggerFactory.getLogger(UnitConversionSkillTest.class);
+    public static final String AVATAR_ID = "anime1";
 
     @Profile("UnitConversionSkillTest")
     @SpringBootApplication(scanBasePackageClasses = {SkillRepository.class, TaskRepository.class, WordNetConfig.class},
@@ -104,7 +105,7 @@ public class UnitConversionSkillTest {
             session.getActiveLocales().add(Locale.US);
             session.open(null, null);
 
-            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "Berapa 5 km dalam cm?", avatarId, factService, taskRepo, scriptRepo);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "Berapa 5 km dalam cm?", AVATAR_ID, factService, taskRepo, scriptRepo);
             session.update(mockChannel, null);
 //            assertThat(session.get("unitConversion.promptMeasurementToUnit").getState(), equalTo(ActivityState.COMPLETED));
 
