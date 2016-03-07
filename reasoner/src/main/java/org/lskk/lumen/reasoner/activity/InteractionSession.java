@@ -24,10 +24,10 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Soon this will be replaced by {@link org.kie.internal.runtime.StatefulKnowledgeSession},
@@ -124,6 +124,8 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
         if (activity instanceof PromptTask) {
             if (null != this.focusedTask && ActivityState.ACTIVE == this.focusedTask.getState()) {
+                Preconditions.checkState(this.focusedTask != activity,
+                        "Sanity check failed: Trying to activate an already focused task '%s'", activity.getPath());
                 log.debug("Defocusing {} for {} ...", this.focusedTask, activity);
                 this.focusedTask = null;
             }
@@ -134,7 +136,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
             log.debug("Activating from {}: {} ...", previous, activity);
             activity.setState(ActivityState.ACTIVE);
             try {
-                activity.onStateChanged(previous, activity.getState(), locale, this);
+                changedState(activity, previous, activity.getState(), locale, this);
             } catch (Exception e) {
                 throw new ReasonerException(e, "Error while activating %s", activity);
             }
@@ -145,6 +147,8 @@ public class InteractionSession implements Serializable, AutoCloseable {
             }
 
             pollActions(locale);
+        } else {
+            log.warn("Not activating {} activity '{}'", activity.getState(), activity.getPath());
         }
     }
 
@@ -178,9 +182,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
      * @see #update(Channel, String)
      */
     protected void pollActions(Locale locale) {
-        activities.forEach(activity -> {
-            activity.pollActions(this, locale);
+        // recursively pollActions
+        activities.forEach(parents -> parents.pollActions(this, locale));
 
+        // grab the result of those
+        visitFirst(activity -> {
             if (activity instanceof Task) {
                 // TODO: replace with SyncLiteralTask/SyncLabelTask/SyncStatementTask
                 final Task task = (Task) activity;
@@ -207,21 +213,30 @@ public class InteractionSession implements Serializable, AutoCloseable {
                     }
                 }
             }
+
+            return null;
         });
     }
 
     // TODO: should parameters replaced by CommunicateAction?
+    // TODO: avatarId
     public void receiveUtterance(Locale locale, String text, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
         lastLocale = locale;
         final CommunicateAction communicateAction = new CommunicateAction(locale, text, null);
 
-        // Check child activities first
-        final List<Activity> activeActivities = activities.stream().filter(it -> ActivityState.ACTIVE == it.getState())
+        // Check ACTIVE child activities first
+        // Skill is different, it's consulted even if PENDING, as long as it's enabled
+        final List<Activity> activeActivities = activities.stream().filter(Activity::getEnabled)
+                .filter(it -> ActivityState.ACTIVE == it.getState() || (it instanceof Skill && ActivityState.PENDING == it.getState()))
                 .collect(Collectors.toList());
-        log.trace("Executing receiveUtterance for {} active activities {}: {}", activeActivities.size(),
+        log.debug("Executing receiveUtterance for {} active activities or Skills {}: {}", activeActivities.size(),
                 activeActivities.stream().map(Activity::getPath).collect(Collectors.toList()), communicateAction);
         activeActivities.forEach(activity -> {
-            log.trace("Executing receiveUtterance for '{}': {}", activity.getPath(), communicateAction);
+            log.trace("Executing receiveUtterance for {} {} '{}': {}",
+                    activity.getState(), activity.getClass().getSimpleName(), activity.getPath(), communicateAction);
+            if (ActivityState.PENDING == activity.getState()) {
+                activate(activity, locale);
+            }
             activity.receiveUtterance(communicateAction, this, focusedTask);
         });
         pollActions(locale);
@@ -257,7 +272,8 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
         final Optional<UtterancePattern> best = totalMatches.stream().findFirst();
         if (best.isPresent() && best.get().getConfidence() >= INTENT_MIN_CONFIDENCE) {
-            launchSkill(best.get(), skillRepo, taskRepo, scriptRepo);
+            final Skill skill = launchSkill(best.get(), skillRepo, taskRepo, scriptRepo);
+            skill.receiveUtterance(new CommunicateAction(locale, text, null), this, focusedTask);
         } else if (best.isPresent()) {
             log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
                     best.get().getSkill().getId(), best.get().getIntent().getId());
@@ -265,13 +281,15 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     /**
-     * Create all {@link Activity}s of a {@link org.lskk.lumen.reasoner.skill.Skill} based
-     * on matched {@link UtterancePattern}.
-     *  @param utterancePattern
+     * Create all {@link Activity}s based on matched {@link UtterancePattern} which can be either:
+     * {@link org.lskk.lumen.reasoner.skill.Skill} with auto-start intent, or
+     * {@link org.lskk.lumen.reasoner.skill.Skill} with intent from {@link UtterancePattern#getIntent()}.
+     *
+     * @param utterancePattern
      * @param skillRepo
      * @param scriptRepo
      */
-    protected void launchSkill(UtterancePattern utterancePattern, SkillRepository skillRepo, TaskRepository taskRepo, ScriptRepository scriptRepo) {
+    protected Skill launchSkill(UtterancePattern utterancePattern, SkillRepository skillRepo, TaskRepository taskRepo, ScriptRepository scriptRepo) {
         // Sanity check: Make sure you don't already have this skill in the session
         final Optional<Activity> existing = activities.stream().filter(it -> it instanceof Skill && utterancePattern.getSkill().getId().equals(it.getId()))
                 .findAny();
@@ -299,7 +317,18 @@ public class InteractionSession implements Serializable, AutoCloseable {
         }
         add(skill);
         skill.initialize();
-        activate(skill, Locale.forLanguageTag(utterancePattern.getInLanguage()));
+        final Locale locale = Locale.forLanguageTag(utterancePattern.getInLanguage());
+        activate(skill, locale);
+        if (null != utterancePattern.getIntent()) {
+            final Activity realIntent = skill.get(utterancePattern.getIntent().getId());
+            // when Skill is activated, this intent may already be active, so do not blindly re-activate
+            if (ActivityState.ACTIVE != realIntent.getState()) {
+                activate(realIntent, locale);
+            }
+        } else {
+            skill.autoStart(locale, this);
+        }
+        return skill;
     }
 
     /**
@@ -310,7 +339,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
      */
     protected void expressAll(Channel<?> channel, String avatarId) {
         visitFirst(activity -> {
-            log.trace("expressAll() visiting activity '{}'", activity.getPath());
+            log.trace("Session {} expressAll() visiting activity '{}'", id, activity.getPath());
             while (true) {
                 final CommunicateAction pendingCommunicateAction = activity.getPendingCommunicateActions().poll();
                 if (null == pendingCommunicateAction) {
@@ -373,13 +402,78 @@ public class InteractionSession implements Serializable, AutoCloseable {
             this.focusedTask = null;
         }
         try {
-            activity.onStateChanged(previous, activity.getState(), locale, this);
+            changedState(activity, previous, activity.getState(), locale, this);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new ReasonerException(e, "Cannot complete activity '%s'", activity.getPath());
         }
         if (activity instanceof Task) {
             pollActions(locale);
         }
+    }
+
+    /**
+     * Visit all of specified {@link Activity}'s descendants and sets their state back to {@link ActivityState#PENDING}.
+     */
+    public void reset(Activity parent, Locale locale) {
+        final ActivityState previousForParent = parent.getState();
+        parent.visitFirst(act -> {
+            final ActivityState previous = act.getState();
+            if (ActivityState.COMPLETED == previous) {
+                act.setState(ActivityState.PENDING);
+                try {
+                    changedState(act, previous, act.getState(), locale, this);
+                } catch (Exception e) {
+                    throw new ReasonerException(e, "Cannot reset state of '%s' for descendant '%s'",
+                            parent.getPath(), act.getPath());
+                }
+            }
+            return null;
+        });
+//        if (ActivityState.COMPLETED == previousForParent) {
+//            parent.setState(ActivityState.ACTIVE);
+//            try {
+//                changedState(parent, previousForParent, parent.getState(), locale, this);
+//            } catch (Exception e) {
+//                throw new ReasonerException(e, "Cannot reset state of '%s' for parent", parent.getPath());
+//            }
+//        }
+    }
+
+    /**
+     * Calls {@link Activity#onStateChanged(ActivityState, ActivityState, Locale, InteractionSession)}
+     * of an {@link Activity}, and bubbling up to all of that activity's parents.
+     * @param target
+     * @param previous
+     * @param current
+     * @param locale Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
+     * @param session
+     * @throws Exception
+     */
+    protected void changedState(final Activity target, ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
+        Activity curActivity = target;
+        do {
+            if (target == curActivity) {
+                curActivity.onStateChanged(previous, target.getState(), locale, this);
+            } else {
+                curActivity.onChildStateChanged(target, previous, target.getState(), locale, this);
+            }
+            // bubble-up
+            curActivity = curActivity.getParent();
+        } while (null != curActivity);
+
+        printAllStates();
+    }
+
+    /**
+     * Debugging tool to print all activity's states.
+     */
+    public void printAllStates() {
+        final StringBuffer sb = new StringBuffer();
+        visitFirst(act -> {
+            sb.append(String.format("%s %s\n", act.getPath(), act.getState()));
+            return null;
+        });
+        log.info("Session {} states:\n{}", getId(), sb);
     }
 
     public void schedule(Activity activity) {

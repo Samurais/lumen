@@ -1,10 +1,7 @@
 package org.lskk.lumen.reasoner.activity;
 
 import jdk.nashorn.api.scripting.URLReader;
-import org.apache.commons.beanutils.BeanUtils;
 import org.lskk.lumen.reasoner.intent.Slot;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.script.Invocable;
 import javax.script.ScriptContext;
@@ -29,7 +26,7 @@ public class Script extends Activity {
             engine.eval(new URLReader(scriptUrl, StandardCharsets.UTF_8));
             final Invocable invocable = (Invocable) engine;
 
-            log.debug("{}+ '{}' provides {} scriptables: {}", getClass().getSimpleName(), getPath(),
+            log.debug("{} '{}' provides {} scriptables: {}", getClass().getSimpleName(), getPath(),
                     session.getScriptables().size(), session.getScriptables().keySet());
             engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(session.getScriptables());
 
@@ -44,6 +41,9 @@ public class Script extends Activity {
             engine.getBindings(ScriptContext.ENGINE_SCOPE).put("outSlots", outSlotsVar);
             engine.getBindings(ScriptContext.ENGINE_SCOPE).put("pendingCommunicateActions", getPendingCommunicateActions());
             invocable.invokeFunction("onActivate");
+
+            // if everything's good, the Script can complete
+            session.complete(this, locale);
         }
     }
 }

@@ -12,6 +12,7 @@ import org.lskk.lumen.reasoner.intent.Slot;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 03/03/2016.
@@ -74,14 +75,28 @@ public class Skill extends Activity {
     @Override
     public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
         super.onStateChanged(previous, current, locale, session);
-        if (ActivityState.ACTIVE == current) {
-            // Activate first auto-start and ready child activity
-            final Optional<Activity> child = getActivities().stream()
-                    .filter(act -> act.isReady() && act.getAutoStart()).findFirst();
-            if (child.isPresent()) {
-                session.activate(child.get(), locale);
-            }
+        if (ActivityState.COMPLETED == current) {
+            log.info("Resetting completed skill '{}' with {} children: {}",
+                    getPath(), getActivities().size(), getActivities().stream().map(Activity::getId).collect(Collectors.toList()));
+            session.reset(this, locale);
         }
+    }
+
+    /**
+     * Called by {@link InteractionSession#launchSkill(UtterancePattern, SkillRepository, TaskRepository, ScriptRepository)}
+     * if an activated Skill needs to auto-start a child activity.
+     * @param locale
+     * @param session
+     * @deprecated {@link #pollActions(InteractionSession, Locale)} automatically activates enabled & ready activity.
+     */
+    @Deprecated
+    public void autoStart(Locale locale, InteractionSession session) {
+//        // Activate first auto-start and ready child activity
+//        final Optional<Activity> child = getActivities().stream()
+//                .filter(act -> act.isReady() && act.getAutoStart()).findFirst();
+//        if (child.isPresent()) {
+//            session.activate(child.get(), locale);
+//        }
     }
 
     @Override
@@ -118,12 +133,14 @@ public class Skill extends Activity {
             }
         });
 
-        // activate PENDING and ready activities
-        getActivities().stream().filter(act -> ActivityState.PENDING == act.getState() && act.isReady())
-                .forEach(act -> {
-                    log.debug("{} '{}' requesting activation of pending and ready activity '{}'", getClass().getSimpleName(), getPath(), act.getId());
-                    session.activate(act, locale);
-                });
+        // if we're ACTIVE, then activate PENDING and ready child activities
+        if (ActivityState.ACTIVE == getState()) {
+            getActivities().stream().filter(act -> ActivityState.PENDING == act.getState() && act.isReady())
+                    .forEach(act -> {
+                        log.debug("{} '{}' requesting activation of pending and ready activity '{}'", getClass().getSimpleName(), getPath(), act.getId());
+                        session.activate(act, locale);
+                    });
+        }
     }
 
     protected enum SyntaxKind {

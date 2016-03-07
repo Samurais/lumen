@@ -7,7 +7,8 @@
   "utterancePatterns": [
     {"pattern": "{chapter}:{verse}", "scope": "LOCAL"},
     {"pattern": "{chapter} : {verse}", "scope": "LOCAL"},
-    
+    {"pattern": "{chapter} {verse}", "scope": "LOCAL"},
+
     {"inLanguage": "id-ID", "pattern": "{chapter} ayat {verse}", "scope": "LOCAL"},
     {"inLanguage": "id-ID", "pattern": "Surat {chapter} ayat {verse}", "scope": "LOCAL"},
     {"inLanguage": "id-ID", "pattern": "{chapter}:{verse}", "scope": "LOCAL"},

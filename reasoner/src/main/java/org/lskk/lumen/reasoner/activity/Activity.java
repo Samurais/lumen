@@ -174,11 +174,12 @@ public abstract class Activity implements Serializable {
     }
 
     /**
-     * Override this to handle lifecycle state transitions.
+     * Override this to handle lifecycle state transitions of this {@link Activity} only.
      * @param previous
      * @param current
      * @param locale Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
      * @param session
+     * @see #onChildStateChanged(Activity, ActivityState, ActivityState, Locale, InteractionSession)
      */
     public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
         if (ActivityState.ACTIVE == current) {
@@ -189,6 +190,27 @@ public abstract class Activity implements Serializable {
                             "Slot %s.%s [%s] is required but a packet was not received",
                             getPath(), slot.getId(), slot.getThingTypes());
                 });
+            }
+        }
+    }
+
+    /**
+     * Override this to handle lifecycle state transitions of this {@link Activity}'s children.
+     * @param sender
+     * @param previous
+     * @param current
+     * @param locale Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
+     * @param session
+     * @see #onStateChanged(ActivityState, ActivityState, Locale, InteractionSession)
+     */
+    public void onChildStateChanged(Activity sender, ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
+        if (ActivityState.COMPLETED == current) { // a child has completed
+            // check if all children are completed
+            final boolean allCompleted = getActivities().stream().allMatch(it -> ActivityState.COMPLETED == it.getState());
+            if (allCompleted) {
+                log.info("Completing activity '{}' because all {} children have been completed: {}",
+                        getPath(), getActivities().size(), getActivities().stream().map(Activity::getId).collect(Collectors.toList()));
+                session.complete(this, locale);
             }
         }
     }
@@ -232,7 +254,7 @@ public abstract class Activity implements Serializable {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "#" + getId();
+        return getClass().getSimpleName() + ":" + getPath();
     }
 
     /**
@@ -309,7 +331,8 @@ public abstract class Activity implements Serializable {
     }
 
     /**
-     * Visits all enabled descendants and return first non-null value.
+     * Visits enabled descendants and return first non-{@code null} value.
+     * If any descendant {@link Activity} returned non-{@code null}, the rest of descendants will be skipped.
      * @param visitor
      * @param <R>
      * @return

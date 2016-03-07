@@ -56,6 +56,8 @@ public class AffirmationTask extends Task {
             log.info("'{}' requesting CommunicateAction: {}", getPath(), result);
 
             getPendingCommunicateActions().add(new CommunicateAction(locale, result, null));
+
+            session.complete(this, locale);
         }
     }
 

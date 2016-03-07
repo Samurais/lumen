@@ -15,8 +15,6 @@ import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.intent.Slot;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -146,9 +144,10 @@ public class PromptTask extends Task {
         if (plainPart.startsWith(" ")) {
             result = "\\s+" + result;
         }
-        if (plainPart.endsWith(" ")) {
+        if (plainPart.endsWith(" ") && !plainPart.trim().isEmpty()) { // avoid " " becoming double \s+
             result += "\\s+";
         }
+        log.trace("plainToRegex: \"{}\" -> \"{}\"", plainPart, result);
         return result;
     }
 
@@ -168,10 +167,29 @@ public class PromptTask extends Task {
         final Optional<UtterancePattern> best = matchedUtterancePatterns.stream().filter(it -> it.getConfidence() >= COMPLETE_MIN_CONFIDENCE)
                 .sorted(new IConfidence.Comparator()).findFirst();
         if (best.isPresent()) {
-            log.info("{} '{}' will be completed with confidence {} and sending out-slots {}",
-                    getClass().getSimpleName(), getPath(), best.get().getConfidence(), best.get().getSlotValues());
-            best.get().getSlotValues().forEach((slotId, value) -> getOutSlot(slotId).send(value));
-            session.complete(this, realLocale);
+            // retract communications
+            getPendingCommunicateActions().clear();
+
+            final Set<String> outSlotIds = getOutSlots().stream().map(Slot::getId).collect(Collectors.toSet());
+            final Set<String> capturedSlotIds = best.get().getSlotValues().keySet();
+            if (outSlotIds.isEmpty()) {
+                log.info("{} '{}' matched \"{}\"@{} with confidence {} but not sending out-slots",
+                        getClass().getSimpleName(), getPath(), best.get().getPattern(), best.get().getInLanguage(),
+                        best.get().getConfidence());
+                askQuestion(realLocale);
+            } else if (capturedSlotIds.equals(outSlotIds)) {
+                log.info("{} '{}' will be completed, matched \"{}\"@{} with confidence {} and sending out-slots {}",
+                        getClass().getSimpleName(), getPath(), best.get().getPattern(), best.get().getInLanguage(),
+                        best.get().getConfidence(), best.get().getSlotValues());
+                best.get().getSlotValues().forEach((slotId, value) -> getOutSlot(slotId).send(value));
+                session.complete(this, realLocale);
+            } else {
+                log.info("{} '{}' matched \"{}\"@{} with confidence {} and sending out-slots {}",
+                        getClass().getSimpleName(), getPath(), best.get().getPattern(), best.get().getInLanguage(),
+                        best.get().getConfidence(), best.get().getSlotValues());
+                best.get().getSlotValues().forEach((slotId, value) -> getOutSlot(slotId).send(value));
+                askQuestion(realLocale);
+            }
         }
     }
 
@@ -201,7 +219,9 @@ public class PromptTask extends Task {
                     while (true) {
                         final boolean found = placeholderMatcher.find();
                         if (found) {
-                            String plainPart = it.getPattern().substring(lastPlainOffset, placeholderMatcher.start());
+                            final StringBuffer sb = new StringBuffer();
+                            placeholderMatcher.appendReplacement(sb, "");
+                            final String plainPart = sb.toString();
                             real += plainToRegex(plainPart);
                             plainPartLength += plainPart.length();
                             final String slotId = placeholderMatcher.group("slot");
@@ -237,14 +257,17 @@ public class PromptTask extends Task {
                             real += "(?<" + slotId + ">" + slotStringPattern + ")";
                             lastPlainOffset = placeholderMatcher.end();
                         } else {
-                            String plainPart = it.getPattern().substring(lastPlainOffset, it.getPattern().length());
-                            real += plainToRegex(plainPart);
-                            plainPartLength += plainPart.length();
                             break;
                         }
                     }
+                    final StringBuffer sb = new StringBuffer();
+                    placeholderMatcher.appendTail(sb);
+                    final String plainPart = sb.toString();
+                    real += plainToRegex(plainPart);
+                    plainPartLength += plainPart.length();
+
                     final Pattern realPattern = Pattern.compile(real, Pattern.CASE_INSENSITIVE);
-                    log.debug("Matching {} for \"{}\"@{} {}...", realPattern, utterance, locale.toLanguageTag(), scope);
+                    log.debug("Matching '{}' -> {} for \"{}\"@{} {}...", it.getPattern(), realPattern, utterance, locale.toLanguageTag(), scope);
                     final Matcher realMatcher = realPattern.matcher(utterance);
                     if (realMatcher.find()) {
                         final UtterancePattern matched = new UtterancePattern();
@@ -256,8 +279,9 @@ public class PromptTask extends Task {
                         matched.setStyle(it.getStyle());
                         // language-independent utterance pattern gets 0.9 multiplier
                         final float languageMultiplier = null != it.getInLanguage() ? 1f : 0.9f;
-                        // GLOBAL scope has full multiplier, LOCAL scope has 0.9
-                        final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.9f;
+                        // GLOBAL scope has full multiplier, LOCAL scope has 0.99. Its multiplier is quite high because
+                        // we still want to match e.g. "{chapter} {verse}" which only has 1 plainPart
+                        final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.99f;
                         // we prefer as many matching plaintext as possible, i.e. "Read Quran {Al-Baqarah}" is preferred over "Read {Quran Al-Baqarah}" over "{Read Quran Al-Baqarah}"
                         final float plainPartMultiplier = 0.9f + (Math.min(plainPartLength, 20f) / 200f);
                         matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * languageMultiplier * scopeMultiplier * plainPartMultiplier);
@@ -362,26 +386,26 @@ public class PromptTask extends Task {
         super.onStateChanged(previous, current, locale, session);
         if (ActivityState.ACTIVE == current) {
             // if we don't yet have the info, express the question
-            // Get appropriate question for target language, if possible.
-            // If not, returns first question.
-            final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))
-                    .collect(Collectors.toList());
-            final QuestionTemplate questionTemplate;
-            if (!matches.isEmpty()) {
-                questionTemplate = matches.get(RandomUtils.nextInt(0, matches.size()));
-            } else {
-                questionTemplate = askSsmls.get(0);
-            }
-            final CommunicateAction initiative = new CommunicateAction(
-                    Optional.ofNullable(questionTemplate.getInLanguage()).map(Locale::forLanguageTag).orElse(locale),
-                    questionTemplate.getObject(), null);
-            initiative.setConversationStyle(questionTemplate.getStyle());
-            getPendingCommunicateActions().add(initiative);
-        } else if (ActivityState.COMPLETED == current) {
-            // FIXME: send the outSlots!
-//            if (null != getAffirmationTask()) {
-//                session.schedule(getAffirmationTask());
-//            }
+            askQuestion(locale);
         }
     }
+
+    protected void askQuestion(Locale locale) {
+        // Get appropriate question for target language, if possible.
+        // If not, returns first question.
+        final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))
+                .collect(Collectors.toList());
+        final QuestionTemplate questionTemplate;
+        if (!matches.isEmpty()) {
+            questionTemplate = matches.get(RandomUtils.nextInt(0, matches.size()));
+        } else {
+            questionTemplate = askSsmls.get(0);
+        }
+        final CommunicateAction initiative = new CommunicateAction(
+                Optional.ofNullable(questionTemplate.getInLanguage()).map(Locale::forLanguageTag).orElse(locale),
+                questionTemplate.getObject(), null);
+        initiative.setConversationStyle(questionTemplate.getStyle());
+        getPendingCommunicateActions().add(initiative);
+    }
+
 }
