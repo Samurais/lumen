@@ -43,7 +43,11 @@
     {"inLanguage": "en-US", "pattern": "How much is {measure} in {unit}", "scope": "GLOBAL"},
     {"inLanguage": "en-US", "pattern": "How much is {measure} as {unit}", "scope": "GLOBAL"},
     {"inLanguage": "en-US", "pattern": "How much {measure} in {unit}", "clause": "CASUAL", "scope": "GLOBAL"},
-    {"inLanguage": "en-US", "pattern": "How much {measure} as {unit}", "clause": "CASUAL", "scope": "GLOBAL"}
+    {"inLanguage": "en-US", "pattern": "How much {measure} as {unit}", "clause": "CASUAL", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "What is {measure} in {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "What is {measure} as {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "What's {measure} in {unit}", "clause": "CASUAL", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "What's {measure} as {unit}", "clause": "CASUAL", "scope": "GLOBAL"}
   ],
   "outSlots": [
     {"id": "measure", "thingTypes": ["yago:yagoQuantity"]},
