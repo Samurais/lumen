@@ -275,7 +275,7 @@ public class PromptTask extends Task {
                     plainPartLength += plainPart.length();
 
                     final Pattern realPattern = Pattern.compile(real, Pattern.CASE_INSENSITIVE);
-                    log.debug("Matching '{}' -> {} for \"{}\"@{} {}...", it.getPattern(), realPattern, utterance, locale.toLanguageTag(), scope);
+                    log.trace("Matching '{}' -> {} for \"{}\"@{} {}...", it.getPattern(), realPattern, utterance, locale.toLanguageTag(), scope);
                     final Matcher realMatcher = realPattern.matcher(utterance);
                     if (realMatcher.find()) {
                         final UtterancePattern matched = new UtterancePattern();
@@ -436,6 +436,7 @@ public class PromptTask extends Task {
                 Optional.ofNullable(questionTemplate.getInLanguage()).map(Locale::forLanguageTag).orElse(locale),
                 questionTemplate.getObject(), null);
         initiative.setConversationStyle(questionTemplate.getStyle());
+        initiative.setUsedForSynthesis(true);
         getPendingCommunicateActions().add(initiative);
     }
 

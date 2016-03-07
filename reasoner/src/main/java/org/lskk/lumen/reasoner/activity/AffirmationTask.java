@@ -55,7 +55,9 @@ public class AffirmationTask extends Task {
             final String result = sb.toString();
             log.info("'{}' requesting CommunicateAction: {}", getPath(), result);
 
-            getPendingCommunicateActions().add(new CommunicateAction(locale, result, null));
+            final CommunicateAction communicateAction = new CommunicateAction(locale, result, null);
+            communicateAction.setUsedForSynthesis(true);
+            getPendingCommunicateActions().add(communicateAction);
 
             session.complete(this, locale);
         }
