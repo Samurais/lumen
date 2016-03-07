@@ -27,6 +27,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Locale;
+import java.util.Optional;
 
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -98,7 +99,7 @@ public class InteractionSessionTest {
             session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel, null);
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo, null);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());
@@ -133,7 +134,7 @@ public class InteractionSessionTest {
             session.activate(skill, LumenLocale.INDONESIAN);
             session.update(mockChannel, null);
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "namaku Hendy Irawan", factService, taskRepo, null);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "namaku Hendy Irawan", factService, taskRepo, null);
             assertThat(promptName.getState(), Matchers.equalTo(ActivityState.COMPLETED));
 //            verify(factService, times(5)).assertLabel(any(), any(), any(), eq("id-ID"), any(), any(), any());
 //            verify(factService, times(0)).assertPropertyToLiteral(any(), any(), any(), any(), any(), any(), any());

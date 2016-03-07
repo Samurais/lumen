@@ -8,7 +8,6 @@ import org.lskk.lumen.reasoner.skill.Skill;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -125,7 +124,7 @@ public class UtterancePattern implements Serializable, IConfidence {
     }
 
     /**
-     * Only used by {@link InteractionSession#receiveUtterance(Locale, String, FactService, TaskRepository, ScriptRepository)}.
+     * Only used by {@link InteractionSession#receiveUtterance(java.util.Optional, String, FactService, TaskRepository, ScriptRepository)}.
      * @return
      */
     @JsonIgnore
@@ -138,7 +137,7 @@ public class UtterancePattern implements Serializable, IConfidence {
     }
 
     /**
-     * Only used by {@link InteractionSession#receiveUtterance(Locale, String, FactService, TaskRepository, ScriptRepository)}.
+     * Only used by {@link InteractionSession#receiveUtterance(java.util.Optional, String, FactService, TaskRepository, ScriptRepository)}.
      * @return
      */
     public Skill getSkill() {

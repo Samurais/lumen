@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.*;
@@ -67,7 +68,7 @@ public class PromptTaskTest {
 //        assertThat(promptBirthdate.getPendingPropositions(LumenLocale.INDONESIAN).peek().getObject(), containsString("lahir"));
 //        assertThat(promptBirthdate.getPendingPropositions(Locale.US).get().getObject(), containsString("born"));
 
-        final List<UtterancePattern> matches = promptBirthdate.matchUtterance(LumenLocale.INDONESIAN, "Aku lahir tanggal 14 Desember 1983.",
+        final List<UtterancePattern> matches = promptBirthdate.matchUtterance(Optional.of(LumenLocale.INDONESIAN), "Aku lahir tanggal 14 Desember 1983.",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(2));
         assertThat(matches.get(0).getSlotStrings(), hasEntry("birthdate", "14 Desember 1983"));
@@ -94,7 +95,7 @@ public class PromptTaskTest {
     public void promptNameHendyIrawan() {
         final PromptTask promptName = promptTaskRepo.createPrompt("promptName");
 
-        final List<UtterancePattern> matches = promptName.matchUtterance(LumenLocale.INDONESIAN, "Namaku Hendy Irawan",
+        final List<UtterancePattern> matches = promptName.matchUtterance(Optional.of(LumenLocale.INDONESIAN), "Namaku Hendy Irawan",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(2)));
         final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
@@ -135,7 +136,7 @@ public class PromptTaskTest {
     public void promptNameSigitAriWijanarko() {
         final PromptTask promptName = promptTaskRepo.createPrompt("promptName");
 
-        final List<UtterancePattern> matches = promptName.matchUtterance(Locale.US, "I am Sigit Ari Wijanarko",
+        final List<UtterancePattern> matches = promptName.matchUtterance(Optional.of(Locale.US), "I am Sigit Ari Wijanarko",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(2)));
         final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
@@ -190,7 +191,7 @@ public class PromptTaskTest {
     public void promptGenderIndonesianMale() {
         final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
 
-        final List<UtterancePattern> matches = promptGender.matchUtterance(LumenLocale.INDONESIAN, "Gue cowok",
+        final List<UtterancePattern> matches = promptGender.matchUtterance(Optional.of(LumenLocale.INDONESIAN), "Gue cowok",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
@@ -206,7 +207,7 @@ public class PromptTaskTest {
     public void promptGenderIndonesianFemale() {
         final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
 
-        final List<UtterancePattern> matches = promptGender.matchUtterance(LumenLocale.INDONESIAN, "Aku gadis",
+        final List<UtterancePattern> matches = promptGender.matchUtterance(Optional.of(LumenLocale.INDONESIAN), "Aku gadis",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
@@ -222,7 +223,7 @@ public class PromptTaskTest {
     public void promptGenderEnglishMale() {
         final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
 
-        final List<UtterancePattern> matches = promptGender.matchUtterance(Locale.US, "I am a man",
+        final List<UtterancePattern> matches = promptGender.matchUtterance(Optional.of(Locale.US), "I am a man",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
@@ -238,7 +239,7 @@ public class PromptTaskTest {
     public void promptGenderEnglishFemale() {
         final PromptTask promptGender = promptTaskRepo.createPrompt("promptGender");
 
-        final List<UtterancePattern> matches = promptGender.matchUtterance(Locale.US, "I am female",
+        final List<UtterancePattern> matches = promptGender.matchUtterance(Optional.of(Locale.US), "I am female",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream().filter(it -> it.getConfidence() >= 0.9f)
@@ -268,7 +269,7 @@ public class PromptTaskTest {
     public void promptReligionIndonesian() {
         final PromptTask promptReligion = promptTaskRepo.createPrompt("promptReligion");
 
-        final List<UtterancePattern> matches = promptReligion.matchUtterance(LumenLocale.INDONESIAN, "Saya muslimah",
+        final List<UtterancePattern> matches = promptReligion.matchUtterance(Optional.of(LumenLocale.INDONESIAN), "Saya muslimah",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
@@ -284,7 +285,7 @@ public class PromptTaskTest {
     public void promptReligionEnglish() {
         final PromptTask promptReligion = promptTaskRepo.createPrompt("promptReligion");
 
-        final List<UtterancePattern> matches = promptReligion.matchUtterance(Locale.US, "I believe in Protestant",
+        final List<UtterancePattern> matches = promptReligion.matchUtterance(Optional.of(Locale.US), "I believe in Protestant",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
@@ -314,7 +315,7 @@ public class PromptTaskTest {
     public void promptAgeIndonesian() {
         final PromptTask promptAge = promptTaskRepo.createPrompt("promptAge");
 
-        final List<UtterancePattern> matches = promptAge.matchUtterance(LumenLocale.INDONESIAN, "Saya berusia 45th",
+        final List<UtterancePattern> matches = promptAge.matchUtterance(Optional.of(LumenLocale.INDONESIAN), "Saya berusia 45th",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
@@ -334,7 +335,7 @@ public class PromptTaskTest {
     public void promptAgeEnglish() {
         final PromptTask promptAge = promptTaskRepo.createPrompt("promptAge");
 
-        final List<UtterancePattern> matches = promptAge.matchUtterance(Locale.US, "I'm 16 yrs old",
+        final List<UtterancePattern> matches = promptAge.matchUtterance(Optional.of(Locale.US), "I'm 16 yrs old",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
@@ -369,7 +370,7 @@ public class PromptTaskTest {
     public void promptQuranChapterVerseIndonesian() {
         final PromptTask promptQuranChapterVerse = promptTaskRepo.createPrompt("promptQuranChapterVerse");
 
-        final List<UtterancePattern> matches = promptQuranChapterVerse.matchUtterance(LumenLocale.INDONESIAN, "Baca surat Al-Kahfi ayat 45",
+        final List<UtterancePattern> matches = promptQuranChapterVerse.matchUtterance(Optional.of(LumenLocale.INDONESIAN), "Baca surat Al-Kahfi ayat 45",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()
@@ -388,7 +389,7 @@ public class PromptTaskTest {
     public void promptQuranChapterVerseEnglish() {
         final PromptTask promptQuranChapterVerse = promptTaskRepo.createPrompt("promptQuranChapterVerse");
 
-        final List<UtterancePattern> matches = promptQuranChapterVerse.matchUtterance(Locale.US, "Read Quran Al-Baqarah:255",
+        final List<UtterancePattern> matches = promptQuranChapterVerse.matchUtterance(Optional.of(Locale.US), "Read Quran Al-Baqarah:255",
                 UtterancePattern.Scope.ANY);
         assertThat(matches, hasSize(greaterThanOrEqualTo(1)));
         final List<UtterancePattern> confidentMatches = matches.stream()

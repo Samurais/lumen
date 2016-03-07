@@ -23,25 +23,49 @@ public class AgentResponse implements Serializable {
     private List<Serializable> insertables = new ArrayList<>();
     private List<SemanticMessage> semanticMessages = new ArrayList<>();
 
+    /**
+     * Stimuli only, no response (yet).
+     * @param stimuli
+     */
     public AgentResponse(Object stimuli) {
         this.stimuli.add(stimuli);
     }
 
+    /**
+     * Stimuli and single response.
+     * @param stimuli
+     * @param communicateAction
+     */
     public AgentResponse(Object stimuli, CommunicateAction communicateAction) {
         this.stimuli.add(stimuli);
         this.communicateActions.add(communicateAction);
     }
 
+    /**
+     * Multiple stimuli and single response.
+     * @param stimuli
+     * @param communicateAction
+     */
     public AgentResponse(List<Object> stimuli, CommunicateAction communicateAction) {
         this.stimuli.addAll(stimuli);
         this.communicateActions.add(communicateAction);
     }
 
+    /**
+     * Multi stimuli but unrecognized input.
+     * @param stimuli
+     * @param unrecognizedInput
+     */
     public AgentResponse(List<Object> stimuli, UnrecognizedInput unrecognizedInput) {
         this.stimuli.addAll(stimuli);
         this.unrecognizedInput = unrecognizedInput;
     }
 
+    /**
+     * Single stimuli but unrecognized input.
+     * @param stimuli
+     * @param unrecognizedInput
+     */
     public AgentResponse(Object stimuli, UnrecognizedInput unrecognizedInput) {
         this.stimuli.add(stimuli);
         this.unrecognizedInput = unrecognizedInput;

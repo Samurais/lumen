@@ -4,11 +4,14 @@ Persistence module for Lumen Social Robot.
 
 ## Preparation
 
-1. Ensure PostgreSQL 9.5+ is running
-2. Ensure Neo4j 2.3+ is running
-3. Copy `config/application.dev.properties` to `config/application.properties`
-4. Edit `config/application.properties`
-5. Run
+1. Ensure PostgreSQL 9.5+ is installed and running. If not, install from http://www.postgresql.org/ .
+2. In PgAdmin, create database `lumen_lumen_dev` using `UTF-8` encoding.
+3. TODO: In PgAdmin, restore from PostgreSQL template database snapshot : ?
+4. Ensure Neo4j 2.3+ is running. If not, install from http://neo4j.org/ .
+5. Extract template Neo4j database snapshot to `C:\Users\<username>\Neo4j\Documents` (will create `default.graphdb` subfolder).
+6. Copy `config/application.dev.properties` to `config/application.properties`
+7. Edit `config/application.properties`
+8. Run
 
 ## Running from Command Line
 

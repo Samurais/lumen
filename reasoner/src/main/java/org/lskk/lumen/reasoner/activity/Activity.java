@@ -10,6 +10,7 @@ import org.lskk.lumen.reasoner.intent.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.*;
@@ -143,7 +144,7 @@ public abstract class Activity implements Serializable {
      * @param session
      * @param focusedTask
      */
-    public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session, Task focusedTask) {
+    public void receiveUtterance(@Nullable CommunicateAction communicateAction, InteractionSession session, Task focusedTask) {
         activities.stream().filter(it -> ActivityState.ACTIVE == it.getState()).forEach(activity -> {
             log.trace("Executing receiveUtterance for '{}': {}", activity.getPath(), communicateAction);
             activity.receiveUtterance(communicateAction, session, focusedTask);
@@ -165,11 +166,11 @@ public abstract class Activity implements Serializable {
      * @param locale
      * @param utterance
      * @param scope     If {@link Activity} is not active or is used as a {@link org.lskk.lumen.reasoner.skill.Skill}'s intent,
-     *                  use {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#GLOBAL}.
-     *                  If {@link Activity} is active, use {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#ANY}.
+     *                  use {@link UtterancePattern.Scope#GLOBAL}.
+     *                  If {@link Activity} is active, use {@link UtterancePattern.Scope#ANY}.
      * @return
      */
-    public List<UtterancePattern> matchUtterance(Locale locale, String utterance, UtterancePattern.Scope scope) {
+    public List<UtterancePattern> matchUtterance(Optional<Locale> locale, String utterance, UtterancePattern.Scope scope) {
         return ImmutableList.of();
     }
 

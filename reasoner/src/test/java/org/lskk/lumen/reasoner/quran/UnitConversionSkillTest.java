@@ -33,6 +33,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Locale;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -106,11 +107,11 @@ public class UnitConversionSkillTest {
             session.getActiveLocales().add(Locale.US);
             session.open(null, null);
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "Berapa 5 km dalam cm?", factService, taskRepo, scriptRepo);
+            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "Berapa 5 km dalam cm?", factService, taskRepo, scriptRepo);
             session.update(mockChannel, null);
 //            assertThat(session.get("unitConversion.promptMeasurementToUnit").getState(), equalTo(ActivityState.COMPLETED));
 
-//            session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo, scriptRepo);
+//            session.receiveUtterance(Optional.of(LumenLocale.INDONESIAN), "Al-Kahfi:45", factService, taskRepo, scriptRepo);
 //            session.update(mockChannel, null);
 //            assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
 

@@ -79,7 +79,7 @@ public class ReasonerRouter extends RouteBuilder {
                     inCommunicate.setAvatarId(AvatarChannel.getAvatarId((String) exchange.getIn().getHeader(RabbitMQConstants.ROUTING_KEY)));
                     log.info("Chat inbox for {}: {}", inCommunicate.getAvatarId(), inCommunicate);
 
-                    final Locale origLocale = Optional.ofNullable(inCommunicate.getInLanguage()).orElse(Locale.US);
+                    final Optional<Locale> origLocale = Optional.ofNullable(inCommunicate.getInLanguage());
                     final float[] speechTruthValue = Optional.ofNullable(inCommunicate.getSpeechTruthValue()).orElse(new float[]{0f, 0f, 0f});
                     final boolean speechInput = speechTruthValue.length >= 2 && speechTruthValue[1] > 0f;
 

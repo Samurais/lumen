@@ -2,6 +2,7 @@ package org.lskk.lumen.reasoner.activity;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
@@ -155,7 +156,8 @@ public class PromptTask extends Task {
 
     @Override
     public void receiveUtterance(CommunicateAction communicateAction, InteractionSession session, Task focusedTask) {
-        final List<UtterancePattern> matchedUtterancePatterns = matchUtterance(communicateAction.getInLanguage(), communicateAction.getObject(),
+        final List<UtterancePattern> matchedUtterancePatterns = matchUtterance(
+                Optional.ofNullable(communicateAction.getInLanguage()), communicateAction.getObject(),
                 focusedTask == this ? UtterancePattern.Scope.ANY : UtterancePattern.Scope.GLOBAL);
         getMatchedUtterancePatterns().clear();
         getMatchedUtterancePatterns().addAll(matchedUtterancePatterns);
@@ -164,7 +166,6 @@ public class PromptTask extends Task {
         getLabelsToAssert().addAll(labelsToAssert);
         final List<Literal> literalsToAssert = generateLiteralsToAssert(matchedUtterancePatterns);
         getLiteralsToAssert().addAll(literalsToAssert);
-        final Locale realLocale = Optional.ofNullable(communicateAction.getInLanguage()).orElse(session.getLastLocale());
 
         final Optional<UtterancePattern> best = matchedUtterancePatterns.stream().filter(it -> it.getConfidence() >= COMPLETE_MIN_CONFIDENCE)
                 .sorted(new IConfidence.Comparator()).findFirst();
@@ -172,9 +173,12 @@ public class PromptTask extends Task {
             // retract communications
             getPendingCommunicateActions().clear();
 
+            final Locale realLocale = Locale.forLanguageTag(best.get().getInLanguage());
+
             final Set<String> outSlotIds = getOutSlots().stream().map(Slot::getId).collect(Collectors.toSet());
             final Set<String> capturedSlotIds = best.get().getSlotValues().keySet();
-            if (outSlotIds.isEmpty()) {
+            log.debug("askquestion real locale = {}", realLocale);
+            if (capturedSlotIds.isEmpty()) {
                 log.info("{} '{}' matched \"{}\"@{} with confidence {} but not sending out-slots",
                         getClass().getSimpleName(), getPath(), best.get().getPattern(), best.get().getInLanguage(),
                         best.get().getConfidence());
@@ -200,15 +204,15 @@ public class PromptTask extends Task {
      *
      * @param locale
      * @param utterance
-     * @param scope     If PromptTask is not active, use {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#GLOBAL}.
-     *                  If PromptTask is active, use {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#ANY}.
+     * @param scope     If PromptTask is not active, use {@link UtterancePattern.Scope#GLOBAL}.
+     *                  If PromptTask is active, use {@link UtterancePattern.Scope#ANY}.
      * @return
      */
     @Override
-    public List<UtterancePattern> matchUtterance(Locale locale, String utterance, UtterancePattern.Scope scope) {
+    public List<UtterancePattern> matchUtterance(final Optional<Locale> locale, final String utterance, final UtterancePattern.Scope scope) {
         final Pattern PLACEHOLDER_PATTERN = Pattern.compile("[{](?<slot>[a-z0-9_]+)[}]", Pattern.CASE_INSENSITIVE);
         final List<UtterancePattern> matches = utterancePatterns.stream()
-                .filter(it -> null == it.getInLanguage() || locale == Locale.forLanguageTag(it.getInLanguage()))
+                .filter(it -> !locale.isPresent() || null == it.getInLanguage() || locale.get() == Locale.forLanguageTag(it.getInLanguage()))
                 .filter(it -> UtterancePattern.Scope.ANY == scope || scope == it.getScope())
                 .map(it -> {
                     // Converts "aku lahir tanggal {birthdate}" where birthDate=xs:date
@@ -275,18 +279,18 @@ public class PromptTask extends Task {
                     plainPartLength += plainPart.length();
 
                     final Pattern realPattern = Pattern.compile(real, Pattern.CASE_INSENSITIVE);
-                    log.trace("Matching '{}' -> {} for \"{}\"@{} {}...", it.getPattern(), realPattern, utterance, locale.toLanguageTag(), scope);
+                    log.trace("{} matching '{}' -> {} for \"{}\"@{} {}...", getPath(), it.getPattern(), realPattern, utterance, locale.orElse(null), scope);
                     final Matcher realMatcher = realPattern.matcher(utterance);
                     if (realMatcher.find()) {
                         final UtterancePattern matched = new UtterancePattern();
-                        final Locale realLocale = it.getInLanguage() != null ? Locale.forLanguageTag(it.getInLanguage()) : locale;
+                        final Locale realLocale = it.getInLanguage() != null ? Locale.forLanguageTag(it.getInLanguage()) : locale.orElse(Locale.US);
                         matched.setInLanguage(realLocale.toLanguageTag());
                         matched.setPattern(it.getPattern());
                         matched.setScope(it.getScope());
                         matched.setActual(utterance);
                         matched.setStyle(it.getStyle());
                         // language-independent utterance pattern gets 0.9 multiplier
-                        final float languageMultiplier = null != it.getInLanguage() ? 1f : 0.9f;
+                        final float languageMultiplier = null != it.getInLanguage() && locale.isPresent() ? 1f : 0.9f;
                         // GLOBAL scope has full multiplier, LOCAL scope has 0.99. Its multiplier is quite high because
                         // we still want to match e.g. "{chapter} {verse}" which only has 1 plainPart
                         final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.99f;
@@ -347,7 +351,7 @@ public class PromptTask extends Task {
                                 matched.getSlotValues().put(slotId, toTargetValue(slot.getThingTypes().iterator().next(),
                                         matched.getInLanguage(), slotString, matched.getStyle()));
                             }
-                            log.debug("Matched {} multipliers: language={} scope={} plainPart={}({})", matched,
+                            log.debug("{} matched {} multipliers: language={} scope={} plainPart={}({})", getPath(), matched,
                                     languageMultiplier, scopeMultiplier, plainPartMultiplier, plainPartLength);
                             return matched;
                         } else {
@@ -365,7 +369,7 @@ public class PromptTask extends Task {
 
     /**
      * By default returns empty list. Override this to return assertable {@link ThingLabel}s.
-     * @param utteranceMatches Matches of utterance patterns returned by {@link #matchUtterance(Locale, String, UtterancePattern.Scope)}.
+     * @param utteranceMatches Matches of utterance patterns returned by {@link Activity#matchUtterance(Optional, String, UtterancePattern.Scope)}.
      * @return
      */
     public List<ThingLabel> generateLabelsToAssert(List<UtterancePattern> utteranceMatches) {
@@ -374,7 +378,7 @@ public class PromptTask extends Task {
 
     /**
      * By default returns empty list. Override this to return assertable {@link Literal}s.
-     * @param utteranceMatches Matches of utterance patterns returned by {@link #matchUtterance(Locale, String, UtterancePattern.Scope)}.
+     * @param utteranceMatches Matches of utterance patterns returned by {@link Activity#matchUtterance(Optional, String, UtterancePattern.Scope)}.
      * @return
      */
     public List<Literal> generateLiteralsToAssert(List<UtterancePattern> utteranceMatches) {
@@ -422,6 +426,7 @@ public class PromptTask extends Task {
     }
 
     protected void askQuestion(Locale locale) {
+        Preconditions.checkNotNull(locale, "locale must be given for askQuestion()");
         // Get appropriate question for target language, if possible.
         // If not, returns first question.
         final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))

@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.activity;
 
+import org.lskk.lumen.core.LumenLocale;
 import org.lskk.lumen.reasoner.ux.Channel;
 import org.springframework.stereotype.Service;
 
@@ -7,6 +8,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Manages {@link InteractionSession}s based on {@link org.lskk.lumen.reasoner.ux.Channel},
@@ -37,7 +39,10 @@ public class SessionManager {
     public InteractionSession getOrCreate(Channel<?> channel, String avatarId) {
         if (sessions.isEmpty()) {
             final InteractionSession session = sessionProvider.get();
+            session.getActiveLocales().add(LumenLocale.INDONESIAN);
+            session.getActiveLocales().add(Locale.US);
             sessions.add(session);
+            session.open(channel, avatarId);
             return session;
         } else {
             return sessions.get(0);

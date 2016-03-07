@@ -10,6 +10,7 @@ import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.ReasonerException;
+import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.skill.ActivityRef;
 import org.lskk.lumen.reasoner.skill.Skill;
 import org.lskk.lumen.reasoner.skill.SkillRepository;
@@ -85,9 +86,10 @@ public class InteractionSession implements Serializable, AutoCloseable {
     private Queue<Activity> pendingActivations = new ArrayDeque<>();
 
     public void open(Channel<?> channel, String avatarId) {
-        Preconditions.checkState(!activeLocales.isEmpty(),
-                "Requires at least one active locale");
+        Preconditions.checkState(!activeLocales.isEmpty(), "Requires at least one active locale");
         lastLocale = activeLocales.get(0);
+        log.info("Session {} opened with lastLocale {} and {} active locales: {}",
+                lastLocale.toLanguageTag(), activeLocales.stream().map(Locale::toLanguageTag).collect(Collectors.toList()));
         update(channel, avatarId);
     }
 
@@ -221,9 +223,13 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
     // TODO: should parameters replaced by CommunicateAction?
     // TODO: avatarId
-    public void receiveUtterance(Locale locale, String text, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
-        lastLocale = locale;
-        final CommunicateAction communicateAction = new CommunicateAction(locale, text, null);
+    public void receiveUtterance(@Nullable Optional<Locale> locale, String text, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
+        printAllStates();
+
+        if (locale.isPresent()) {
+            lastLocale = locale.get();
+        }
+        final CommunicateAction communicateAction = new CommunicateAction(locale.orElse(null), text, null);
 
         // Check ACTIVE child activities first
         // Skill is different, it's consulted even if PENDING, as long as it's enabled
@@ -236,11 +242,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
             log.trace("Executing receiveUtterance for {} {} '{}': {}",
                     activity.getState(), activity.getClass().getSimpleName(), activity.getPath(), communicateAction);
             if (ActivityState.PENDING == activity.getState()) {
-                activate(activity, locale);
+                activate(activity, locale.orElse(lastLocale));
             }
             activity.receiveUtterance(communicateAction, this, focusedTask);
         });
-        pollActions(locale);
+        pollActions(locale.orElse(lastLocale));
 
         // consult daemon skills, only if enabled and only if not yet added to this session
         final Set<String> addedSkills = activities.stream().filter(it -> it instanceof Skill).map(Activity::getId).collect(Collectors.toSet());
@@ -255,18 +261,19 @@ public class InteractionSession implements Serializable, AutoCloseable {
                     match.setSkill(skill);
                 });
                 if (!matches.isEmpty()) {
-                    log.debug("Skill '{}' intent '{}' returned {} matches for utterance '{}'@{}",
-                            skill.getId(), intent.getId(), matches.size(), text, locale.toLanguageTag());
+                    log.debug("Repository Skill '{}' intent '{}' returned {} matches for utterance '{}'@{}",
+                            skill.getId(), intent.getId(), matches.size(), text, locale.orElse(null));
                 }
                 return matches.stream();
             }).collect(Collectors.toList());
-            log.debug("Skill '{}' with {} intents {} returned {} matches for '{}'@{}",
+            log.debug("Repository Skill '{}' with {} intents {} returned {} matches for '{}'@{}",
                     skill.getId(), skill.getIntents().size(), skill.getIntents().stream().map(Activity::getId).toArray(), skillMatches.size(),
-                    text, locale.toLanguageTag());
+                    text, locale.orElse(null));
             return skillMatches.stream();
         }).sorted(new IConfidence.Comparator()).collect(Collectors.toList());
-        log.info("Total {} matches for '{}'@{} from {} enabled+unadded repository skills:\n{}",
-                totalMatches.size(), text, locale.toLanguageTag(), enabledSkills.size(),
+        log.info("Total {} matches for '{}'@{} from {} enabled+unadded repository skills ({}):\n{}",
+                totalMatches.size(), text, locale.orElse(null), enabledSkills.size(),
+                enabledSkills.stream().map(Skill::getId).collect(Collectors.toList()),
                 totalMatches.stream().limit(10)
                         .map(m -> String.format("* %s/%s: %s", m.getSkill().getId(), m.getIntent().getId(), m))
                         .collect(Collectors.joining("\n")));
@@ -274,11 +281,39 @@ public class InteractionSession implements Serializable, AutoCloseable {
         final Optional<UtterancePattern> best = totalMatches.stream().findFirst();
         if (best.isPresent() && best.get().getConfidence() >= INTENT_MIN_CONFIDENCE) {
             final Skill skill = launchSkill(best.get(), skillRepo, taskRepo, scriptRepo);
-            skill.receiveUtterance(new CommunicateAction(locale, text, null), this, focusedTask);
+            skill.receiveUtterance(new CommunicateAction(locale.orElse(null), text, null), this, focusedTask);
         } else if (best.isPresent()) {
             log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
                     best.get().getSkill().getId(), best.get().getIntent().getId());
         }
+    }
+
+    /**
+     * TODO: Support avatarId.
+     * @param locale
+     * @param text
+     * @param factService
+     * @param taskRepo
+     * @param scriptRepo
+     * @return
+     */
+    public AgentResponse receiveUtteranceForResponse(Optional<Locale> locale, String text, FactService factService, TaskRepository taskRepo, ScriptRepository scriptRepo) {
+        final String avatarId = "anime1";
+
+        receiveUtterance(locale, text, factService, taskRepo, scriptRepo);
+        final List<CommunicateAction> replies = expressAllForResponse(avatarId);// pre-activation express
+
+        final Activity nextActivity = pendingActivations.poll();
+        if (null != nextActivity) {
+            activate(nextActivity, getLastLocale());
+        }
+
+        replies.addAll(expressAllForResponse(avatarId)); // post-activation express
+
+        final AgentResponse agentResponse = new AgentResponse(text);
+        agentResponse.setStimuliLanguage(locale.orElse(null));
+        agentResponse.getCommunicateActions().addAll(replies);
+        return agentResponse;
     }
 
     /**
@@ -337,6 +372,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
      *
      * @param channel
      * @param avatarId
+     * @see #expressAllForResponse(String)
      */
     protected void expressAll(Channel<?> channel, String avatarId) {
         visitFirst(activity -> {
@@ -350,6 +386,30 @@ public class InteractionSession implements Serializable, AutoCloseable {
             }
             return null;
         });
+    }
+
+    /**
+     *
+     * @return
+     * @see #expressAll(Channel, String)
+     * @see #receiveUtteranceForResponse(Optional, String, FactService, TaskRepository, ScriptRepository)
+     * @param avatarId
+     */
+    protected List<CommunicateAction> expressAllForResponse(String avatarId) {
+        final ArrayList<CommunicateAction> communicateActions = new ArrayList<>();
+        visitFirst(activity -> {
+            log.trace("Session {} expressAll() visiting activity '{}'", id, activity.getPath());
+            while (true) {
+                final CommunicateAction pendingCommunicateAction = activity.getPendingCommunicateActions().poll();
+                if (null == pendingCommunicateAction) {
+                    break;
+                }
+                pendingCommunicateAction.setAvatarId(avatarId);
+                communicateActions.add(pendingCommunicateAction);
+            }
+            return null;
+        });
+        return communicateActions;
     }
 
     /**
@@ -476,7 +536,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
             sb.append(String.format("%s %s\n", act.getPath(), act.getState()));
             return null;
         });
-        log.info("Session {} states:\n{}", getId(), sb);
+        log.info("Session {} focus={}, states:\n{}", getId(), focusedTask != null ? focusedTask.getPath() : null, sb);
     }
 
     public void schedule(Activity activity) {
