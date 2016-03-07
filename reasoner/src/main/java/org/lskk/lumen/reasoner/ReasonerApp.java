@@ -7,12 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {GroovyTemplateAutoConfiguration.class})
 @Profile({"reasonerApp", "reasonerSocmedApp"})
 @Import(LumenCoreConfig.class)
 class ReasonerApp implements CommandLineRunner {
