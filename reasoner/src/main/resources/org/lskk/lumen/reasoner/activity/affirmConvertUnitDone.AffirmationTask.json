@@ -1,0 +1,14 @@
+{
+  "@type": "AffirmationTask",
+  "description": "Affirm unit conversion result.",
+  "autoPoll": true,
+  "expressions": [
+    {"inLanguage": "id-ID", "pattern": "{measure} setara dengan {converted}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "{measure} is equal to {converted}.", "style": "FORMAL"}
+  ],
+  "inSlots": [
+    {"id": "measure", "required": true, "thingTypes": ["yago:yagoQuantity"]},
+    {"id": "unit", "required": true, "thingTypes": ["yago:wordnet_unit_of_measurement_113583724"]},
+    {"id": "converted", "required": true, "thingTypes": ["yago:yagoQuantity"]}
+  ]
+}

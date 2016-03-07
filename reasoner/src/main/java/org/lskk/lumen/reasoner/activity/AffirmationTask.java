@@ -1,6 +1,5 @@
 package org.lskk.lumen.reasoner.activity;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomUtils;
 import org.lskk.lumen.core.CommunicateAction;
@@ -17,6 +16,7 @@ import java.util.stream.Collectors;
  * affirming: to express agreement with or commitment to; uphold; support.
  * When state changes to {@link ActivityState#ACTIVE}, it will express provided {@link CommunicateAction}.
  * Created by ceefour on 28/02/2016.
+ *
  * @todo Maybe merge with {@link CollectTask}.
  */
 public class AffirmationTask extends Task {
@@ -61,9 +61,4 @@ public class AffirmationTask extends Task {
         }
     }
 
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .toString();
-    }
 }

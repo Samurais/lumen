@@ -16,6 +16,8 @@ import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.intent.Slot;
 
+import javax.measure.Measure;
+import javax.measure.unit.Unit;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -249,6 +251,12 @@ public class PromptTask extends Task {
                                 case "yago:wordnet_religion_105946687":
                                     slotStringPattern = "[a-z '-]+";
                                     break;
+                                case "yago:yagoQuantity":
+                                    slotStringPattern = "[-]?[0-9]+[.,]?[0-9]*\\s+[a-z0-9/^]+";
+                                    break;
+                                case "yago:wordnet_unit_of_measurement_113583724":
+                                    slotStringPattern = "[a-z0-9/^]+";
+                                    break;
                                 default:
                                     throw new ReasonerException(String.format("Slot '%s.%s' uses unsupported type '%s'",
                                             getPath(), slotId, slot.getThingTypes()));
@@ -284,7 +292,10 @@ public class PromptTask extends Task {
                         final float scopeMultiplier = UtterancePattern.Scope.GLOBAL == it.getScope() ? 1f : 0.99f;
                         // we prefer as many matching plaintext as possible, i.e. "Read Quran {Al-Baqarah}" is preferred over "Read {Quran Al-Baqarah}" over "{Read Quran Al-Baqarah}"
                         final float plainPartMultiplier = 0.9f + (Math.min(plainPartLength, 20f) / 200f);
-                        matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * languageMultiplier * scopeMultiplier * plainPartMultiplier);
+                        // a full-utterance match has 1f confidence, each additional character is -0.01 up to max penalty of -0.1
+                        final float lengthMultiplier = 1f + (-0.01f * Math.min(10, utterance.length() - realMatcher.group().length()));
+                        matched.setConfidence(Optional.ofNullable(it.getConfidence()).orElse(1f) * languageMultiplier * scopeMultiplier * plainPartMultiplier
+                            * lengthMultiplier);
 
                         // for each slot, check if the captured slot value is valid in valid format for conversion to target value
                         boolean allValid = true;
@@ -298,6 +309,22 @@ public class PromptTask extends Task {
                                 case "xsd:integer":
                                     break;
                                 case "xs:date":
+                                    break;
+                                case "yago:yagoQuantity":
+                                    try {
+                                        Measure.valueOf(slotString);
+                                    } catch (Exception e) {
+                                        log.debug("Regex matched {} but invalid Measure format: {}", matched, e.toString());
+                                        allValid = false;
+                                    }
+                                    break;
+                                case "yago:wordnet_unit_of_measurement_113583724":
+                                    try {
+                                        Unit.valueOf(slotString);
+                                    } catch (Exception e) {
+                                        log.debug("Regex matched {} but invalid Unit format: {}", matched, e.toString());
+                                        allValid = false;
+                                    }
                                     break;
                                 case "yago:wordnet_sex_105006898":
                                 case "yago:wordnet_religion_105946687":
@@ -376,6 +403,10 @@ public class PromptTask extends Task {
             case "xs:date":
                 final LocalDate localDate = DateTimeFormat.longDate().withLocale(Locale.forLanguageTag(inLanguage)).parseLocalDate(value);
                 return localDate;
+            case "yago:yagoQuantity":
+                return Measure.valueOf(value);
+            case "yago:wordnet_unit_of_measurement_113583724":
+                return Unit.valueOf(value);
             default:
                 throw new ReasonerException("Unsupported type: " + expectedType);
         }

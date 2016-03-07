@@ -39,7 +39,11 @@
     {"inLanguage": "en-US", "pattern": "Calculate {measure} as {unit}", "scope": "GLOBAL"},
     {"inLanguage": "en-US", "pattern": "Convert {measure} in {unit}", "scope": "GLOBAL"},
     {"inLanguage": "en-US", "pattern": "Convert {measure} to {unit}", "scope": "GLOBAL"},
-    {"inLanguage": "en-US", "pattern": "Convert {measure} as {unit}", "scope": "GLOBAL"}
+    {"inLanguage": "en-US", "pattern": "Convert {measure} as {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "How much is {measure} in {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "How much is {measure} as {unit}", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "How much {measure} in {unit}", "clause": "CASUAL", "scope": "GLOBAL"},
+    {"inLanguage": "en-US", "pattern": "How much {measure} as {unit}", "clause": "CASUAL", "scope": "GLOBAL"}
   ],
   "outSlots": [
     {"id": "measure", "thingTypes": ["yago:yagoQuantity"]},

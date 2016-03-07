@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.activity;
 
+import com.google.common.collect.ImmutableMap;
 import jdk.nashorn.api.scripting.URLReader;
 import org.lskk.lumen.reasoner.intent.Slot;
 
@@ -26,9 +27,10 @@ public class Script extends Activity {
             engine.eval(new URLReader(scriptUrl, StandardCharsets.UTF_8));
             final Invocable invocable = (Invocable) engine;
 
+            final Map<String, Object> realScriptables = Optional.ofNullable(session.getScriptables()).orElse(ImmutableMap.of());
             log.debug("{} '{}' provides {} scriptables: {}", getClass().getSimpleName(), getPath(),
-                    session.getScriptables().size(), session.getScriptables().keySet());
-            engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(session.getScriptables());
+                    realScriptables.size(), realScriptables.keySet());
+            engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(realScriptables);
 
             engine.getBindings(ScriptContext.ENGINE_SCOPE).put("log", log);
 //            engine.getBindings(ScriptContext.ENGINE_SCOPE).put("intent", intent);

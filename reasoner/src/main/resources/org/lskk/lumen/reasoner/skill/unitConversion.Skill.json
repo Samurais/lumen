@@ -2,18 +2,24 @@
   "@type": "Skill",
   "name": "Unit Conversion",
   "description": "Converts a measurement to another unit.",
-  "enabled": "false",
-  "tasks": [
+  "enabled": true,
+  "activities": [
     {
       "href": "prompt:promptMeasurementToUnit",
       "intentCapturing": true
     },
     {
-      "href": "affirm:affirmConvertUnit"
+      "href": "script:convertUnit"
+    },
+    {
+      "href": "affirmation:affirmConvertUnitDone"
     }
   ],
   "connections": [
-    {"source": "promptMeasurementToUnit.measure", "sink": "affirmConvertUnit.measure"},
-    {"source": "promptMeasurementToUnit.unit", "sink": "affirmConvertUnit.unit"}
+    {"source": "promptMeasurementToUnit.measure", "sink": "convertUnit.measure"},
+    {"source": "promptMeasurementToUnit.unit", "sink": "convertUnit.unit"},
+    {"source": "promptMeasurementToUnit.measure", "sink": "affirmConvertUnitDone.measure"},
+    {"source": "promptMeasurementToUnit.unit", "sink": "affirmConvertUnitDone.unit"},
+    {"source": "convertUnit.converted", "sink": "affirmConvertUnitDone.converted"}
   ]
 }

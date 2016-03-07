@@ -2,6 +2,7 @@
   "@type": "Skill",
   "name": "Quran",
   "description": "Reads Quran from specific chapter and verse.",
+  "enabled": true,
   "activities": [
     {
       "href": "prompt:promptQuranChapterVerse",

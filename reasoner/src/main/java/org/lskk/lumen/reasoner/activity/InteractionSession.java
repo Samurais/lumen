@@ -10,12 +10,13 @@ import org.lskk.lumen.persistence.neo4j.Literal;
 import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.ReasonerException;
+import org.lskk.lumen.reasoner.skill.ActivityRef;
 import org.lskk.lumen.reasoner.skill.Skill;
 import org.lskk.lumen.reasoner.skill.SkillRepository;
-import org.lskk.lumen.reasoner.skill.ActivityRef;
 import org.lskk.lumen.reasoner.ux.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,6 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,10 +32,10 @@ import java.util.stream.Collectors;
 /**
  * Soon this will be replaced by {@link org.kie.internal.runtime.StatefulKnowledgeSession},
  * but for now I'll use this to prototype the intended behavior.
- *
+ * <p>
  * <p>TO REPEAT: This can NOT extend {@link Activity}, for the simple reason that it will be replaced by
  * Drools's {@link org.kie.internal.runtime.StatefulKnowledgeSession}!</p>
- *
+ * <p>
  * <p>Serializable, state is stored. So either use Spring to create this prototype bean using {@link javax.inject.Provider}
  * or pass service beans in methods.</p>
  * <p>
@@ -45,10 +45,10 @@ import java.util.stream.Collectors;
  * Running -suspend-> Suspended
  * Suspended -resume-> Running
  * </p>
- *
+ * <p>
  * <p>Sessions can also be merged. For example, one opens a chat, and they also open a Twitter. Later on Lumen discovers
  * that these are the same user, so the two sessions will be merged into one, enabling seamless interaction.</p>
- *
+ * <p>
  * Created by ceefour on 26/02/2016.
  */
 @Component
@@ -69,7 +69,8 @@ public class InteractionSession implements Serializable, AutoCloseable {
     public static final float ASSERT_LITERAL_MIN_CONFIDENCE = 0.8f;
     private static final AtomicLong SEQ_ID = new AtomicLong(0);
 
-    @Inject @Scriptable
+    @Autowired(required = false)
+    @Scriptable
     private Map<String, Object> scriptables;
     @Inject
     private FactService factService;
@@ -95,9 +96,9 @@ public class InteractionSession implements Serializable, AutoCloseable {
     }
 
     /**
+     * @return
      * @see Scriptable
      * @see Script
-     * @return
      */
     public Map<String, Object> getScriptables() {
         return scriptables;
@@ -295,7 +296,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
                 .findAny();
         if (existing.isPresent()) {
             throw new ReasonerException(String.format(
-                "Invalid attempt to launch already added skill '%s' from %s", existing.get().getPath(), utterancePattern));
+                    "Invalid attempt to launch already added skill '%s' from %s", existing.get().getPath(), utterancePattern));
         }
 
         log.info("Launching {}/{} ...", utterancePattern.getSkill().getId(), utterancePattern.getIntent().getId());
@@ -353,6 +354,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
 
     /**
      * Visits all enabled descendants and return first non-null value.
+     *
      * @param visitor
      * @param <R>
      * @return
@@ -442,10 +444,11 @@ public class InteractionSession implements Serializable, AutoCloseable {
     /**
      * Calls {@link Activity#onStateChanged(ActivityState, ActivityState, Locale, InteractionSession)}
      * of an {@link Activity}, and bubbling up to all of that activity's parents.
+     *
      * @param target
      * @param previous
      * @param current
-     * @param locale Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
+     * @param locale   Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
      * @param session
      * @throws Exception
      */

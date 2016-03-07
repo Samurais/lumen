@@ -18,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.orm.jpa.EntityScan;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -41,19 +43,20 @@ import static org.mockito.Mockito.*;
  * Created by ceefour on 18/02/2016.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(QuranSkillTest.Config.class)
-@ActiveProfiles("QuranSkillTest")
-public class QuranSkillTest {
-    private static final Logger log = LoggerFactory.getLogger(QuranSkillTest.class);
+@SpringApplicationConfiguration(UnitConversionSkillTest.Config.class)
+@ActiveProfiles("UnitConversionSkillTest")
+public class UnitConversionSkillTest {
+    private static final Logger log = LoggerFactory.getLogger(UnitConversionSkillTest.class);
 
-    @Profile("QuranSkillTest")
-    @SpringBootApplication(scanBasePackageClasses = {SkillRepository.class, TaskRepository.class, WordNetConfig.class, QuranChapter.class},
-        exclude = {JmxAutoConfiguration.class, CamelAutoConfiguration.class, GroovyTemplateAutoConfiguration.class})
+    @Profile("UnitConversionSkillTest")
+    @SpringBootApplication(scanBasePackageClasses = {SkillRepository.class, TaskRepository.class, WordNetConfig.class},
+        exclude = {HibernateJpaAutoConfiguration.class, DataSourceAutoConfiguration.class, JmxAutoConfiguration.class,
+                CamelAutoConfiguration.class, GroovyTemplateAutoConfiguration.class})
     @Import({LumenCoreConfig.class})
-    @EntityScan(basePackageClasses = QuranChapter.class)
+//    @EntityScan(basePackageClasses = QuranChapter.class)
 //    @Configuration
 //    @ComponentScan(basePackageClasses = {IntentExecutor.class, ThingRepository.class, YagoTypeRepository.class, FactServiceImpl.class})
-    @EnableJpaRepositories(basePackageClasses = QuranChapter.class)
+//    @EnableJpaRepositories(basePackageClasses = QuranChapter.class)
 //    @EnableNeo4jRepositories(basePackageClasses = ThingRepository.class)
     public static class Config {
         @Bean
@@ -81,63 +84,38 @@ public class QuranSkillTest {
     @Inject
     private Provider<InteractionSession> sessionProvider;
 
-    @Inject
-    private QuranChapterRepository quranChapterRepo;
-    @Inject
-    private QuranVerseRepository quranVerseRepo;
-    @Inject
-    private LiteralRepository literalRepo;
-
     @Test
     public void skillsLoaded() {
         assertThat(skillRepo.getSkills().values(), hasSize(greaterThanOrEqualTo(1)));
     }
 
     @Test
-    public void quranSkill() {
-        final Skill quranSkill = skillRepo.get("quran");
-        quranSkill.resolveIntents(taskRepo);
-        assertThat(quranSkill.getId(), equalTo("quran"));
-        assertThat(quranSkill.getActivityRefs(), hasSize(greaterThanOrEqualTo(1)));
-        assertThat(quranSkill.getIntents(), hasSize(1));
+    public void unitConversionSkill() {
+        final Skill skill = skillRepo.get("unitConversion");
+        skill.resolveIntents(taskRepo);
+        assertThat(skill.getId(), equalTo("unitConversion"));
+        assertThat(skill.getActivityRefs(), hasSize(greaterThanOrEqualTo(2)));
+        assertThat(skill.getIntents(), hasSize(1));
     }
 
     @Test
-    public void quranInteraction() {
+    public void unitConversionInteraction() {
         reset(factService, mockChannel);
         try (final InteractionSession session = sessionProvider.get()) {
             session.getActiveLocales().add(LumenLocale.INDONESIAN);
             session.getActiveLocales().add(Locale.US);
             session.open(null, null);
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "baca Quran", factService, taskRepo, scriptRepo);
+            session.receiveUtterance(LumenLocale.INDONESIAN, "Berapa 5 km dalam cm?", factService, taskRepo, scriptRepo);
             session.update(mockChannel, null);
-            assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.ACTIVE));
+//            assertThat(session.get("unitConversion.promptMeasurementToUnit").getState(), equalTo(ActivityState.COMPLETED));
 
-            session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo, scriptRepo);
-            session.update(mockChannel, null);
-            assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
+//            session.receiveUtterance(LumenLocale.INDONESIAN, "Al-Kahfi:45", factService, taskRepo, scriptRepo);
+//            session.update(mockChannel, null);
+//            assertThat(session.get("quran.promptQuranChapterVerse").getState(), equalTo(ActivityState.COMPLETED));
 
-            verify(mockChannel, times(2)).express(any(), any(), any());
+            verify(mockChannel, times(1)).express(any(), any(), any());
         }
     }
 
-    @Test
-    public void readAlKahfi() {
-        log.info("halo");
-        final QuranChapter quranChapter = quranChapterRepo.findOne("quran_18");
-        log.info("chapter: {}", quranChapter);
-    }
-
-    @Test
-    public void readAlKahfiAyat46() {
-        final QuranVerse quranVerse = quranVerseRepo.findOne("quran_18_verse_46");
-        log.info("verse: {}", quranVerse);
-    }
-
-    @Test
-    public void readAlKahfiAyat46Literal() {
-        final Literal quranLiteral = literalRepo.findOne("quran_18_verse_46_ind");
-        log.info("literal: {}", quranLiteral);
-    }
 }
