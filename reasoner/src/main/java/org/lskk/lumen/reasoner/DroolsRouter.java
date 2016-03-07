@@ -18,7 +18,7 @@ import javax.inject.Inject;
  * @deprecated Now uses {@link ReasonerRouter}
  */
 @Component
-@Profile("reasonerApp")
+@Profile({"reasonerApp", "reasonerSocmedApp"})
 @Deprecated
 public class DroolsRouter extends RouteBuilder {
 

@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 @SpringBootApplication
-@Profile("reasonerApp")
+@Profile({"reasonerApp", "reasonerSocmedApp"})
 @Import(LumenCoreConfig.class)
 class ReasonerApp implements CommandLineRunner {
 
