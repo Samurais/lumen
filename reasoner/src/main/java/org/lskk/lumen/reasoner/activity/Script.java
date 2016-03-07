@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.activity;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import jdk.nashorn.api.scripting.URLReader;
 import org.lskk.lumen.reasoner.intent.Slot;
@@ -22,7 +23,9 @@ public class Script extends Activity {
     public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
         super.onStateChanged(previous, current, locale, session);
         if (ActivityState.ACTIVE == current) {
-            final URL scriptUrl = Script.class.getResource("/org/lskk/lumen/reasoner/activity/" + getId() + ".js");
+            final String scriptPath = "/org/lskk/lumen/reasoner/activity/" + getId() + ".js";
+            final URL scriptUrl = Preconditions.checkNotNull(Script.class.getResource(scriptPath),
+                    "Cannot find script '%s' file in classpath: %s", getId(), scriptPath);
             final ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
             engine.eval(new URLReader(scriptUrl, StandardCharsets.UTF_8));
             final Invocable invocable = (Invocable) engine;
