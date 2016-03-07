@@ -86,11 +86,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j</artifactId>
-            <version>2.3.2</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.neo4j</groupId>-->
+            <!--<artifactId>neo4j</artifactId>-->
+            <!--<version>2.3.2</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.apache.tinkerpop</groupId>
             <artifactId>neo4j-gremlin</artifactId>
@@ -107,6 +107,12 @@
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-tinkerpop-api-impl</artifactId>
             <version>0.1-2.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.neo4j</groupId>
+                    <artifactId>neo4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
