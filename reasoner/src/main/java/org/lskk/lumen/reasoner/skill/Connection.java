@@ -46,23 +46,23 @@ public class Connection implements Serializable {
         this.sink = sink;
     }
 
-    @JsonIgnore
     public String getSourceActivity() {
         return StringUtils.substringBefore(source, ".");
     }
 
-    @JsonIgnore
     public String getSourceSlot() {
         return StringUtils.substringAfter(source, ".");
     }
 
-    @JsonIgnore
     public String getSinkActivity() {
         return StringUtils.substringBefore(sink, ".");
     }
 
-    @JsonIgnore
     public String getSinkSlot() {
         return StringUtils.substringAfter(sink, ".");
+    }
+
+    public String getActivityPair() {
+        return getSourceActivity() + "," + getSinkActivity();
     }
 }

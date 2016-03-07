@@ -39,11 +39,7 @@ public abstract class PubLayout extends WebPage {
         add(new HtmlTag("html", Locale.US));
         add(new Label("title", getTitleModel()));
         add(new MetaTag("metaDescription", new Model<>("description"), getMetaDescriptionModel()));
-        /*add(new BookmarkablePageLink<>("histogramLink", HistogramPage.class));
-        add(new BookmarkablePageLink<>("equalizationLink", EqualizationPage.class));
-        add(new BookmarkablePageLink<>("chaincodeLink", ChainCodePage.class));
-        add(new BookmarkablePageLink<>("chaincodeImlLink", ChainCodeImlPage.class));
-        add(new BookmarkablePageLink<>("zhangSuenLink", ZhangSuenPage.class));*/
+        add(new BookmarkablePageLink<>("skillManagementLink", SkillManagementPage.class, new PageParameters().set("skillId", "")));
 //        add(new BookmarkablePageLink<>("roadsLink", RoadListPage.class,
 //                new PageParameters().set(SeoBookmarkableMapper.LOCALE_PREF_ID_PARAMETER, localePrefId)));
 //        add(new BookmarkablePageLink<>("camerasLink", CameraListPage.class,

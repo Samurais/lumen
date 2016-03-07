@@ -21,12 +21,10 @@ public class ActivityRef implements Serializable {
         this.href = href;
     }
 
-    @JsonIgnore
     public String getId() {
         return URI.create(href).getSchemeSpecificPart();
     }
 
-    @JsonIgnore
     public String getScheme() {
         return URI.create(href).getScheme();
     }

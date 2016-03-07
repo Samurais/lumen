@@ -1,0 +1,104 @@
+<wicket:panel>
+    <div id="myholder"></div>
+    <script type="text/javascript" wicket:id="skillJson"></script>
+    <script type="text/javascript">
+
+    var graph = new joint.dia.Graph;
+
+    var paper = new joint.dia.Paper({
+        el: $('#myholder'),
+        width: 600,
+        height: 400,
+        model: graph,
+        gridSize: 1
+    });
+
+    var activityRects = {};
+    var activityLinks = {};
+
+    /*
+    var rect = new joint.shapes.basic.Rect({
+        position: { x: 100, y: 30 },
+        size: { width: 100, height: 30 },
+        attrs: { rect: { fill: 'blue' }, text: { text: 'task1', fill: 'white' } }
+    });
+    */
+    var activityX = 100, activityY = 30;
+    skill.activities.forEach(function(act) {
+        activityX = Math.floor(Math.random() * (paper.getArea().width - 240));
+        activityY = Math.floor(Math.random() * (paper.getArea().height - 30));
+
+        var fill = 'blue';
+        switch (act.scheme) {
+        case 'prompt':
+            fill = 'blue';
+            break;
+        case 'affirmation':
+            fill = 'green';
+            break;
+        case 'script':
+            fill = 'olive';
+            break;
+        default:
+            fill = 'blue';
+        }
+
+        var rect = new joint.shapes.basic.Rect({
+            position: {x: activityX, y: activityY},
+            size: {width: 240, height: 30},
+            attrs: {
+                rect: {fill: fill},
+                text: {text: act.href, fill: 'white'}
+            }
+        });
+        act._rect = rect;
+        graph.addCells([rect]);
+        activityRects[act.href.replace(/^.+:/, '')] = rect;
+
+        activityX += 200;
+        activityY += 50;
+    });
+
+/*
+    var rect2 = new joint.shapes.basic.Rect({
+        position: { x: 400, y: 30 },
+        size: { width: 100, height: 30 },
+        attrs: { rect: { fill: 'blue' }, text: { text: 'task2', fill: 'white' } }
+    });
+
+    var link = new joint.dia.Link({
+        source: { id: rect.id },
+        target: { id: rect2.id }
+    });*/
+
+    _.values(_.groupBy(skill.connections, 'activityPair')).forEach(function(pair) {
+        var rect1 = activityRects[pair[0].sourceActivity];
+        var rect2 = activityRects[pair[0].sinkActivity];
+        var sourceText = pair.map(function(conn) { return conn.sourceSlot; }).join(', ');
+        var sinkText = pair.map(function(conn) { return conn.sinkSlot; }).join(', ');
+        var link;
+        if (sourceText != sinkText) {
+            link = new joint.shapes.fsa.Arrow({
+                source: {id: rect1.id},
+                target: {id: rect2.id},
+                labels: [
+                    {position: 0.2, attrs: {text: {text: sourceText} } },
+                    {position: 0.8, attrs: {text: {text: sinkText} } }
+                ]
+            });
+        } else {
+            link = new joint.shapes.fsa.Arrow({
+                source: {id: rect1.id},
+                target: {id: rect2.id},
+                labels: [
+                    {position: 0.5, attrs: {text: {text: sourceText} } }
+                ]
+            });
+        }
+        graph.addCells([link]);
+    });
+
+    //graph.addCells([rect, rect2, link]);
+
+    </script>
+</wicket:panel>

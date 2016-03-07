@@ -86,7 +86,6 @@
 			<scope>runtime</scope>
 		</dependency>-->
 
-
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
@@ -178,6 +177,16 @@
             <artifactId>wicket-spring</artifactId>
             <version>7.2.0</version>
         </dependency>
+		<dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-extensions</artifactId>
+            <version>7.2.0</version>
+        </dependency>
+		<dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-util</artifactId>
+            <version>7.2.0</version>
+        </dependency>
         <dependency>
             <groupId>de.agilecoders.wicket</groupId>
             <artifactId>wicket-bootstrap-themes</artifactId>
@@ -208,6 +217,32 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+		<dependency>
+			<groupId>org.webjars.bower</groupId>
+			<artifactId>lodash</artifactId>
+			<version>4.6.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.bower</groupId>
+			<artifactId>jointjs</artifactId>
+			<version>0.9.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.bower</groupId>
+			<artifactId>backbone</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+		<!--<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>ST4</artifactId>
+			<version>4.0.8</version>
+		</dependency>-->
+		<dependency>
+			<groupId>org.webjars.bower</groupId>
+			<artifactId>underscore</artifactId>
+			<version>1.8.3</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
