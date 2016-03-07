@@ -11,9 +11,9 @@ import com.opencsv.CSVReader;
 import org.apache.camel.spring.boot.CamelAutoConfiguration;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.sparql.util.NodeFactoryExtra;
+import org.lskk.lumen.persistence.jpa.YagoLabelRepository;
 import org.lskk.lumen.persistence.jpa.YagoType;
 import org.lskk.lumen.persistence.jpa.YagoTypeRepository;
-import org.lskk.lumen.persistence.jpa.YagoLabelRepository;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
@@ -38,12 +38,12 @@ import java.util.stream.Collectors;
 /**
  * PostgreSQL is used to store labels and glossary, Neo4j is used to store taxonomy hierarchy (e.g. {@link org.apache.jena.vocabulary.RDFS#subClassOf},
  * {@link org.apache.jena.vocabulary.RDFS#subPropertyOf}, {@link org.apache.jena.vocabulary.RDF#type}).
- *
+ * <p>
  * This works together with {@link ImportYagoTaxonomy2Neo4jApp}.
- *
+ * <p>
  * -Xmx4g please
  */
-@SpringBootApplication(exclude={//CrshAutoConfiguration.class,
+@SpringBootApplication(exclude = {//CrshAutoConfiguration.class,
         JmxAutoConfiguration.class, CamelAutoConfiguration.class, GroovyTemplateAutoConfiguration.class})
 @Profile("importYagoTaxonomy2PostgresApp")
 public class ImportYagoTaxonomy2PostgresApp implements CommandLineRunner {
@@ -248,6 +248,7 @@ public class ImportYagoTaxonomy2PostgresApp implements CommandLineRunner {
 
     /**
      * Get taxonomy type nodes from taxonomyFile.
+     *
      * @param taxonomyFile
      * @throws IOException
      * @throws InterruptedException
@@ -299,6 +300,7 @@ public class ImportYagoTaxonomy2PostgresApp implements CommandLineRunner {
 
     /**
      * Create initial taxonomy type nodes from typeHrefs.
+     *
      * @param typeHrefs
      * @throws IOException
      * @throws InterruptedException
@@ -317,6 +319,7 @@ public class ImportYagoTaxonomy2PostgresApp implements CommandLineRunner {
 
     /**
      * Link subclasses from taxonomyFile.
+     *
      * @param taxonomyFile
      * @throws IOException
      * @throws InterruptedException
@@ -378,6 +381,7 @@ public class ImportYagoTaxonomy2PostgresApp implements CommandLineRunner {
 
     /**
      * Add labels from labelsFile.
+     *
      * @param labelsFile
      * @throws IOException
      * @throws InterruptedException
@@ -470,7 +474,10 @@ public class ImportYagoTaxonomy2PostgresApp implements CommandLineRunner {
         txTemplate.execute((tx) -> createInitialTypes(typeHrefs));
 //        txTemplate.execute((tx) -> { linkSubclasses(new File(yagoTsvFolder, "yagoTaxonomy.tsv")); return null; });
         // only add labels for existing entities, i.e. types only
-        txTemplate.execute((tx) -> { addLabelsOnlyForExisting(typeHrefs, new File(yagoTsvFolder, "yagoLabels.tsv")); return null; });
+        txTemplate.execute((tx) -> {
+            addLabelsOnlyForExisting(typeHrefs, new File(yagoTsvFolder, "yagoLabels.tsv"));
+            return null;
+        });
 
         log.info("Done");
     }
