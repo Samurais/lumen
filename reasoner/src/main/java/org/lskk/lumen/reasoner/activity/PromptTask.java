@@ -256,7 +256,7 @@ public class PromptTask extends Task {
                                     slotStringPattern = "[a-z '-]+";
                                     break;
                                 case "yago:yagoQuantity":
-                                    slotStringPattern = "[-]?[0-9]+[.,]?[0-9]*\\s+[a-z0-9/^]+";
+                                    slotStringPattern = "[-]?[0-9]+[.,]?[0-9]*\\s*[a-z0-9/^]+";
                                     break;
                                 case "yago:wordnet_unit_of_measurement_113583724":
                                     slotStringPattern = "[a-z0-9/^]+";
@@ -315,10 +315,11 @@ public class PromptTask extends Task {
                                 case "xs:date":
                                     break;
                                 case "yago:yagoQuantity":
+                                    final String tweakedMeasure = slotString.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)", "$1 ");
                                     try {
-                                        Measure.valueOf(slotString);
+                                        Measure.valueOf(tweakedMeasure);
                                     } catch (Exception e) {
-                                        log.debug("Regex matched {} but invalid Measure format: {}", matched, e.toString());
+                                        log.debug("Regex matched {} but invalid Measure format: {}", matched, tweakedMeasure);
                                         allValid = false;
                                     }
                                     break;
@@ -408,7 +409,7 @@ public class PromptTask extends Task {
                 final LocalDate localDate = DateTimeFormat.longDate().withLocale(Locale.forLanguageTag(inLanguage)).parseLocalDate(value);
                 return localDate;
             case "yago:yagoQuantity":
-                return Measure.valueOf(value);
+                return Measure.valueOf(value.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)", "$1 "));
             case "yago:wordnet_unit_of_measurement_113583724":
                 return Unit.valueOf(value);
             default:
