@@ -4,6 +4,8 @@
   "autoPoll": true,
   "inSlots": [
     {"id": "date", "thingTypes": ["xsd:date"], "required": true},
+    {"id": "lat", "thingTypes": ["xsd:float"], "required": true, "initialValue": -6.9174639},
+    {"id": "lon", "thingTypes": ["xsd:float"], "required": true, "initialValue": 107.6191228},
     {"id": "timeZone", "thingTypes": ["yago:TimeZone"], "required": true}
   ],
   "outSlots": [

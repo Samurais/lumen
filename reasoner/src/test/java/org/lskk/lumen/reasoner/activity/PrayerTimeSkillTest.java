@@ -105,12 +105,12 @@ public class PrayerTimeSkillTest {
             final Script script = scriptRepo.createScript("calcPrayerTime");
             script.initialize();
             assertThat(script.getId(), equalTo("calcPrayerTime"));
-            assertThat(script.getInSlots().stream().map(Slot::getId).toArray(), Matchers.arrayContaining("date", "timeZone"));
+            assertThat(script.getInSlots().stream().map(Slot::getId).toArray(), Matchers.arrayContaining("date", "lat", "lon", "timeZone"));
             assertThat(script.getOutSlots().stream().map(Slot::getId).toArray(), Matchers.arrayContaining("fajr", "sunrise",
                     "dhuhr", "asr", "sunset", "maghrib", "isha"));
 
             script.getInSlots().get(0).add(new LocalDate("2016-03-08"));
-            script.getInSlots().get(1).add(DateTimeZone.forID("Asia/Jakarta"));
+            script.getInSlots().get(3).add(DateTimeZone.forID("Asia/Jakarta"));
 
             script.setState(ActivityState.ACTIVE);
             script.onStateChanged(ActivityState.PENDING, ActivityState.ACTIVE, LumenLocale.INDONESIAN, session);

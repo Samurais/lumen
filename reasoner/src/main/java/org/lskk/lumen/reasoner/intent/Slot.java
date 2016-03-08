@@ -1,6 +1,8 @@
 package org.lskk.lumen.reasoner.intent;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.PostConstruct;
@@ -29,6 +31,7 @@ public class Slot implements Serializable {
     private Set<String> literals = new HashSet<>();
     private Set<String> thingTypes = new HashSet<>();
     private Object last;
+    private Object initialValue;
 
     private transient Queue<Object> inQueue;
     private transient Queue<Object> outQueue;
@@ -37,6 +40,9 @@ public class Slot implements Serializable {
     public void initialize(Direction direction) {
         if (Direction.IN == direction) {
             inQueue = new ArrayDeque<>();
+            if (null != getInitialValue()) {
+                add(initialValue);
+            }
         } else {
             outQueue = new ArrayDeque<>();
         }
@@ -72,6 +78,19 @@ public class Slot implements Serializable {
 
     public void setKind(SlotKind kind) {
         this.kind = kind;
+    }
+
+    /**
+     * Only used for in-slots, and only usable for primitive types, e.g. {@link String}, {@link Number},
+     * and {@link Boolean}.
+     * @return
+     */
+    public Object getInitialValue() {
+        return initialValue;
+    }
+
+    public void setInitialValue(Object initialValue) {
+        this.initialValue = initialValue;
     }
 
     /**

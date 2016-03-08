@@ -7,8 +7,8 @@ with(new JavaImporter(org.lskk.lumen.reasoner.activity, org.joda.time)) {
         // Important: to use .last, we need to set Script.autoPoll = true in the Script.json descriptor file
         var date = inSlots.date.last; // org.joda.time.LocalDate
         // Bandung:
-        var lat = -6.9174639;//inSlots.measure.last;
-        var lon = 107.6191228;//inSlots.unit.last;
+        var lat = inSlots.lat.last; //-6.9174639;//inSlots.measure.last;
+        var lon = inSlots.lon.last; //107.6191228;//inSlots.unit.last;
         var timeZone = inSlots.timeZone.last; // org.joda.time.DateTimeZone, e.g. DateTimeZone.forID('Asia/Jakarta');
         /*
         "method" - these are the different methods identifying various schools of thought about how to compute the timings. This parameter accepts values from 0-7, as signified below:

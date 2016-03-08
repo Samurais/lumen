@@ -57,10 +57,12 @@
             events.push('intentCapturing = true');
         }
         act.instance.inSlots.forEach(function(slot) {
-            events.push('in ' + slot.id + ' ' + slot.thingTypes[0]);
+            var slotStr = 'in ' + slot.id + ' ' + slot.thingTypes[0] + (slot.initialValue ? ' = ' + slot.initialValue : '');
+            events.push(slotStr);
         });
         act.instance.outSlots.forEach(function(slot) {
-            events.push('out ' + slot.id + ' ' + slot.thingTypes[0]);
+            var slotStr = 'out ' + slot.id + ' ' + slot.thingTypes[0] + (slot.initialValue ? ' = ' + slot.initialValue : '');
+            events.push(slotStr);
         });
 
         var rect = new joint.shapes.uml.State({
