@@ -1,0 +1,18 @@
+{
+  "@type": "AffirmationTask",
+  "description": "Affirm Islamic prayer times.",
+  "autoPoll": true,
+  "expressions": [
+    {"inLanguage": "id-ID", "pattern": "Waktu sholat Subuh pukul {fajr}, Dhuhur pukul {dhuhr}, Asar pukul {asr}, Maghrib pukul {maghrib}, dan Isya pukul {isha}, berlaku untuk kota {city} pada {date}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Prayer time for Subuh is at {fajr}, Dhuhr at {dhuhr}, Asr at {asr}, Maghrib at {maghrib}, and Isha at {isha}, in {city} on {date}.", "style": "FORMAL"}
+  ],
+  "inSlots": [
+    {"id": "fajr", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "dhuhr", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "asr", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "maghrib", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "isha", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "city", "required": true, "thingTypes": ["yago:wordnet_city_108524735"]},
+    {"id": "date", "required": true, "thingTypes": ["xsd:date"]}
+  ]
+}

@@ -310,6 +310,7 @@ public abstract class Activity implements Serializable {
      * meaning that all required {@link #getInSlots()}s has packets waiting in the queue.
      * @return
      */
+    @JsonIgnore
     public boolean isReady() {
         return getInSlots().stream().filter(Slot::isRequired)
                 .allMatch(slot -> slot.hasNext());

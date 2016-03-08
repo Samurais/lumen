@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.activity.*;
@@ -21,7 +20,7 @@ public class Skill extends Activity {
 
     private List<ActivityRef> activityRefs = new ArrayList<>();
     /**
-     * Initially {@code null} until {@link #resolveIntents(TaskRepository)} is called by {@link InteractionSession#receiveUtterance(Optional, String, String, FactService, TaskRepository, ScriptRepository)}.
+     * Initially {@code null} until {@link #resolveIntents(TaskRepository, ScriptRepository)} is called by {@link InteractionSession#receiveUtterance(Optional, String, String, FactService, TaskRepository, ScriptRepository)}.
      */
     private List<Activity> intents;
     private List<Connection> connections = new ArrayList<>();
@@ -44,27 +43,37 @@ public class Skill extends Activity {
     }
 
     /**
-     * Resolve {@link ActivityRef}s with {@link ActivityRef#getIntentCapturing()} of {@code true}, to
-     * {@link Activity}s. Only called once, further calls have no effect.
+     * Resolve {@link ActivityRef}s into {@link ActivityRef#setInstance(Activity)}.
+     * For {@link ActivityRef#getIntentCapturing()} of {@code true}, will be added to {@link #getIntents()}.
+     * Only called once, further calls have no effect.
      * @param taskRepo
+     * @param scriptRepo
      */
-    public void resolveIntents(TaskRepository taskRepo) {
+    public void resolveIntents(TaskRepository taskRepo, ScriptRepository scriptRepo) {
         if (null == intents) {
             intents = new ArrayList<>();
-            activityRefs.stream().filter(it -> Boolean.TRUE.equals(it.getIntentCapturing())).forEach(taskRef -> {
-                final String taskId = StringUtils.substringAfter(taskRef.getHref(), ":");
-                log.info("Skill '{}' resolving intent-capturing {} task '{}'", getPath(), taskRef.getScheme(), taskRef.getId());
-                final Task task;
-                if ("prompt".equals(taskRef.getScheme())) {
-                    task = taskRepo.createPrompt(taskId);
-                } else if ("affirmation".equals(taskRef.getScheme())) {
-                    task = taskRepo.createAffirmation(taskId);
-                } else {
-                    throw new ReasonerException(String.format("Cannot resolve skill '%s', unsupported task reference '%s'",
-                            getPath(), taskRef.getHref()));
+            activityRefs.stream().forEach(actitivyRef -> {
+                log.info("Skill '{}' resolving {} {} task '{}'", getPath(),
+                        Boolean.TRUE == actitivyRef.getIntentCapturing() ? "intent-capturing" : "regular", actitivyRef.getScheme(), actitivyRef.getId());
+                final Activity instance;
+                switch (actitivyRef.getScheme()) {
+                    case "prompt":
+                        instance = taskRepo.createPrompt(actitivyRef.getId());
+                        break;
+                    case "affirmation":
+                        instance = taskRepo.createAffirmation(actitivyRef.getId());
+                        break;
+                    case "script":
+                        instance = scriptRepo.createScript(actitivyRef.getId());
+                        break;
+                    default:
+                        throw new ReasonerException(String.format("Cannot resolve skill '%s', unsupported activity reference '%s'",
+                                getPath(), actitivyRef.getHref()));
                 }
-                intents.add(task);
-                taskRef.setInstance(task);
+                actitivyRef.setInstance(instance);
+                if (Boolean.TRUE == actitivyRef.getIntentCapturing()) {
+                    intents.add(instance);
+                }
             });
         }
     }

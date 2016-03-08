@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Scope("prototype")
-public class InteractionSession implements Serializable, AutoCloseable {
+public class InteractionSession implements Serializable, AutoCloseable, IScriptablesProvider {
     private static final Logger log = LoggerFactory.getLogger(InteractionSession.class);
     /**
      * Minimum intent confidence before a session will materialize the skill.
@@ -102,6 +102,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
      * @see Scriptable
      * @see Script
      */
+    @Override
     public Map<String, Object> getScriptables() {
         return scriptables;
     }
@@ -252,7 +253,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
         final List<Skill> enabledSkills = skillRepo.getSkills().values().stream()
                 .filter(it -> it.getEnabled() && !addedSkills.contains(it.getId())).collect(Collectors.toList());
         final List<UtterancePattern> totalMatches = enabledSkills.stream().flatMap(skill -> {
-            skill.resolveIntents(taskRepo);
+            skill.resolveIntents(taskRepo, scriptRepo);
             final List<UtterancePattern> skillMatches = skill.getIntents().stream().flatMap(intent -> {
                 final List<UtterancePattern> matches = intent.matchUtterance(locale, text, UtterancePattern.Scope.GLOBAL);
                 matches.forEach(match -> {
@@ -452,7 +453,7 @@ public class InteractionSession implements Serializable, AutoCloseable {
      */
     public void complete(Activity activity, Locale locale) {
         Preconditions.checkArgument(ActivityState.ACTIVE == activity.getState(),
-                "Can only complete an ACTIVE activity, but got %s", activity);
+                "Can only complete an ACTIVE activity, but got %s %s", activity.getState(), activity);
         log.debug("Completing from {}: {} ...", activity.getState(), activity);
         final ActivityState previous = activity.getState();
         activity.setState(ActivityState.COMPLETED);

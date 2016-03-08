@@ -1,9 +1,11 @@
 package org.lskk.lumen.reasoner.web;
 
 import com.google.common.collect.ImmutableList;
+import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapBookmarkablePageLink;
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.list.BootstrapListView;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
@@ -26,6 +28,7 @@ public class SkillManagementPage extends PubLayout {
 
     public SkillManagementPage(PageParameters parameters) {
         super(parameters);
+        final StringValue skillId = parameters.get("skillId");
         final LoadableDetachableModel<List<Skill>> skillsModel = new LoadableDetachableModel<List<Skill>>() {
             @Override
             protected List<Skill> load() {
@@ -35,15 +38,21 @@ public class SkillManagementPage extends PubLayout {
         add(new BootstrapListView<Skill>("skillsLv", skillsModel) {
             @Override
             protected void populateItem(ListItem<Skill> item) {
-                item.add(new BookmarkablePageLink<>("link", SkillManagementPage.class,
-                        new PageParameters().set("skillId", item.getModelObject().getId()))
-                    .setBody(new PropertyModel<>(item.getModel(), "id")));
+                final CharSequence link = urlFor(SkillManagementPage.class,
+                        new PageParameters().set("skillId", item.getModelObject().getId()));
+                item.add(new AttributeModifier("href", link.toString()));
+//                item.add(new BookmarkablePageLink<>("link", SkillManagementPage.class,
+//                        new PageParameters().set("skillId", item.getModelObject().getId()))
+//                    .setBody(new PropertyModel<>(item.getModel(), "id")));
+                if (item.getModelObject().getId().equals(skillId.toString())) {
+                    item.add(new CssClassNameAppender("active"));
+                }
+                item.add(new Label("id", new PropertyModel<>(item.getModel(), "id")));
             }
         });
         final LoadableDetachableModel<Skill> skillModel = new LoadableDetachableModel<Skill>() {
             @Override
             protected Skill load() {
-                final StringValue skillId = parameters.get("skillId");
                 return !skillId.isEmpty() ? skillRepo.get(skillId.toString()) : null;
             }
         };

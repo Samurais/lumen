@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.intent;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.PostConstruct;
@@ -127,6 +128,7 @@ public class Slot implements Serializable {
         return packet;
     }
 
+    @JsonIgnore
     public Queue<Object> getOutQueue() {
         return outQueue;
     }

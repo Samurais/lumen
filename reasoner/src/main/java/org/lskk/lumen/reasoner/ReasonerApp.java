@@ -26,11 +26,6 @@ class ReasonerApp implements CommandLineRunner {
                 .run(args);
     }
 
-    @Bean(destroyMethod = "close")
-    public CloseableHttpClient httpClient() {
-        return HttpClients.createSystem();
-    }
-
     @Override
     public void run(String... args) throws Exception {
         log.info("Joining thread, you can press Ctrl+C to shutdown application");

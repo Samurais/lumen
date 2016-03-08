@@ -1,0 +1,21 @@
+{
+  "@type": "Script",
+  "name": "Prayer Times",
+  "description": "Calculate the Islamic prayer times using aladhan.com REST API.",
+  "enabled": true,
+  "activities": [
+    {
+      "href": "script:calcPrayerTime"
+    },
+    {
+      "href": "affirmation:affirmPrayerTimes"
+    }
+  ],
+  "connections": [
+    {"source": "calcPrayerTime.fajr", "sink": "affirmPrayerTimes.fajr"},
+    {"source": "calcPrayerTime.dhuhr", "sink": "affirmPrayerTimes.dhuhr"},
+    {"source": "calcPrayerTime.asr", "sink": "affirmPrayerTimes.asr"},
+    {"source": "calcPrayerTime.maghrib", "sink": "affirmPrayerTimes.maghrib"},
+    {"source": "calcPrayerTime.isha", "sink": "affirmPrayerTimes.isha"}
+  ]
+}

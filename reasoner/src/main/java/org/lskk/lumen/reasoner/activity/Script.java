@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import jdk.nashorn.api.scripting.URLReader;
 import org.lskk.lumen.reasoner.intent.Slot;
 
+import javax.annotation.Nullable;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -19,8 +20,16 @@ import java.util.*;
  */
 public class Script extends Activity {
 
+    /**
+     *
+     * @param previous
+     * @param current
+     * @param locale Specific {@link Locale} that was active during the state change, it's always one of {@link InteractionSession#getActiveLocales()}.
+     * @param session Only {@link InteractionSession#getScriptables()} is used.
+     * @throws Exception
+     */
     @Override
-    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, InteractionSession session) throws Exception {
+    public void onStateChanged(ActivityState previous, ActivityState current, Locale locale, @Nullable InteractionSession session) throws Exception {
         super.onStateChanged(previous, current, locale, session);
         if (ActivityState.ACTIVE == current) {
             final String scriptPath = "/org/lskk/lumen/reasoner/activity/" + getId() + ".js";

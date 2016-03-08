@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.lskk.lumen.reasoner.ReasonerException;
+import org.lskk.lumen.reasoner.activity.ScriptRepository;
 import org.lskk.lumen.reasoner.activity.TaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,8 @@ public class SkillRepository {
     private ObjectMapper mapper;
     @Autowired(required = false)
     private TaskRepository taskRepo;
+    @Autowired(required = false)
+    private ScriptRepository scriptRepo;
 
     public Map<String, Skill> getSkills() {
         return skills;
@@ -50,8 +53,11 @@ public class SkillRepository {
 
         skills.values().forEach(Skill::initialize);
 
-        if (null != taskRepo) {
-            skills.forEach((id, skill) -> skill.resolveIntents(taskRepo));
+        if (null != taskRepo && null != scriptRepo) {
+            skills.forEach((id, skill) -> skill.resolveIntents(taskRepo, scriptRepo));
+        } else {
+            log.warn("TaskRepository or ScriptRepository beans not available, will not resolve {} skills: {}",
+                    skills.size(), skills.keySet());
         }
     }
 
@@ -82,6 +88,6 @@ public class SkillRepository {
     }
 
     public void resolveIntents(TaskRepository taskRepo) {
-        skills.forEach((k, v) -> v.resolveIntents(taskRepo));
+        skills.forEach((k, v) -> v.resolveIntents(taskRepo, scriptRepo));
     }
 }

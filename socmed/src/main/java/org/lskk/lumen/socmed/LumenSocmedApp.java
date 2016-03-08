@@ -3,6 +3,7 @@ package org.lskk.lumen.socmed;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.lskk.lumen.core.LumenCoreConfig;
+import org.lskk.lumen.core.util.ProxyConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -15,7 +16,7 @@ import org.springframework.context.annotation.Profile;
 
 @SpringBootApplication
 @Profile("socmedApp")
-@Import(LumenCoreConfig.class)
+@Import({LumenCoreConfig.class, ProxyConfig.class})
 public class LumenSocmedApp implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(LumenSocmedApp.class);

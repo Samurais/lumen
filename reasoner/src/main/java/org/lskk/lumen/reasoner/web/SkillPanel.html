@@ -7,8 +7,8 @@
 
     var paper = new joint.dia.Paper({
         el: $('#myholder'),
-        width: 600,
-        height: 400,
+        width: 700,
+        height: 500,
         model: graph,
         gridSize: 1
     });
@@ -52,13 +52,26 @@
                 text: {text: act.href, fill: 'white'}
             }
         });*/
+        var events = [];
+        if (act.intentCapturing) {
+            events.push('intentCapturing = true');
+        }
+        act.instance.inSlots.forEach(function(slot) {
+            events.push('in ' + slot.id + ' ' + slot.thingTypes[0]);
+        });
+        act.instance.outSlots.forEach(function(slot) {
+            events.push('out ' + slot.id + ' ' + slot.thingTypes[0]);
+        });
+
         var rect = new joint.shapes.uml.State({
             position: {x: activityX, y: activityY},
-            size: {width: act.id.length * 10, height: act.intentCapturing ? 45 : 30},
+            size: {width: 50 + act.id.length * 10, height: 30 + events.length * 15},
             name: act.id,
-            events: act.intentCapturing ? ['intentCapturing = true'] : [],
+            events: events,
             attrs: {
-                '.uml-state-body': {fill: fill}
+                '.uml-state-body': {fill: fill},
+                '.uml-state-name': {'font-family': 'sans-serif', 'font-weight': 'bold'},
+                '.uml-state-events': {'font-family': 'sans-serif', 'font-size': 12}
             }
         });
         act._rect = rect;
@@ -117,7 +130,7 @@
     graph.on('cell:pointerup', function(cell) {
         // has an obstacle been moved? Then reroute the link.
         //if (_.contains(obstacles, cell)) paper.findViewByModel(link).update();
-        activityLinks.forEach(function(link) { paper.findViewByModel(link).update(); });
+        //activityLinks.forEach(function(link) { paper.findViewByModel(link).update(); });
     });
 
 
