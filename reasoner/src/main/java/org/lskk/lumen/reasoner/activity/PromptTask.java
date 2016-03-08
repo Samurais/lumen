@@ -323,7 +323,7 @@ public class PromptTask extends Task {
                                 case "yago:yagoQuantity":
                                     final MeasureFormat measureFormat = MeasureFormat.getInstance(NumberFormat.getNumberInstance(realLocale), UnitFormat.getInstance(realLocale));
 //                final DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.forLanguageTag(inLanguage));
-                                    final String tweakedMeasure = slotString.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)", "$1 ");
+                                    final String tweakedMeasure = slotString.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)\\s*", "$1 ");
 //                        .replace(Character.toString(decimalFormat.getDecimalFormatSymbols().getDecimalSeparator()), "!DECIMAL!")
 //                        .replace(Character.toString(decimalFormat.getDecimalFormatSymbols().getGroupingSeparator()), "")
 //                        .replace("!DECIMAL!", ".");
@@ -424,7 +424,7 @@ public class PromptTask extends Task {
             case "yago:yagoQuantity":
                 final MeasureFormat measureFormat = MeasureFormat.getInstance(NumberFormat.getNumberInstance(realLocale), UnitFormat.getInstance(realLocale));
 //                final DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.forLanguageTag(inLanguage));
-                final String tweakedMeasure = value.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)", "$1 ");
+                final String tweakedMeasure = value.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)\\s*", "$1 ");
                 return measureFormat.parse(tweakedMeasure, new ParsePosition(0));
 //                        .replace(Character.toString(decimalFormat.getDecimalFormatSymbols().getDecimalSeparator()), "!DECIMAL!")
 //                        .replace(Character.toString(decimalFormat.getDecimalFormatSymbols().getGroupingSeparator()), "")
