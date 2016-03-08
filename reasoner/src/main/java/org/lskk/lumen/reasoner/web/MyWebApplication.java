@@ -5,8 +5,10 @@ import de.agilecoders.wicket.core.settings.BootstrapSettings;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.core.settings.SingleThemeProvider;
 import de.agilecoders.wicket.themes.markup.html.bootswatch.BootswatchTheme;
+import de.agilecoders.wicket.webjars.WicketWebjars;
 import org.apache.wicket.Page;
 import org.apache.wicket.RuntimeConfigurationType;
+import org.apache.wicket.markup.html.SecurePackageResourceGuard;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.apache.wicket.settings.ExceptionSettings;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
@@ -39,6 +41,7 @@ public class MyWebApplication extends WebApplication {
         Bootstrap.install(this, bootstrapSettings);
 
         //Howler.install(this);
+        ((SecurePackageResourceGuard) getResourceSettings().getPackageResourceGuard()).addPattern("+*.map");
 
         mountPages();
     }
