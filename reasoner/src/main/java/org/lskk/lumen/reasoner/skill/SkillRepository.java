@@ -7,6 +7,7 @@ import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.activity.TaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Repository;
@@ -30,6 +31,8 @@ public class SkillRepository {
 
     @Inject
     private ObjectMapper mapper;
+    @Autowired(required = false)
+    private TaskRepository taskRepo;
 
     public Map<String, Skill> getSkills() {
         return skills;
@@ -46,6 +49,10 @@ public class SkillRepository {
         log.info("Loaded {} Skills: {}", skills.size(), skills.keySet());
 
         skills.values().forEach(Skill::initialize);
+
+        if (null != taskRepo) {
+            skills.forEach((id, skill) -> skill.resolveIntents(taskRepo));
+        }
     }
 
     public Skill get(String id) {

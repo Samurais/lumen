@@ -12,6 +12,7 @@ import java.net.URI;
 public class ActivityRef implements Serializable {
     private String href;
     private Boolean intentCapturing;
+    private transient Activity instance;
 
     public String getHref() {
         return href;
@@ -43,4 +44,11 @@ public class ActivityRef implements Serializable {
     public void setIntentCapturing(Boolean intentCapturing) {
         this.intentCapturing = intentCapturing;
     }
-}
+
+    public Activity getInstance() {
+        return instance;
+    }
+
+    public void setInstance(Activity instance) {
+        this.instance = instance;
+    }}

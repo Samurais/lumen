@@ -14,7 +14,7 @@
     });
 
     var activityRects = {};
-    var activityLinks = {};
+    var activityLinks = [];
 
     /*
     var rect = new joint.shapes.basic.Rect({
@@ -31,24 +31,34 @@
         var fill = 'blue';
         switch (act.scheme) {
         case 'prompt':
-            fill = 'blue';
+            fill = 'rgba(48, 208, 198, 0.4)';
             break;
         case 'affirmation':
-            fill = 'green';
+            fill = 'rgba(208, 48, 198, 0.4)';
             break;
         case 'script':
-            fill = 'olive';
+            fill = 'rgba(48, 198, 48, 0.4)';
             break;
         default:
-            fill = 'blue';
+            fill = 'rgba(48, 48, 48, 0.4)';
         }
 
+/*
         var rect = new joint.shapes.basic.Rect({
             position: {x: activityX, y: activityY},
             size: {width: 240, height: 30},
             attrs: {
                 rect: {fill: fill},
                 text: {text: act.href, fill: 'white'}
+            }
+        });*/
+        var rect = new joint.shapes.uml.State({
+            position: {x: activityX, y: activityY},
+            size: {width: act.id.length * 10, height: act.intentCapturing ? 45 : 30},
+            name: act.id,
+            events: act.intentCapturing ? ['intentCapturing = true'] : [],
+            attrs: {
+                '.uml-state-body': {fill: fill}
             }
         });
         act._rect = rect;
@@ -90,15 +100,25 @@
             link = new joint.shapes.fsa.Arrow({
                 source: {id: rect1.id},
                 target: {id: rect2.id},
+                router: {name: 'metro'},
+                connector: {name: 'rounded'},
                 labels: [
                     {position: 0.5, attrs: {text: {text: sourceText} } }
                 ]
             });
         }
         graph.addCells([link]);
+        activityLinks.push(link);
     });
 
     //graph.addCells([rect, rect2, link]);
+
+    graph.on('change:position', function(cell) {
+        // has an obstacle been moved? Then reroute the link.
+        //if (_.contains(obstacles, cell)) paper.findViewByModel(link).update();
+        activityLinks.forEach(function(link) { paper.findViewByModel(link).update(); });
+    });
+
 
     </script>
 </wicket:panel>

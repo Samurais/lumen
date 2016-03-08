@@ -64,6 +64,7 @@ public class Skill extends Activity {
                             getPath(), taskRef.getHref()));
                 }
                 intents.add(task);
+                taskRef.setInstance(task);
             });
         }
     }

@@ -65,4 +65,5 @@ public class Connection implements Serializable {
     public String getActivityPair() {
         return getSourceActivity() + "," + getSinkActivity();
     }
+
 }
