@@ -4,6 +4,10 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomUtils;
 import org.lskk.lumen.core.CommunicateAction;
 
+import javax.measure.Measure;
+import javax.measure.MeasureFormat;
+import javax.measure.unit.UnitFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -49,7 +53,16 @@ public class AffirmationTask extends Task {
                 final String slotId = matcher.group(1);
                 final Object slotValue = getInSlot(slotId).getLast();
                 log.debug("in-slot {}.{} = {}", getPath(), slotId, slotValue);
-                sb.append(String.valueOf(slotValue));
+
+                final String ssmlValue;
+                if (slotValue instanceof Measure) {
+                    final MeasureFormat measureFormat = MeasureFormat.getInstance(NumberFormat.getNumberInstance(locale), UnitFormat.getInstance(locale));
+                    ssmlValue = measureFormat.format(slotValue);
+                } else {
+                    ssmlValue = String.valueOf(slotValue);
+                }
+
+                sb.append(ssmlValue);
             }
             matcher.appendTail(sb);
             final String result = sb.toString();

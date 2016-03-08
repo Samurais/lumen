@@ -18,8 +18,13 @@ import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.intent.Slot;
 
 import javax.measure.Measure;
+import javax.measure.MeasureFormat;
 import javax.measure.unit.Unit;
+import javax.measure.unit.UnitFormat;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -303,6 +308,7 @@ public class PromptTask extends Task {
 
                         // for each slot, check if the captured slot value is valid in valid format for conversion to target value
                         boolean allValid = true;
+                        final DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(realLocale);
                         for (final String slotId : slots) {
                             final String slotString = realMatcher.group(slotId);
                             matched.getSlotStrings().put(slotId, slotString);
@@ -315,9 +321,15 @@ public class PromptTask extends Task {
                                 case "xs:date":
                                     break;
                                 case "yago:yagoQuantity":
+                                    final MeasureFormat measureFormat = MeasureFormat.getInstance(NumberFormat.getNumberInstance(realLocale), UnitFormat.getInstance(realLocale));
+//                final DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.forLanguageTag(inLanguage));
                                     final String tweakedMeasure = slotString.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)", "$1 ");
+//                        .replace(Character.toString(decimalFormat.getDecimalFormatSymbols().getDecimalSeparator()), "!DECIMAL!")
+//                        .replace(Character.toString(decimalFormat.getDecimalFormatSymbols().getGroupingSeparator()), "")
+//                        .replace("!DECIMAL!", ".");
+                                //return Measure.valueOf(tweakedMeasure);
                                     try {
-                                        Measure.valueOf(tweakedMeasure);
+                                        measureFormat.parse(tweakedMeasure, new ParsePosition(0));
                                     } catch (Exception e) {
                                         log.debug("Regex matched {} but invalid Measure format: {}", matched, tweakedMeasure);
                                         allValid = false;
@@ -400,6 +412,7 @@ public class PromptTask extends Task {
      * @return
      */
     public Object toTargetValue(String expectedType, String inLanguage, String value, ConversationStyle style) {
+        final Locale realLocale = Locale.forLanguageTag(inLanguage);
         switch (expectedType) {
             case "xsd:string":
                 return value;
@@ -409,7 +422,14 @@ public class PromptTask extends Task {
                 final LocalDate localDate = DateTimeFormat.longDate().withLocale(Locale.forLanguageTag(inLanguage)).parseLocalDate(value);
                 return localDate;
             case "yago:yagoQuantity":
-                return Measure.valueOf(value.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)", "$1 "));
+                final MeasureFormat measureFormat = MeasureFormat.getInstance(NumberFormat.getNumberInstance(realLocale), UnitFormat.getInstance(realLocale));
+//                final DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.forLanguageTag(inLanguage));
+                final String tweakedMeasure = value.replaceFirst("^([-]?[0-9]+[.,]?[0-9]*)", "$1 ");
+                return measureFormat.parse(tweakedMeasure, new ParsePosition(0));
+//                        .replace(Character.toString(decimalFormat.getDecimalFormatSymbols().getDecimalSeparator()), "!DECIMAL!")
+//                        .replace(Character.toString(decimalFormat.getDecimalFormatSymbols().getGroupingSeparator()), "")
+//                        .replace("!DECIMAL!", ".");
+                //return Measure.valueOf(tweakedMeasure);
             case "yago:wordnet_unit_of_measurement_113583724":
                 return Unit.valueOf(value);
             default:
