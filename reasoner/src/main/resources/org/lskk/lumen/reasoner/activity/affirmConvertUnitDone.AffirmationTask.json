@@ -8,7 +8,6 @@
   ],
   "inSlots": [
     {"id": "measure", "required": true, "thingTypes": ["yago:yagoQuantity"]},
-    {"id": "unit", "required": true, "thingTypes": ["yago:wordnet_unit_of_measurement_113583724"]},
     {"id": "converted", "required": true, "thingTypes": ["yago:yagoQuantity"]}
   ]
 }

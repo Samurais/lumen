@@ -19,7 +19,6 @@
     {"source": "promptMeasurementToUnit.measure", "sink": "convertUnit.measure"},
     {"source": "promptMeasurementToUnit.unit", "sink": "convertUnit.unit"},
     {"source": "promptMeasurementToUnit.measure", "sink": "affirmConvertUnitDone.measure"},
-    {"source": "promptMeasurementToUnit.unit", "sink": "affirmConvertUnitDone.unit"},
     {"source": "convertUnit.converted", "sink": "affirmConvertUnitDone.converted"}
   ]
 }
