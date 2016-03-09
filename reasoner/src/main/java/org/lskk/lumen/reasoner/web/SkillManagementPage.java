@@ -5,9 +5,13 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapBookmarkablePageLink;
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 import de.agilecoders.wicket.core.markup.html.bootstrap.list.BootstrapListView;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesomeIconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.ladda.LaddaAjaxButton;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.model.*;
@@ -28,6 +32,7 @@ public class SkillManagementPage extends PubLayout {
 
     public SkillManagementPage(PageParameters parameters) {
         super(parameters);
+
         final StringValue skillId = parameters.get("skillId");
         final LoadableDetachableModel<List<Skill>> skillsModel = new LoadableDetachableModel<List<Skill>>() {
             @Override
@@ -35,7 +40,18 @@ public class SkillManagementPage extends PubLayout {
                 return ImmutableList.copyOf(skillRepo.getSkills().values());
             }
         };
-        add(new BootstrapListView<Skill>("skillsLv", skillsModel) {
+
+        final Form<Void> form = new Form<>("form");
+        form.add(new LaddaAjaxButton("reloadBtn", new Model<>("Reload"), Buttons.Type.Default) {
+            @Override
+            protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
+                super.onSubmit(target, form);
+                skillRepo.reload();
+                setResponsePage(SkillManagementPage.class);
+            }
+        }.setIconType(FontAwesomeIconType.refresh));
+
+        form.add(new BootstrapListView<Skill>("skillsLv", skillsModel) {
             @Override
             protected void populateItem(ListItem<Skill> item) {
                 final CharSequence link = urlFor(SkillManagementPage.class,
@@ -63,7 +79,8 @@ public class SkillManagementPage extends PubLayout {
 
         skillDiv.add(new SkillPanel("skillPanel", skillModel));
 
-        add(skillDiv);
+        form.add(skillDiv);
+        add(form);
     }
 
     @Override

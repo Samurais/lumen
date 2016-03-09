@@ -40,6 +40,12 @@ public class SkillPanel extends GenericPanel<Skill> {
     }
 
     @Override
+    protected void onConfigure() {
+        super.onConfigure();
+        setVisibilityAllowed(null != getModelObject());
+    }
+
+    @Override
     public void renderHead(IHeaderResponse response) {
         super.renderHead(response);
         response.render(CssHeaderItem.forReference(new WebjarsCssResourceReference("jointjs/0.9.7/dist/joint.min.css")));

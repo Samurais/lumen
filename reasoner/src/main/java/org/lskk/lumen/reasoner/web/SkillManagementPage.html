@@ -1,8 +1,9 @@
 <wicket:extend>
 <div layout:fragment="content" class="container">
-    <div class="row">
+    <form class="row" wicket:id="form">
         <div class="col-sm-3">
             <h1>Skills</h1>
+            <p><button wicket:id="reloadBtn">Reload</button></p>
             <div class="list-group">
                 <a wicket:id="skillsLv" class="list-group-item"><wicket:container wicket:id="id"></wicket:container></a>
             </div>
@@ -13,6 +14,6 @@
 
             <div wicket:id="skillPanel"></div>
         </div>
-    </div>
+    </form>
 </div>
 </wicket:extend>

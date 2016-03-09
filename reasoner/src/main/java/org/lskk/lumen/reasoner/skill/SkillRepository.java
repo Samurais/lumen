@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Created by ceefour on 03/03/2016.
@@ -42,22 +43,31 @@ public class SkillRepository {
     }
 
     @PostConstruct
-    public void init() throws IOException {
-        final Resource[] skillResources = new PathMatchingResourcePatternResolver(SkillRepository.class.getClassLoader())
-                .getResources("classpath*:org/lskk/lumen/reasoner/skill/*.Skill.json");
-        for (final Resource res : skillResources) {
-            final String id = StringUtils.substringBefore(res.getFilename(), ".");
-            createOnly(id, res.getURL());
-        }
-        log.info("Loaded {} Skills: {}", skills.size(), skills.keySet());
+    public void init() {
+        reload();
+    }
 
-        skills.values().forEach(Skill::initialize);
+    public void reload() {
+        try {
+            final Resource[] skillResources = new PathMatchingResourcePatternResolver(SkillRepository.class.getClassLoader())
+                    .getResources("classpath*:org/lskk/lumen/reasoner/skill/*.Skill.json");
+            for (final Resource res : skillResources) {
+                final String id = StringUtils.substringBefore(res.getFilename(), ".");
+                final Skill skill = createOnly(id, res.getURL());
+                skills.put(id, skill);
+            }
+            log.info("Loaded {} Skills: {}", skills.size(), skills.keySet());
 
-        if (null != taskRepo && null != scriptRepo) {
-            skills.forEach((id, skill) -> skill.resolveIntents(taskRepo, scriptRepo));
-        } else {
-            log.warn("TaskRepository or ScriptRepository beans not available, will not resolve {} skills: {}",
-                    skills.size(), skills.keySet());
+            skills.values().forEach(Skill::initialize);
+
+            if (null != taskRepo && null != scriptRepo) {
+                skills.forEach((id, skill) -> skill.resolveIntents(taskRepo, scriptRepo));
+            } else {
+                log.warn("TaskRepository or ScriptRepository beans not available, will not resolve {} skills: {}",
+                        skills.size(), skills.keySet());
+            }
+        } catch (Exception e) {
+            throw new ReasonerException(e, "Error scanning Skills");
         }
     }
 
@@ -78,9 +88,9 @@ public class SkillRepository {
         try {
             final Skill skill = mapper.readValue(url, Skill.class);
             skill.setId(id);
-            skills.put(id, skill);
             log.debug("Skill '{}' contains {} tasks: {}", skill.getId(),
-                    skill.getActivityRefs().size(), skill.getActivityRefs().stream().map(ActivityRef::getHref).toArray());
+                    skill.getActivityRefs().size(), skill.getActivityRefs().stream().map(ActivityRef::getHref)
+                            .collect(Collectors.toList()));
             return skill;
         } catch (Exception e) {
             throw new ReasonerException(e, "Error loading skill '%s' from '%s'", id, url);

@@ -1,7 +1,7 @@
 package org.lskk.lumen.reasoner;
 
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.lskk.lumen.core.util.ProxyConfig;
 import org.lskk.lumen.reasoner.activity.InteractionSession;
 import org.lskk.lumen.reasoner.activity.Script;
@@ -22,7 +22,7 @@ public class HttpClientConfig {
 
     @Bean(destroyMethod = "close")
     public CloseableHttpClient httpClient() {
-        return HttpClients.createSystem();
+        return CachingHttpClients.createMemoryBound();
     }
 
     @Bean
