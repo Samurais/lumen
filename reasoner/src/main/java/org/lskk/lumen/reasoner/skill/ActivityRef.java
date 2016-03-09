@@ -1,6 +1,5 @@
 package org.lskk.lumen.reasoner.skill;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.lskk.lumen.reasoner.activity.Activity;
 
 import java.io.Serializable;
@@ -35,6 +34,7 @@ public class ActivityRef implements Serializable {
      * {@link org.lskk.lumen.reasoner.activity.UtterancePattern.Scope#GLOBAL} utterances
      * even when the {@link Activity} is not yet asserted
      * in the {@link org.lskk.lumen.reasoner.activity.InteractionSession}.
+     *
      * @return
      */
     public Boolean getIntentCapturing() {
@@ -51,4 +51,5 @@ public class ActivityRef implements Serializable {
 
     public void setInstance(Activity instance) {
         this.instance = instance;
-    }}
+    }
+}
