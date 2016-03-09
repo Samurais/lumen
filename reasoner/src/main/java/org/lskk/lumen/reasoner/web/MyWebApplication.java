@@ -43,6 +43,8 @@ public class MyWebApplication extends WebApplication {
         //Howler.install(this);
         ((SecurePackageResourceGuard) getResourceSettings().getPackageResourceGuard()).addPattern("+*.map");
 
+        JQueryFix1_12_1.apply(this);
+
         mountPages();
     }
 }

@@ -47,8 +47,11 @@ public class SkillPanel extends GenericPanel<Skill> {
         response.render(JavaScriptHeaderItem.forReference(getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
         response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("lodash/3.10.1/lodash.min.js")));
         response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("backbone/1.2.3/backbone-min.js")));
+        response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("graphlib/1.0.7/dist/graphlib.core.min.js")));
+        response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("dagre/0.7.4/dist/dagre.core.min.js")));
         response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("jointjs/0.9.7/dist/joint.min.js")));
-        response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("jointjs/0.9.7/dist/joint.shapes.uml.min.js")));
+//        response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("jointjs/0.9.7/dist/joint.shapes.uml.min.js")));
+//        response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("jointjs/0.9.7/dist/joint.layout.DirectedGraph.min.js")));
         response.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("underscore/1.8.3/underscore-min.js")));
     }
 }

@@ -27,6 +27,7 @@
     skill.activities.forEach(function(act) {
         activityX = Math.floor(Math.random() * (paper.getArea().width - 240));
         activityY = Math.floor(Math.random() * (paper.getArea().height - 30));
+        activityX = 100, activityY = 30;
 
         var fill = 'blue';
         switch (act.scheme) {
@@ -124,6 +125,14 @@
         }
         graph.addCells([link]);
         activityLinks.push(link);
+    });
+
+    var res = joint.layout.DirectedGraph.layout(graph, {
+        nodeSep: 100,
+        edgeSep: 10,
+        marginX: 10,
+        marginY: 10,
+        rankDir: 'LR'
     });
 
     //graph.addCells([rect, rect2, link]);
