@@ -83,6 +83,14 @@ public abstract class Activity implements Serializable {
                         getPath(), slotId, outSlots.size(), outSlots.stream().map(Slot::getId).collect(Collectors.toList()))));
     }
 
+    public Optional<Slot> getControlSlot() {
+        return inSlots.stream().filter(it -> Slot.CONTROL.equals(it.getId())).findAny();
+    }
+
+    public Optional<Slot> getCompletedSlot() {
+        return outSlots.stream().filter(it -> Slot.COMPLETED.equals(it.getId())).findAny();
+    }
+
     /**
      * Inferred from the JSON filename, e.g. {@code promptBirthDate.PromptTask.json} means the ID
      * is {@code promptBirthdate}.

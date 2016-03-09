@@ -2,6 +2,11 @@ package org.lskk.lumen.reasoner.activity;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomUtils;
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.lskk.lumen.core.CommunicateAction;
 
 import javax.measure.Measure;
@@ -58,6 +63,12 @@ public class AffirmationTask extends Task {
                 if (slotValue instanceof Measure) {
                     final MeasureFormat measureFormat = MeasureFormat.getInstance(NumberFormat.getNumberInstance(locale), UnitFormat.getInstance(locale));
                     ssmlValue = measureFormat.format(slotValue);
+                } else if (slotValue instanceof LocalDate) {
+                    ssmlValue = DateTimeFormat.longDate().withLocale(locale).print((LocalDate) slotValue);
+                } else if (slotValue instanceof LocalTime) {
+                    ssmlValue = DateTimeFormat.shortTime().withLocale(locale).print((LocalTime) slotValue);
+                } else if (slotValue instanceof DateTime) {
+                    ssmlValue = DateTimeFormat.longDateTime().withLocale(locale).print((DateTime) slotValue);
                 } else {
                     ssmlValue = String.valueOf(slotValue);
                 }

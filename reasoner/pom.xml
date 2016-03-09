@@ -218,15 +218,22 @@
             </exclusions>
         </dependency>
 
-		<dependency>
+		<!--<dependency>
 			<groupId>org.webjars.bower</groupId>
 			<artifactId>lodash</artifactId>
 			<version>4.6.1</version>
-		</dependency>
+		</dependency>-->
 		<dependency>
+			<!-- already depends on lodash 3.x -->
 			<groupId>org.webjars.bower</groupId>
 			<artifactId>jointjs</artifactId>
 			<version>0.9.7</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.webjars.bower</groupId>
+					<artifactId>jquery</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars.bower</groupId>

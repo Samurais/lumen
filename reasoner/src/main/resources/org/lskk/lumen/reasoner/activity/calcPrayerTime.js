@@ -5,11 +5,11 @@ with(new JavaImporter(org.lskk.lumen.reasoner.activity, org.joda.time)) {
      */
     function onActivate() {
         // Important: to use .last, we need to set Script.autoPoll = true in the Script.json descriptor file
-        var date = inSlots.date.last; // org.joda.time.LocalDate
         // Bandung:
         var lat = inSlots.lat.last; //-6.9174639;//inSlots.measure.last;
         var lon = inSlots.lon.last; //107.6191228;//inSlots.unit.last;
         var timeZone = inSlots.timeZone.last; // org.joda.time.DateTimeZone, e.g. DateTimeZone.forID('Asia/Jakarta');
+        var date = inSlots.date.last || new org.joda.time.LocalDate(); // org.joda.time.LocalDate
         /*
         "method" - these are the different methods identifying various schools of thought about how to compute the timings. This parameter accepts values from 0-7, as signified below:
         0 - Shia Ithna-Ashari
@@ -37,9 +37,16 @@ with(new JavaImporter(org.lskk.lumen.reasoner.activity, org.joda.time)) {
         var sunset = new LocalTime(result.data.timings.Sunset);
         var maghrib = new LocalTime(result.data.timings.Maghrib);
         var isha = new LocalTime(result.data.timings.Isha);
-        log.info("Fajr={} Sunrise={} Dhuhr={} Asr={} Sunset={} Maghrib={} Isha={}",
-            fajr, sunrise, dhuhr, asr, sunset, maghrib, isha);
+        log.info("{} {} -> Fajr={} Sunrise={} Dhuhr={} Asr={} Sunset={} Maghrib={} Isha={}",
+            date, timeZone, fajr, sunrise, dhuhr, asr, sunset, maghrib, isha);
+        outSlots.dateOut.send(date);
         outSlots.fajr.send(fajr);
+        outSlots.sunrise.send(sunrise);
+        outSlots.dhuhr.send(dhuhr);
+        outSlots.asr.send(asr);
+        outSlots.sunset.send(sunset);
+        outSlots.maghrib.send(maghrib);
+        outSlots.isha.send(isha);
     }
 
 }

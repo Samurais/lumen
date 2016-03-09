@@ -3,12 +3,14 @@
   "description": "Calculate Islamic prayer time using aladhan.com REST API.",
   "autoPoll": true,
   "inSlots": [
-    {"id": "date", "thingTypes": ["xsd:date"], "required": true},
-    {"id": "lat", "thingTypes": ["xsd:float"], "required": true, "initialValue": -6.9174639},
-    {"id": "lon", "thingTypes": ["xsd:float"], "required": true, "initialValue": 107.6191228},
-    {"id": "timeZone", "thingTypes": ["yago:TimeZone"], "required": true}
+    {"id": "control", "thingTypes": ["xsd:any"], "required": true},
+    {"id": "date", "thingTypes": ["xsd:date"], "required": false},
+    {"id": "lat", "thingTypes": ["xsd:float"], "required": true, "initial": -6.9174639},
+    {"id": "lon", "thingTypes": ["xsd:float"], "required": true, "initial": 107.6191228},
+    {"id": "timeZone", "thingTypes": ["yago:TimeZone"], "required": true, "initial": "Asia/Jakarta"}
   ],
   "outSlots": [
+    {"id": "dateOut", "thingTypes": ["xsd:date"]},
     {"id": "fajr", "thingTypes": ["xsd:time"]},
     {"id": "sunrise", "thingTypes": ["xsd:time"]},
     {"id": "dhuhr", "thingTypes": ["xsd:time"]},

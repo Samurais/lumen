@@ -5,6 +5,10 @@
   "enabled": true,
   "activities": [
     {
+      "href": "prompt:promptPrayerTimes",
+      "intentCapturing": true
+    },
+    {
       "href": "script:calcPrayerTime"
     },
     {
@@ -12,6 +16,8 @@
     }
   ],
   "connections": [
+    {"source": "promptPrayerTimes.completed", "sink": "calcPrayerTime.control"},
+    {"source": "calcPrayerTime.dateOut", "sink": "affirmPrayerTimes.date"},
     {"source": "calcPrayerTime.fajr", "sink": "affirmPrayerTimes.fajr"},
     {"source": "calcPrayerTime.dhuhr", "sink": "affirmPrayerTimes.dhuhr"},
     {"source": "calcPrayerTime.asr", "sink": "affirmPrayerTimes.asr"},

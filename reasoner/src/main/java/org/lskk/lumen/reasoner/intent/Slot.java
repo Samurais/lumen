@@ -1,16 +1,16 @@
 package org.lskk.lumen.reasoner.intent;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+import org.lskk.lumen.core.LumenType;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
-import java.util.ArrayDeque;
-import java.util.HashSet;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 /**
  * {@link IntentType}'s dependency to {@link EntityType}.
@@ -18,6 +18,9 @@ import java.util.Set;
  * @see <a href="https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/defining-the-voice-interface#The Intent Schema">Amazon Alexa Skills Kit - Intent Schema</a></a>
  */
 public class Slot implements Serializable {
+
+    public static final String CONTROL = "control";
+    public static final String COMPLETED = "completed";
 
     public enum Direction {
         IN,
@@ -31,7 +34,7 @@ public class Slot implements Serializable {
     private Set<String> literals = new HashSet<>();
     private Set<String> thingTypes = new HashSet<>();
     private Object last;
-    private Object initialValue;
+    private Serializable initial;
 
     private transient Queue<Object> inQueue;
     private transient Queue<Object> outQueue;
@@ -40,8 +43,8 @@ public class Slot implements Serializable {
     public void initialize(Direction direction) {
         if (Direction.IN == direction) {
             inQueue = new ArrayDeque<>();
-            if (null != getInitialValue()) {
-                add(initialValue);
+            if (null != getInitial()) {
+                add(initial);
             }
         } else {
             outQueue = new ArrayDeque<>();
@@ -85,12 +88,31 @@ public class Slot implements Serializable {
      * and {@link Boolean}.
      * @return
      */
-    public Object getInitialValue() {
-        return initialValue;
+    public Object getInitial() {
+        return initial;
     }
 
-    public void setInitialValue(Object initialValue) {
-        this.initialValue = initialValue;
+    public void setInitial(JsonNode json) {
+        switch (thingTypes.iterator().next()) {
+            case "xsd:string":
+                this.initial = json.asText();
+                break;
+            case "xsd:float":
+                this.initial = (float) json.asDouble();
+                break;
+            case "xsd:date":
+                this.initial = new LocalDate(json.asText());
+                break;
+            case "xsd:time":
+                this.initial = new LocalTime(json.asText());
+                break;
+            case "yago:TimeZone":
+                this.initial = DateTimeZone.forID(json.asText());
+                break;
+            default:
+                throw new UnsupportedOperationException(String.format("Unsupported slot '%s' type %s for initial '%s'",
+                        getId(), thingTypes, json));
+        }
     }
 
     /**

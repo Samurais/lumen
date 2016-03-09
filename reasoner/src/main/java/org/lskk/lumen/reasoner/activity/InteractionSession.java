@@ -11,6 +11,7 @@ import org.lskk.lumen.persistence.neo4j.ThingLabel;
 import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.event.AgentResponse;
+import org.lskk.lumen.reasoner.intent.Slot;
 import org.lskk.lumen.reasoner.skill.ActivityRef;
 import org.lskk.lumen.reasoner.skill.Skill;
 import org.lskk.lumen.reasoner.skill.SkillRepository;
@@ -142,6 +143,7 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
             try {
                 changedState(activity, previous, activity.getState(), locale, this);
             } catch (Exception e) {
+                activity.setState(previous);
                 throw new ReasonerException(e, "Error while activating %s", activity);
             }
 
@@ -186,6 +188,8 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
      * @see #update(Channel, String)
      */
     protected void pollActions(Locale locale) {
+        log.debug("pollActions {} requested for session {}", locale.toLanguageTag(), getId());
+
         // recursively pollActions
         activities.forEach(parents -> parents.pollActions(this, locale));
 
@@ -220,6 +224,8 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
 
             return null;
         });
+
+        printAllStates();
     }
 
     // TODO: should parameters replaced by CommunicateAction?
@@ -246,7 +252,6 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
             }
             activity.receiveUtterance(communicateAction, this, focusedTask);
         });
-        pollActions(locale.orElse(lastLocale));
 
         // consult daemon skills, only if enabled and only if not yet added to this session
         final Set<String> addedSkills = activities.stream().filter(it -> it instanceof Skill).map(Activity::getId).collect(Collectors.toSet());
@@ -266,7 +271,7 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
                 }
                 return matches.stream();
             }).collect(Collectors.toList());
-            log.debug("Repository Skill '{}' with {} intents {} returned {} matches for '{}'@{}",
+            log.trace("Repository Skill '{}' with {} intents {} returned {} matches for '{}'@{}",
                     skill.getId(), skill.getIntents().size(), skill.getIntents().stream().map(Activity::getId).toArray(), skillMatches.size(),
                     text, locale.orElse(null));
             return skillMatches.stream();
@@ -286,6 +291,8 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
             log.info("Best intent confidence is < {}, skipped {}/{}: {}", INTENT_MIN_CONFIDENCE,
                     best.get().getSkill().getId(), best.get().getIntent().getId());
         }
+
+        pollActions(locale.orElse(lastLocale));
     }
 
     /**
@@ -465,9 +472,7 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
         } catch (Exception e) {
             throw new ReasonerException(e, "Cannot complete activity '%s'", activity.getPath());
         }
-        if (activity instanceof Task) {
-            pollActions(locale);
-        }
+        pollActions(locale);
     }
 
     /**
@@ -478,6 +483,8 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
         parent.visitFirst(act -> {
             final ActivityState previous = act.getState();
             if (ActivityState.COMPLETED == previous) {
+                act.getInSlots().forEach(it -> it.initialize(Slot.Direction.IN));
+                act.getOutSlots().forEach(it -> it.initialize(Slot.Direction.OUT));
                 act.setState(ActivityState.PENDING);
                 try {
                     changedState(act, previous, act.getState(), locale, this);
@@ -530,7 +537,10 @@ public class InteractionSession implements Serializable, AutoCloseable, IScripta
     public void printAllStates() {
         final StringBuffer sb = new StringBuffer();
         visitFirst(act -> {
-            sb.append(String.format("%s %s\n", act.getPath(), act.getState()));
+            final String inSlotsState = act.getInSlots().stream().map(it -> it.getId() + ":" + (it.hasNext() ? "hasNext" : "notReady"))
+                    .collect(Collectors.joining(" "));
+            sb.append(String.format("%s %s  %s %s\n", act.getPath(), act.getState(), act.isReady() ? "READY" : "NOT_READY",
+                    inSlotsState));
             return null;
         });
         log.info("Session {} focus={}, states:\n{}", getId(), focusedTask != null ? focusedTask.getPath() : null, sb);

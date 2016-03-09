@@ -180,22 +180,24 @@ public class PromptTask extends Task {
 
             final Locale realLocale = Locale.forLanguageTag(best.get().getInLanguage());
 
-            final Set<String> outSlotIds = getOutSlots().stream().map(Slot::getId).collect(Collectors.toSet());
+            final Set<String> customOutSlotIds = getOutSlots().stream().map(Slot::getId)
+                    .filter(it -> !"completed".equals(it)).collect(Collectors.toSet());
             final Set<String> capturedSlotIds = best.get().getSlotValues().keySet();
             log.debug("askquestion real locale = {}", realLocale);
-            if (capturedSlotIds.isEmpty()) {
-                log.info("{} '{}' matched \"{}\"@{} with confidence {} but not sending out-slots",
-                        getClass().getSimpleName(), getPath(), best.get().getPattern(), best.get().getInLanguage(),
-                        best.get().getConfidence());
-                askQuestion(realLocale);
-            } else if (capturedSlotIds.equals(outSlotIds)) {
+            if (capturedSlotIds.equals(customOutSlotIds)) {
                 log.info("{} '{}' will be completed, matched \"{}\"@{} with confidence {} and sending out-slots {}",
                         getClass().getSimpleName(), getPath(), best.get().getPattern(), best.get().getInLanguage(),
                         best.get().getConfidence(), best.get().getSlotValues());
                 best.get().getSlotValues().forEach((slotId, value) -> getOutSlot(slotId).send(value));
+                getCompletedSlot().ifPresent(it -> it.send(true));
                 session.complete(this, realLocale);
+            } else if (capturedSlotIds.isEmpty()) {
+                log.info("{} '{}' matched \"{}\"@{} with confidence {} but not sending out-slots",
+                        getClass().getSimpleName(), getPath(), best.get().getPattern(), best.get().getInLanguage(),
+                        best.get().getConfidence());
+                askQuestion(realLocale);
             } else {
-                log.info("{} '{}' matched \"{}\"@{} with confidence {} and sending out-slots {}",
+                log.info("{} '{}' matched \"{}\"@{} with confidence {} and sending out-slots {} (but not completed)",
                         getClass().getSimpleName(), getPath(), best.get().getPattern(), best.get().getInLanguage(),
                         best.get().getConfidence(), best.get().getSlotValues());
                 best.get().getSlotValues().forEach((slotId, value) -> getOutSlot(slotId).send(value));
@@ -452,18 +454,20 @@ public class PromptTask extends Task {
         // If not, returns first question.
         final List<QuestionTemplate> matches = askSsmls.stream().filter(it -> locale.equals(Locale.forLanguageTag(it.getInLanguage())))
                 .collect(Collectors.toList());
-        final QuestionTemplate questionTemplate;
+        final Optional<QuestionTemplate> questionTemplate;
         if (!matches.isEmpty()) {
-            questionTemplate = matches.get(RandomUtils.nextInt(0, matches.size()));
+            questionTemplate = Optional.of(matches.get(RandomUtils.nextInt(0, matches.size())));
         } else {
-            questionTemplate = askSsmls.get(0);
+            questionTemplate = askSsmls.stream().findFirst();
         }
-        final CommunicateAction initiative = new CommunicateAction(
-                Optional.ofNullable(questionTemplate.getInLanguage()).map(Locale::forLanguageTag).orElse(locale),
-                questionTemplate.getObject(), null);
-        initiative.setConversationStyle(questionTemplate.getStyle());
-        initiative.setUsedForSynthesis(true);
-        getPendingCommunicateActions().add(initiative);
+        if (questionTemplate.isPresent()) {
+            final CommunicateAction initiative = new CommunicateAction(
+                    Optional.ofNullable(questionTemplate.get().getInLanguage()).map(Locale::forLanguageTag).orElse(locale),
+                    questionTemplate.get().getObject(), null);
+            initiative.setConversationStyle(questionTemplate.get().getStyle());
+            initiative.setUsedForSynthesis(true);
+            getPendingCommunicateActions().add(initiative);
+        }
     }
 
 }
