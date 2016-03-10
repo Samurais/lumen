@@ -22,7 +22,7 @@ public class HttpClientConfig {
 
     @Bean(destroyMethod = "close")
     public CloseableHttpClient httpClient() {
-        return CachingHttpClients.createMemoryBound();
+        return CachingHttpClients.custom().useSystemProperties().build();
     }
 
     @Bean
