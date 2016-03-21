@@ -11,7 +11,7 @@ public class RdfUtils {
 
     public static final String SCHEMA_NAMESPACE = "http://schema.org/";
     public static final String YAGO_NAMESPACE = "http://yago-knowledge.org/resource/";
-    public static final String LUMEN_NAMESPACE = "http://lumen.lskk.ee.itb.ac.id/resource/";
+    public static final String LUMEN_NAMESPACE = "http://lumen.lskk.org/resource/";
     private static final FastAbbreviatingPrefixMap PREFIX_MAP;
 
     static {

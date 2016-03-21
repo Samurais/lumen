@@ -19,6 +19,7 @@ import java.util.Locale;
  * Provides a way to interact with person, either physically or via social media.
  * A channel has a default {@link Locale}.
  * Created by ceefour on 14/11/2015.
+ * @param <P> Channel implementation-specific type of custom params for {@link #express(String, Proposition, boolean, Object)}.
  */
 public abstract class Channel<P> {
 

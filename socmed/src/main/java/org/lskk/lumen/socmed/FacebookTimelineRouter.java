@@ -7,6 +7,7 @@ import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.lskk.lumen.core.*;
 import org.lskk.lumen.core.util.AsError;
+import org.lskk.lumen.core.util.ToJson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -44,7 +45,7 @@ public class FacebookTimelineRouter extends RouteBuilder {
                     from("rabbitmq://localhost/amq.topic?connectionFactory=#amqpConnFactory&exchangeType=topic&autoDelete=false&queue=" + LumenChannel.FACEBOOK_TIMELINE_OUT.key(ag.getId()) + "&routingKey=" + LumenChannel.FACEBOOK_TIMELINE_OUT.key(ag.getId()))
                             .to("log:" + LumenChannel.FACEBOOK_TIMELINE_OUT.key(ag.getId()))
                             .process((Exchange it) -> {
-                                final CommunicateAction communicateAction = toJson.mapper.readValue((byte[]) it.getIn().getBody(), CommunicateAction.class);
+                                final CommunicateAction communicateAction = toJson.getMapper().readValue((byte[]) it.getIn().getBody(), CommunicateAction.class);
                                 it.getIn().setHeader("network.id", "facebook");
                                 it.getIn().setHeader("CamelFacebook.message", communicateAction.getObject());
                                 it.getIn().setBody(null);

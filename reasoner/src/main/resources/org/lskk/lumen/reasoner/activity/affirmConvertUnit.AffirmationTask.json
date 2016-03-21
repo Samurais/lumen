@@ -1,0 +1,13 @@
+{
+  "@type": "AffirmationTask",
+  "description": "Affirm unit conversion.",
+  "autoPoll": true,
+  "expressions": [
+    {"inLanguage": "id-ID", "pattern": "Anda ingin mencari nilai {measure} dalam {unit}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "You want to convert {measure} to {unit}.", "style": "FORMAL"}
+  ],
+  "inSlots": [
+    {"id": "measure", "required": true, "thingTypes": ["yago:yagoQuantity"]},
+    {"id": "unit", "required": true, "thingTypes": ["yago:wordnet_unit_of_measurement_113583724"]}
+  ]
+}

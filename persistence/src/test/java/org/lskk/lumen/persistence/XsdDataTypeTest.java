@@ -1,6 +1,5 @@
 package org.lskk.lumen.persistence;
 
-import groovy.transform.CompileStatic;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.sparql.util.NodeFactoryExtra;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by ceefour on 24/01/15.
  */
-@CompileStatic
 public class XsdDataTypeTest {
         @Test
         public void dataTypes() {

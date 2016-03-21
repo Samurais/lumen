@@ -1,0 +1,149 @@
+<wicket:panel>
+    <div id="myholder"></div>
+    <script type="text/javascript" wicket:id="skillJson"></script>
+    <script type="text/javascript">
+
+    var graph = new joint.dia.Graph;
+
+    var paper = new joint.dia.Paper({
+        el: $('#myholder'),
+        width: 700,
+        height: 500,
+        model: graph,
+        gridSize: 1
+    });
+
+    var activityRects = {};
+    var activityLinks = [];
+
+    /*
+    var rect = new joint.shapes.basic.Rect({
+        position: { x: 100, y: 30 },
+        size: { width: 100, height: 30 },
+        attrs: { rect: { fill: 'blue' }, text: { text: 'task1', fill: 'white' } }
+    });
+    */
+    var activityX = 100, activityY = 30;
+    skill.activities.forEach(function(act) {
+        activityX = Math.floor(Math.random() * (paper.getArea().width - 240));
+        activityY = Math.floor(Math.random() * (paper.getArea().height - 30));
+        activityX = 100, activityY = 30;
+
+        var fill = 'blue';
+        switch (act.scheme) {
+        case 'prompt':
+            fill = 'rgba(48, 208, 198, 0.4)';
+            break;
+        case 'affirmation':
+            fill = 'rgba(208, 48, 198, 0.4)';
+            break;
+        case 'script':
+            fill = 'rgba(48, 198, 48, 0.4)';
+            break;
+        default:
+            fill = 'rgba(48, 48, 48, 0.4)';
+        }
+
+/*
+        var rect = new joint.shapes.basic.Rect({
+            position: {x: activityX, y: activityY},
+            size: {width: 240, height: 30},
+            attrs: {
+                rect: {fill: fill},
+                text: {text: act.href, fill: 'white'}
+            }
+        });*/
+        var events = [];
+        if (act.intentCapturing) {
+            events.push('intentCapturing = true');
+        }
+        act.instance.inSlots.forEach(function(slot) {
+            var slotStr = 'in ' + slot.id + ' ' + slot.thingTypes[0] + (slot.initial ? ' = ' + slot.initial : '');
+            events.push(slotStr);
+        });
+        act.instance.outSlots.forEach(function(slot) {
+            var slotStr = 'out ' + slot.id + ' ' + slot.thingTypes[0] + (slot.initial ? ' = ' + slot.initial : '');
+            events.push(slotStr);
+        });
+
+        var rect = new joint.shapes.uml.State({
+            position: {x: activityX, y: activityY},
+            size: {width: 50 + act.id.length * 10, height: 30 + events.length * 15},
+            name: act.id,
+            events: events,
+            attrs: {
+                '.uml-state-body': {fill: fill},
+                '.uml-state-name': {'font-family': 'sans-serif', 'font-weight': 'bold'},
+                '.uml-state-events': {'font-family': 'sans-serif', 'font-size': 12}
+            }
+        });
+        act._rect = rect;
+        graph.addCells([rect]);
+        activityRects[act.href.replace(/^.+:/, '')] = rect;
+
+        activityX += 200;
+        activityY += 50;
+    });
+
+/*
+    var rect2 = new joint.shapes.basic.Rect({
+        position: { x: 400, y: 30 },
+        size: { width: 100, height: 30 },
+        attrs: { rect: { fill: 'blue' }, text: { text: 'task2', fill: 'white' } }
+    });
+
+    var link = new joint.dia.Link({
+        source: { id: rect.id },
+        target: { id: rect2.id }
+    });*/
+
+    _.values(_.groupBy(skill.connections, 'activityPair')).forEach(function(pair) {
+        var rect1 = activityRects[pair[0].sourceActivity];
+        var rect2 = activityRects[pair[0].sinkActivity];
+        var sourceText = pair.map(function(conn) { return conn.sourceSlot; }).join(', ');
+        var sinkText = pair.map(function(conn) { return conn.sinkSlot; }).join(', ');
+        var link;
+        if (sourceText != sinkText) {
+            link = new joint.shapes.fsa.Arrow({
+                source: {id: rect1.id},
+                target: {id: rect2.id},
+                labels: [
+                    {position: 0.2, attrs: {text: {text: sourceText} } },
+                    {position: 0.8, attrs: {text: {text: sinkText} } }
+                ]
+            });
+        } else {
+            link = new joint.shapes.fsa.Arrow({
+                source: {id: rect1.id},
+                target: {id: rect2.id},
+                router: {name: 'metro'},
+                connector: {name: 'rounded'},
+                labels: [
+                    {position: 0.5, attrs: {text: {text: sourceText} } }
+                ]
+            });
+        }
+        graph.addCells([link]);
+        activityLinks.push(link);
+    });
+
+    var res = joint.layout.DirectedGraph.layout(graph, {
+        nodeSep: 100,
+        edgeSep: 10,
+        marginX: 10,
+        marginY: 10,
+        rankDir: 'LR'
+    });
+
+    //graph.addCells([rect, rect2, link]);
+
+    //graph.on('change:position', function(cell) {
+    graph.on('cell:pointerup', function(cell) {
+        // has an obstacle been moved? Then reroute the link.
+        //if (_.contains(obstacles, cell)) paper.findViewByModel(link).update();
+        //activityLinks.forEach(function(link) { paper.findViewByModel(link).update(); });
+    });
+
+
+    </script>
+</wicket:panel>

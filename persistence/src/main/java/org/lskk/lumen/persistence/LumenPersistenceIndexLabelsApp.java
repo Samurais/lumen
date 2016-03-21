@@ -1,10 +1,10 @@
 package org.lskk.lumen.persistence;
 
-import au.com.bytecode.opencsv.CSVParser;
-import au.com.bytecode.opencsv.CSVReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVReader;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.sparql.util.NodeFactoryExtra;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
@@ -100,7 +100,7 @@ public class LumenPersistenceIndexLabelsApp implements CommandLineRunner {
 
                     readCount++;
                     if (readCount % 100000 == 0) {
-                        log.info("Indexed {} resources: {} out of {} statements from {}", 
+                        log.info("Indexed {} resources: {} out of {} statements from {}",
                                 NUMBER.format(resources.size()), NUMBER.format(importeds), NUMBER.format(readCount), file);
                     }
 
@@ -108,9 +108,9 @@ public class LumenPersistenceIndexLabelsApp implements CommandLineRunner {
                 }
             }
         }
-        log.info("Completed indexing {} resources: {} out of {} statements from {}, writing out to {} ...", 
+        log.info("Completed indexing {} resources: {} out of {} statements from {}, writing out to {} ...",
                 NUMBER.format(resources.size()), NUMBER.format(importeds), NUMBER.format(readCount), file, outFile);
-        
+
         try (final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8), (int) 1024 * 1024)) {
             for (Map.Entry<String, IndexedResource> entry : resources.entrySet()) {
                 final String href = entry.getKey();

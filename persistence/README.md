@@ -2,6 +2,19 @@
 
 Persistence module for Lumen Social Robot.
 
+## Preparation
+
+1. Ensure PostgreSQL 9.5+ is installed and running. If not, install from http://www.postgresql.org/ .
+2. In PgAdmin, create database `lumen_lumen_dev` using `UTF-8` encoding.
+3. Download template PostgreSQL database snapshot from https://drive.google.com/file/d/0B9dx38a6NVxKblMzTGhydWFWNXM/view?usp=sharing .
+4. In PgAdmin, restore from that PostgreSQL template database snapshot.
+5. Ensure Neo4j 2.3+ is running. If not, install from http://neo4j.org/ .
+6. Download template Neo4j database snapshot from https://drive.google.com/file/d/0B9dx38a6NVxKTHIwOXJqanh4RDA/view?usp=sharing .
+7. Extract that template Neo4j database snapshot to `C:\Users\<username>\Neo4j\Documents` (will create `default.graphdb` subfolder).
+8. Copy `config/application.dev.properties` to `config/application.properties`
+9. Edit `config/application.properties`
+10. Run
+
 ## Running from Command Line
 
 To run from command line, first you have to prepare its dependencies, then build it.
@@ -10,8 +23,6 @@ To run from command line, first you have to prepare its dependencies, then build
 2. Build `lumen-persistence` plus `dependency:copy-dependencies`:
 
         mvn -DskipTests install dependency:copy-dependencies
-
-
 
 ## Overview
 
@@ -56,7 +67,25 @@ For person B.J. Habibie (taken from https://gate.d5.mpi-inf.mpg.de/webyago3spotl
 | id_1xidad2_16x_n6kx1s  | <yago:B.J._Habibie> | isMarriedTo   | <yago:Hasri_Ainun_Habibie>             |            |           |                               |
 | id_1xidad2_p3m_zkjp59  | <yago:B.J._Habibie> | hasGender     | male                                   |            |           |                               |
 
-### Sample Data (new)
+### Sample Data
+
+Complete list of properties are available in `Dropbox/Lumen/LumenSchema.xlsx`, here a few samples are provided.
+
+#### yago:wasBornOnDate
+
+    MERGE (hendy:owl_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) SET hendy.prefLabel='Hendy Irawan'
+    MERGE (wasBornOnDate:rdf_Property {nn: 'yago:wasBornOnDate', _partition: 'lumen_yago'}) SET wasBornOnDate.label='was born on date'
+    MERGE (wasBornOnDate) <-[:rdf_predicate]- (literal:rdfs_Literal {t: 'xs:date', v: '1983-12-14', _partition: 'lumen_var'}) -[:rdf_subject]-> (hendy)
+    RETURN wasBornOnDate, hendy, literal
+
+#### rdfs:label
+
+    MATCH (hendy:owl_Thing {nn: 'lumen:Hendy_Irawan'}) WHERE hendy._partition IN ['lumen_yago', 'lumen_common', 'lumen_var']
+    MERGE (hendy) -[label:rdfs_label]-> (:lumen_Label {l: 'id-ID', v: 'Hendy Irawan', _partition: 'lumen_var'})
+    SET hendy.tv=[1.0, 1.0], hendy.m='HNTRWN' 
+    RETURN label
+
+### Sample Data (obsolete)
 
 Yago2s DB import12 must be imported first, otherwise resources won't `MATCH`.
 
@@ -399,15 +428,106 @@ Your heap (`-Xmx`) should be large, i.e. 75% of RAM.
 
 For more info, see (Neo4j Linux Performance Guide](http://neo4j.com/docs/stable/linux-performance-guide.html).
 
-## Import from Yago3 (Lumen Persistence v1.0.0)
+## PostgreSQL + Yago3-based databases (Lumen Persistence v1.0.0)
 
-Now we have a different structure, where each Yago logical knowledge is contained in its own graph database,
-and using OpenCog-friendly schema as much as possible.
+Now we have a different structure, knowledge is split between:
+ 
+1. a PostgreSQL database with multiple schemas containing multiple tables.
+    Schemas are:
+    
+    a. `public`
+    b. `lumen`
+    c. `sanad`
 
-1. `~/lumen_lumen_{tenantEnv}/lumen/taxonomy.neo4j`. Contains the entire `yagoTaxonomy.tsv`, plus the
-    `rdfs:label`, `skos:prefLabel`, `isPreferredMeaningOf` from `yagoLabels.tsv` of those mentioned types.
+    Note: Spring Data JPA is very slow for adding 100,000+ of relationships.
+    Without proper transaction management, `ImportYagoTaxonomy2App::linkSubclasses` still not finished after 1 hour!
+    Even after using native query but without transaction management, `ImportYagoTaxonomy2App::linkSubclasses` still hasn't
+    reached 10000 relationships after 6 minutes!
+    With proper transaction management, `ImportYagoTaxonomy2App::linkSubclasses` can do 5000 links/second.
+    (total is ~570K links)
+    With proper transaction management but Spring Data-style save, `ImportYagoTaxonomy2App::addLabels` (complete)
+    needs 40 seconds to do 10000 labels.
+    With proper transaction management and native query, `ImportYagoTaxonomy2App::addLabels` (complete)
+    needs 6 seconds per 10000 labels.
+    In total, PostgreSQL can do entirely (full labels) in ~6 minutes.
+    As comparison, Neo4j can do the entire `ImportYagoTaxonomyApp` (unpartitioned, simplified labels) in 3 minutes!
 
-## Steps to Import from Yago2s (Lumen Persistence v0.0.1)
+2. a Neo4j database with multiple partitions (using TinkerPop PartitionStrategy)
+   and using OpenCog-friendly schema as much as possible.
+
+Ready database files is available from Hendy Irawan:
+`hendywl\project_passport\lumen\persistence` (see `README.md` there)
+
+1. Thing labels (all partitions: yago+common+var) in PostgreSQL.
+   Table: `public.yagolabel`
+   (I tried YAGO's original PostgreSQL importer before and too slow to import even before adding indexes, e.g. `yagoSources.tsv`.
+   It doesn't even have a primary key!)
+   So we need to be selective and optimize (e.g. use `ENUM`).
+
+2. Things and taxonomy in Neo4j, label: `owl_Thing`, partitions: [`lumen_yago`, `lumen_common`, `lumen_var`].
+    Example:
+    
+        MATCH (y {_partition: 'lumen_yago'}) DETACH DELETE y
+        MATCH (v {_partition: 'lumen_var'}) DETACH DELETE v
+    
+        MERGE (hendy:owl_Thing {nn: 'lumen:Hendy_Irawan', _partition: 'lumen_var'}) // SET hendy.prefLabel='Hendy Irawan'
+        MERGE (person:owl_Thing {nn: 'yago:wordnet_person_100007846', _partition: 'lumen_yago'}) // SET person.prefLabel='person'
+        MERGE (hendy) -[:rdf_type]-> (person)
+
+### How to Import
+
+1. Edit `persistence/config/application.properties`, ensure `workspaceDir` is on the fast data drive
+   (and if you dual-boot, shared), e.g.
+   
+        workspaceDir=D:/lumen_lumen_${tenantEnv}
+
+2. (Optional) Set your Neo4j CE server VM configuration to `-Xmx4g` (in 16 GB system, 4 GB max heap is default)
+3. Import `SemanticProperty` nodes and links from `yagoSchema.tsv`.
+   This will `MERGE` `rdf_Property` nodes representing properties,
+   `owl_Thing` nodes (some are `rdfs:Resource` because we have stuff like `xsd:string` too) representing types.
+   Then `MERGE` links `rdf_Property` for `rdf:type` to `owl_Thing`.
+   Then `MERGE` links `rdf_Property` for `rdfs:domain` to `owl_Thing`.
+   Then `MERGE` links `rdf_Property` for `rdfs:range` to `owl_Thing`.
+   Then `MERGE` links `rdf_Property` for `rdfs:subPropertyOf` to super `rdf_Property`.
+
+4. Things taxonomy to Neo4j.
+    These will `MERGE` `owl:Thing` nodes for types from `yagoTaxonomy.tsv`. (~ 1 min on i7 + RAM 16 GB + SSD)
+    (`MERGE` is required here because importing `yagoSchema.tsv` created types too) 
+    These will `CREATE` `owl:Thing` nodes for all things from `yagoTypes.tsv`. (~ 6 mins on i7 + RAM 16 GB + SSD)
+    It will `CREATE` links `rdfs:subClassOf` between types. (~ 2 mins on i7 + RAM 16 GB + SSD)
+    It will `CREATE` links `rdf:type` between types and things (and other types). (~ 26 mins on i7 + RAM 16 GB + SSD)
+    Download these parts from https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/downloads/ :
+
+        yagoTaxonomy.csv
+        yagoTypes.csv
+        
+    For faster import, get the intermediate files from Hendy's: https://drive.google.com/open?id=0B9dx38a6NVxKWVprQWZwYi1heEE
+    and extract to `lumen/persistence` folder (will fill the `work` subfolder).
+
+5. YAGO3 labels to PostgreSQL.
+    These will add `rdfs:label`, `skos:prefLabel`, `yago:isPreferredMeaningOf`, `yago:hasGloss`, `yago:hasGivenName`, `yago:hasFamilyName`,
+    including metaphone, all indexed.
+    Download these parts from https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/downloads/ :
+
+        yagoLabels.tsv
+        yagoGeonamesGlosses.tsv
+        yagoDBpediaClasses.tsv
+        yagoMultilingualClassLabels.tsv
+
+    TODO: Importer
+
+## OBSOLETE: To be determined whether we use PostgreSQL or adapt the Neo4j to use partitioned style
+
+1. `~/lumen_lumen_{tenantEnv}/lumen/taxonomy.neo4j` (325 MB)
+       Contains the entire `yagoTaxonomy.tsv`, plus the
+       `rdfs:label`, `skos:prefLabel`, `isPreferredMeaningOf` from `yagoLabels.tsv` of those mentioned types.
+
+    `ImportYagoTaxonomyApp YAGO3_FOLDER` using `-Xmx4g`
+    Required input files: `yagoTaxonomy.tsv, yagoLabels.tsv`
+    Sample YAGO3_FOLDER: `D:\databank\yago3_work`
+    ~3 minutes on i7-6700HQ+16GB+SSD
+
+## OBSOLETE: Steps to Import from Yago2s (Lumen Persistence v0.0.1)
 
 This normally should not be required, and only used when database needs to be refreshed or there's a new Yago
 version.
@@ -454,3 +574,4 @@ Excluded Yago files are: (note: even if excluded, these can always be queried on
 7. `yagoMultilingualClassLabels.tsv`: 46 MiB, 787,650 statements. English ones are OK (at least for now, but we do need to say that "car" is "mobil" soon).
 8. `yagoGeonamesData.tsv`: 1.7 GiB, 32,216,600 statements. If you want exact lat-long for `yagoGeoEntity`s,
     you can already get the `geonamesEntityId` and look them up on Geonames DB.
+

@@ -1,0 +1,34 @@
+{
+  "@type": "PromptGenderTask",
+  "askSsmls": [
+    {"inLanguage": "id-ID", "object": "Kamu cowok apa cewek?", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "object": "Anda lelaki atau perempuan?", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "object": "Kamu pria atau wanita?", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "object": "Anda pria atau wanita?", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "object": "Apa jenis kelamin Anda?", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "object": "Jenis kelamin kamu apa?", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "object": "Lo cowok apa cewek?", "style": "SLANG"},
+    {"inLanguage": "en-US", "object": "Are you male or female?"}
+  ],
+  "utterancePatterns": [
+    {"pattern": "{gender}", "scope": "LOCAL"},
+    {"inLanguage": "id-ID", "pattern": "Saya {gender}"},
+    {"inLanguage": "id-ID", "pattern": "Aku {gender}", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Aq {gender}", "style": "SLANG"},
+    {"inLanguage": "id-ID", "pattern": "Gw {gender}", "style": "SLANG"},
+    {"inLanguage": "id-ID", "pattern": "Gue {gender}", "style": "SLANG"},
+    {"inLanguage": "id-ID", "pattern": "Jenis kelaminku {gender}", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Jenis kelamin aku {gender}", "style": "CASUAL"},
+    {"inLanguage": "id-ID", "pattern": "Jenis kelamin saya {gender}", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "pattern": "Jenis kelamin aq {gender}", "style": "SLANG"},
+    {"inLanguage": "id-ID", "pattern": "Jenis kelamin gue {gender}", "style": "SLANG"},
+    {"inLanguage": "id-ID", "pattern": "Jenis kelamin gw {gender}", "style": "SLANG"},
+    {"inLanguage": "en-US", "pattern": "My gender is {gender}", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "I am {gender}"},
+    {"inLanguage": "en-US", "pattern": "I'm {gender}", "style": "CASUAL"}
+  ],
+  "property": "yago:hasGender",
+  "outSlots": [
+    {"id": "gender", "thingTypes": ["yago:wordnet_sex_105006898"]}
+  ]
+}

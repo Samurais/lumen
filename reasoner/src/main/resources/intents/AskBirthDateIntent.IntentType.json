@@ -1,0 +1,18 @@
+{
+    "@type": "IntentType",
+    "id": "AskBirthDateIntent",
+    "slots": [
+        {
+            "id": "keyword",
+            "kind": "LITERAL",
+            "required": "true",
+            "literals": ["lahir"]
+        },
+        {
+            "id": "person",
+            "kind": "THING",
+            "required": "true",
+            "thingTypes": ["yago:wordnet_person_100007846"]
+        }
+    ]
+}

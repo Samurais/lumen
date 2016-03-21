@@ -1,0 +1,94 @@
+databaseChangeLog:
+  - changeSet:
+      id: persistence_1
+      author: ceefour
+      changes:
+        - sql: "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch"
+        - createTable:
+            schemaName: lumen
+            tableName: yagotype
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nn
+                  type: varchar(4000)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: preflabel
+                  type: varchar(4000)
+              - column:
+                  name: ispreferredmeaningof
+                  type: varchar(4000)
+              - column:
+                  name: hasgloss
+                  type: text
+        - createIndex:
+            indexName: ik_yagotype_preflabel
+            schemaName: lumen
+            tableName: yagotype
+            columns:
+              - name: preflabel
+        - createTable:
+            schemaName: lumen
+            tableName: yagolabel
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: type_id
+                  type: int
+                  constraints:
+                    nullable: false
+                    references: lumen.yagotype(id)
+                    foreignKeyName: fk_yagolabel_type_id
+              - column:
+                  name: inlanguage
+                  type: varchar(255)
+              - column:
+                  name: value
+                  type: varchar(4000)
+        - createIndex:
+            indexName: ik_yagolabel_type_id
+            schemaName: lumen
+            tableName: yagolabel
+            columns:
+              - name: type_id
+        - createIndex:
+            indexName: ik_yagolabel_inlanguage
+            schemaName: lumen
+            tableName: yagolabel
+            columns:
+              - name: inlanguage
+        - createTable:
+            schemaName: lumen
+            tableName: yagotype_superclasses
+            columns:
+              - column:
+                  name: yagotype_id
+                  type: int
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    references: lumen.yagotype(id)
+                    foreignKeyName: fk_yagotype_superclasses_yagotype_id
+              - column:
+                  name: superclass_yagotype_id
+                  type: int
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    references: lumen.yagotype(id)
+                    foreignKeyName: fk_yagotype_superclasses_superclass_yagotype_id

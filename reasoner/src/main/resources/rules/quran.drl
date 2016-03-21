@@ -5,7 +5,7 @@ import org.lskk.lumen.core.*
 import org.lskk.lumen.reasoner.*
 import org.lskk.lumen.reasoner.event.*
 import org.lskk.lumen.reasoner.expression.*
-import org.lskk.lumen.reasoner.goal.*
+import org.lskk.lumen.reasoner.intent.*
 import org.lskk.lumen.reasoner.story.*
 import org.lskk.lumen.reasoner.quran.*
 
@@ -22,7 +22,7 @@ end
 
 rule "Request Recite Verse from Quran"
 when
-    $goal : ReciteQuran()
+    $intent : ReciteQuran()
 then
-    quranSvc.recite($goal);
+    quranSvc.recite($intent);
 end

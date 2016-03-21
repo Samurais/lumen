@@ -1,14 +1,14 @@
 package org.lskk.lumen.reasoner.story;
 
-import org.lskk.lumen.reasoner.goal.Goal;
+import org.lskk.lumen.reasoner.intent.Intent;
 
 import java.util.UUID;
 
 /**
- * Goal that tells a story to a person.
+ * Intent that tells a story to a person.
  * Created by ceefour on 07/11/2015.
  */
-public class TellStory extends Goal {
+public class TellStory extends Intent {
     private UUID id = UUID.randomUUID();
     private String storyId;
     private Story story;

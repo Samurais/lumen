@@ -1,5 +1,10 @@
 # Lumen Reasoner
 
+## Requirement: Lumen Persistence
+
+Lumen Persistence (and its dataset) must be running and accessible via RabbitMQ.
+See `persistence/README.md` for how to install Lumen Persistence.
+
 ## Requirement: WordNet 3.0 and ind.zip
 
 1. Download WordNet 3.0 database from http://wordnetcode.princeton.edu/3.0/WNdb-3.0.tar.gz

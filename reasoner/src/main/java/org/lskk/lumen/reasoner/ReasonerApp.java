@@ -7,13 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
-@SpringBootApplication
-@Profile("reasonerApp")
+@SpringBootApplication(exclude = {GroovyTemplateAutoConfiguration.class})
+@Profile({"reasonerApp", "reasonerSocmedApp"})
 @Import(LumenCoreConfig.class)
 class ReasonerApp implements CommandLineRunner {
 
@@ -23,11 +24,6 @@ class ReasonerApp implements CommandLineRunner {
         new SpringApplicationBuilder(ReasonerApp.class)
                 .profiles("reasonerApp", "rabbitmq", "drools")
                 .run(args);
-    }
-
-    @Bean(destroyMethod = "close")
-    public CloseableHttpClient httpClient() {
-        return HttpClients.createSystem();
     }
 
     @Override

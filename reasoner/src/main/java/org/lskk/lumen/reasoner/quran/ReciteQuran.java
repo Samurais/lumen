@@ -1,9 +1,9 @@
 package org.lskk.lumen.reasoner.quran;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.http.annotation.Immutable;
-import org.lskk.lumen.reasoner.goal.Goal;
+import org.lskk.lumen.reasoner.intent.Intent;
+import org.lskk.lumen.reasoner.ux.Channel;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -12,11 +12,21 @@ import java.util.List;
  * before can be recited.
  * Created by ceefour on 16/11/2015.
  */
-public class ReciteQuran extends Goal {
+public class ReciteQuran extends Intent {
     private String upChapter;
     private String upVerses;
     private Integer chapterNumber;
     private List<Integer> verseNumbers;
+
+    public ReciteQuran() {
+    }
+
+    public ReciteQuran(String upChapter, int upVerse, @Nullable Channel<?> channel) {
+        super();
+        this.upChapter = upChapter;
+        this.upVerses = Integer.toString(upVerse);
+        this.setChannel(channel);
+    }
 
     /**
      * User-provided chapter name or number, free-form, e.g. "al-kahfi", "kahfi", "al kahfi", Arabic/Indonesian/English variants,

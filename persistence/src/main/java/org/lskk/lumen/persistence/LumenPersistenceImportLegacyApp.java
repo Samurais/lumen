@@ -351,7 +351,7 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
     }
 
     protected static final Logger log = LoggerFactory.getLogger(LumenPersistenceImportLegacyApp.class);
-    private static final String LUMEN_NAMESPACE = "http://lumen.lskk.ee.itb.ac.id/resource/";
+    private static final String LUMEN_NAMESPACE = "http://lumen.lskk.org/resource/";
     protected static final NumberFormat NUMBER = NumberFormat.getNumberInstance(Locale.US);
     /**
      * For tmpfs/SSD, set multithreaded to true

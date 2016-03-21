@@ -17,11 +17,12 @@ import org.lskk.lumen.reasoner.ReasonerException;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.event.SemanticMessage;
 import org.lskk.lumen.reasoner.event.UnrecognizedInput;
-import org.lskk.lumen.reasoner.goal.Goal;
+import org.lskk.lumen.reasoner.intent.Intent;
 import org.lskk.lumen.reasoner.ux.Channel;
 import org.mvel2.templates.TemplateRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
@@ -38,9 +39,11 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 /**
+ * Experimental: Not being used now, we now use {@link org.lskk.lumen.reasoner.activity.UtterancePattern}.
  * Created by ceefour on 10/28/15.
  */
 @Service
+@Profile("aiml")
 public class AimlService {
     public static final Locale INDONESIAN = Locale.forLanguageTag("id-ID");
     private static final Logger log = LoggerFactory.getLogger(AimlService.class);
@@ -312,29 +315,29 @@ public class AimlService {
             agentResponse.setStimuliLanguage(bestMatch.inLanguage);
             agentResponse.setMatchingTruthValue(bestMatch.truthValue);
 
-            // goal
-            final HashMap<String, Object> goalVars = new HashMap<>();
-            goalVars.put("groups", bestMatch.groups);
-            for (final GoalElement goalEl : bestMatch.category.getTemplate().getGoals()) {
-                final Goal goalObj;
+            // intent
+            final HashMap<String, Object> intentVars = new HashMap<>();
+            intentVars.put("groups", bestMatch.groups);
+            for (final IntentElement intentEl : bestMatch.category.getTemplate().getIntents()) {
+                final Intent intentObj;
                 try {
-                    final Class<Goal> goalClass = (Class<Goal>) AimlService.class.getClassLoader().loadClass(goalEl.getClazz());
-                    goalObj = goalClass.newInstance();
-                    goalObj.setChannel(channel);
-                    goalObj.setAvatarId(avatarId);
+                    final Class<Intent> intentClass = (Class<Intent>) AimlService.class.getClassLoader().loadClass(intentEl.getClazz());
+                    intentObj = intentClass.newInstance();
+                    intentObj.setChannel(channel);
+                    intentObj.setAvatarId(avatarId);
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-                    throw new ReasonerException(e, "Cannot create goal %s", goalEl);
+                    throw new ReasonerException(e, "Cannot create intent %s", intentEl);
                 }
-                for (final GoalElement.GoalProperty propDef : goalEl.getProperties()) {
-                    final Object value = TemplateRuntime.eval(propDef.getValueExpression(), goalVars);
+                for (final IntentElement.IntentProperty propDef : intentEl.getProperties()) {
+                    final Object value = TemplateRuntime.eval(propDef.getValueExpression(), intentVars);
                     try {
-                        PropertyUtils.setProperty(goalObj, propDef.getName(), value);
+                        PropertyUtils.setProperty(intentObj, propDef.getName(), value);
                     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                         throw new ReasonerException(e, "Cannot set %s.%s <- %s (from: %s)",
-                                goalObj.getClass().getSimpleName(), propDef.getName(), value, propDef.getValueExpression());
+                                intentObj.getClass().getSimpleName(), propDef.getName(), value, propDef.getValueExpression());
                     }
                 }
-                agentResponse.getInsertables().add(goalObj);
+                agentResponse.getInsertables().add(intentObj);
             }
 
             // sendToAvatar

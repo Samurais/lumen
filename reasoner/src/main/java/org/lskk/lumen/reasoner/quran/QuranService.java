@@ -3,18 +3,21 @@ package org.lskk.lumen.reasoner.quran;
 import com.google.common.collect.ImmutableList;
 import org.lskk.lumen.core.AudioObject;
 import org.lskk.lumen.core.CommunicateAction;
+import org.lskk.lumen.reasoner.activity.Scriptable;
+import org.lskk.lumen.reasoner.ux.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.Locale;
 
 /**
  * Created by ceefour on 29/11/2015.
  */
-@Service
+@Service @Scriptable
 public class QuranService {
     
     private static final Logger log = LoggerFactory.getLogger(QuranService.class);
@@ -37,8 +40,12 @@ public class QuranService {
         }
         reciteQuran.setVerseNumbers(ImmutableList.of(Integer.parseInt(reciteQuran.getUpVerses())));
     }
+
+    public CommunicateAction recite(String upChapter, int upVerse, @Nullable Channel<?> channel) {
+        return recite(new ReciteQuran(upChapter, upVerse, channel));
+    }
     
-    public void recite(ReciteQuran reciteQuran) {
+    public CommunicateAction recite(ReciteQuran reciteQuran) {
         try {
             log.info("I want to recite chapter {} verse {}", reciteQuran.getUpChapter(), reciteQuran.getUpVerses());
             resolve(reciteQuran);
@@ -67,9 +74,14 @@ public class QuranService {
             audioObject.setUrl(audioUrl);
             log.info("audioUrl={}", audioUrl);
             communicateAction.setAudio(audioObject);
-            reciteQuran.getChannel().express(reciteQuran.getAvatarId(), communicateAction, null);
+
+            if (null != reciteQuran.getChannel()) {
+                reciteQuran.getChannel().express(reciteQuran.getAvatarId(), communicateAction, null);
+            }
+            return communicateAction;
         } catch (Exception e) {
             log.error("Cannot recite " + reciteQuran, e);
         }
+        return null;
     }
 }

@@ -1,0 +1,13 @@
+{
+  "@type": "AffirmationTask",
+  "description": "Affirm unit conversion result.",
+  "autoPoll": true,
+  "expressions": [
+    {"inLanguage": "id-ID", "pattern": "{measure} setara dengan {converted}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "{measure} is equal to {converted}.", "style": "FORMAL"}
+  ],
+  "inSlots": [
+    {"id": "measure", "required": true, "thingTypes": ["yago:yagoQuantity"]},
+    {"id": "converted", "required": true, "thingTypes": ["yago:yagoQuantity"]}
+  ]
+}

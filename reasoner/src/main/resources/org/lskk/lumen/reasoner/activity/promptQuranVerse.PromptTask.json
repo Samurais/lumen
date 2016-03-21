@@ -1,0 +1,20 @@
+{
+  "@type": "PromptTask",
+  "askSsmls": [
+    {"inLanguage": "id-ID", "object": "Ayat berapa?", "style": "FORMAL"},
+    {"inLanguage": "id-ID", "object": "Al-Quran surat {chapter} ayat berapa?", "style": "FORMAL", "dependencies": ["chapter"]},
+    {"inLanguage": "en-US", "object": "Which verse?", "style": "FORMAL"},
+    {"inLanguage": "en-US", "object": "Which verse of Al-Quran chapter {chapter}?", "style": "FORMAL", "dependencies": ["chapter"]}
+  ],
+  "utterancePatterns": [
+    {"pattern": "{verse}", "scope": "LOCAL"},
+
+    {"pattern": "Ayat {verse}", "scope": "LOCAL"},
+    {"pattern": "Ayah {verse}", "scope": "LOCAL"},
+
+    {"inLanguage": "en-US", "pattern": "Verse {verse}", "scope": "LOCAL"}
+  ],
+  "outSlots": [
+    {"id": "verse", "thingTypes": ["xsd:integer"]}
+  ]
+}

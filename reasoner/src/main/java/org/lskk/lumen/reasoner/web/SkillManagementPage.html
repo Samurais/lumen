@@ -1,0 +1,19 @@
+<wicket:extend>
+<div layout:fragment="content" class="container">
+    <form class="row" wicket:id="form">
+        <div class="col-sm-3">
+            <h1>Skills</h1>
+            <p><button wicket:id="reloadBtn">Reload</button></p>
+            <div class="list-group">
+                <a wicket:id="skillsLv" class="list-group-item"><wicket:container wicket:id="id"></wicket:container></a>
+            </div>
+        </div>
+        <div class="col-sm-9" wicket:id="skillDiv">
+            <h2 wicket:id="id">quran</h2>
+            <p><strong wicket:id="name">name</strong>. <wicket:container wicket:id="description">description</wicket:container></p>
+
+            <div wicket:id="skillPanel"></div>
+        </div>
+    </form>
+</div>
+</wicket:extend>

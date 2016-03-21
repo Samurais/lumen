@@ -8,12 +8,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.joda.time.Duration;
 import org.lskk.lumen.core.CommunicateAction;
-import org.lskk.lumen.core.ImageObject;
-import org.lskk.lumen.core.SimpleTruthValue;
 import org.lskk.lumen.core.SocialChannel;
+import org.lskk.lumen.persistence.service.FactService;
 import org.lskk.lumen.reasoner.DroolsService;
 import org.lskk.lumen.reasoner.ReasonerException;
-import org.lskk.lumen.reasoner.aiml.AimlService;
+import org.lskk.lumen.reasoner.activity.InteractionSession;
+import org.lskk.lumen.reasoner.activity.ScriptRepository;
+import org.lskk.lumen.reasoner.activity.SessionManager;
+import org.lskk.lumen.reasoner.activity.TaskRepository;
 import org.lskk.lumen.reasoner.event.AgentResponse;
 import org.lskk.lumen.reasoner.nlp.NaturalLanguage;
 import org.lskk.lumen.reasoner.nlp.en.SentenceGenerator;
@@ -37,8 +39,6 @@ import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -59,8 +59,8 @@ public class ReasonerTwitterConfig {
     private Environment env;
     @Inject
     private ObjectMapper mapper;
-    @Inject
-    private AimlService aimlService;
+//    @Inject
+//    private AimlService aimlService;
     @Inject
     private ImgUr imgur;
     @Inject
@@ -77,6 +77,14 @@ public class ReasonerTwitterConfig {
     private DroolsService droolsService;
     @Inject
     private SocialJournalRepository socialJournalRepo;
+    @Inject
+    private SessionManager sessionManager;
+    @Inject
+    private FactService factService;
+    @Inject
+    private TaskRepository taskRepo;
+    @Inject
+    private ScriptRepository scriptRepo;
 
     @Bean
     public AgentRepository agentRepo() throws IOException {
@@ -117,15 +125,19 @@ public class ReasonerTwitterConfig {
         final DirectMessageHandler dmHandler = new DirectMessageHandler();
         dmHandler.setAuthorization(twitterAuthorization());
         final Twitter twitter = twitterFactory().getInstance(new AccessToken(twitterAuthorization().getAccessToken(), twitterAuthorization().getAccessTokenSecret()));
-        final Locale origLocale = Locale.US;
+//        final Locale origLocale = Locale.US;
         dmHandler.setOnDirectMessage(dm -> {
             final long startTime = System.currentTimeMillis();
             try {
                 final TwitterDirectMessageChannel twitterDmChannel = new TwitterDirectMessageChannel(
                         sentenceGenerator_en, sentenceGenerator_id,
                         twitter, imageObjectResolver, imgurConfig, dm.getSenderScreenName());
-                final AgentResponse resp = aimlService.process(origLocale, dm.getText(), twitterDmChannel, null, false);
-                droolsService.process(resp);
+                final InteractionSession session = sessionManager.getOrCreate(twitterDmChannel, avatarId);
+
+//                final AgentResponse resp = aimlService.process(origLocale, dm.getText(), twitterDmChannel, avatarId, false);
+//                droolsService.process(resp);
+
+                final AgentResponse resp = session.receiveUtteranceForResponse(Optional.empty(), dm.getText(), avatarId, factService, taskRepo, scriptRepo);
                 String replyDm;
                 if (!resp.getCommunicateActions().isEmpty()) {
                     //final CommunicateAction communicateAction = resp.getCommunicateActions();
@@ -155,7 +167,7 @@ public class ReasonerTwitterConfig {
 //                        replyDm += " " + uploaded.getLinks().getImgurPage();
                     }
                 } else {
-                    log.warn("AIML service cannot understand @{} {}: {}",
+                    log.warn("Parser cannot understand @{} {}: {}",
                             dm.getSenderScreenName(), dm.getSenderId(), dm.getText());
                     replyDm = "Sorry, I don't understand :(";
                 }
@@ -169,7 +181,7 @@ public class ReasonerTwitterConfig {
                 }
 
                 final SocialJournal socialJournal = new SocialJournal();
-                socialJournal.setFromResponse(origLocale, avatarId,
+                socialJournal.setFromResponse(resp.getStimuliLanguage(), avatarId,
                         dm.getText(), SocialChannel.TWITTER,
                         resp, Duration.millis(System.currentTimeMillis() - startTime));
                 socialJournalRepo.save(socialJournal);
@@ -203,8 +215,14 @@ public class ReasonerTwitterConfig {
                 final TwitterMentionChannel twitterMentionChannel = new TwitterMentionChannel(
                         sentenceGenerator_en, sentenceGenerator_id,
                         twitter, imageObjectResolver, imgurConfig, status.getUser().getScreenName(), status.getId());
-                final AgentResponse resp = aimlService.process(origLocale, realMessage, twitterMentionChannel, null, false);
-                droolsService.process(resp);
+                final InteractionSession session = sessionManager.getOrCreate(twitterMentionChannel, avatarId);
+
+//                final AgentResponse resp = aimlService.process(origLocale, realMessage, twitterMentionChannel, null, false);
+//                droolsService.process(resp);
+
+                final AgentResponse resp = session.receiveUtteranceForResponse(Optional.empty(), realMessage, avatarId, factService, taskRepo, scriptRepo);
+                String replyDm;
+
                 //final CommunicateAction communicateAction = resp.getCommunicateAction();
                 final String communicateActionsObject = resp.getCommunicateActions().stream()
                         .map(CommunicateAction::getObject).collect(Collectors.joining(" ")).trim();
@@ -233,7 +251,7 @@ public class ReasonerTwitterConfig {
                 }
 
                 final SocialJournal socialJournal = new SocialJournal();
-                socialJournal.setFromResponse(origLocale, avatarId,
+                socialJournal.setFromResponse(resp.getStimuliLanguage(), avatarId,
                         realMessage, SocialChannel.TWITTER,
                         resp, Duration.millis(System.currentTimeMillis() - startTime));
                 socialJournalRepo.save(socialJournal);

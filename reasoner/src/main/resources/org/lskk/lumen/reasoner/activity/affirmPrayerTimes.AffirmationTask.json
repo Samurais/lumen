@@ -1,0 +1,18 @@
+{
+  "@type": "AffirmationTask",
+  "description": "Affirm Islamic prayer times.",
+  "autoPoll": true,
+  "expressions": [
+    {"inLanguage": "id-ID", "pattern": "Waktu sholat {date} untuk kota {city} adalah: Subuh pukul {fajr}, Dhuhur pukul {dhuhr}, Asar pukul {asr}, Maghrib pukul {maghrib}, dan Isya pukul {isha}.", "style": "FORMAL"},
+    {"inLanguage": "en-US", "pattern": "Prayer times in {city} on {date} are: Subuh is at {fajr}, Dhuhr at {dhuhr}, Asr at {asr}, Maghrib at {maghrib}, and Isha at {isha}.", "style": "FORMAL"}
+  ],
+  "inSlots": [
+    {"id": "fajr", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "dhuhr", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "asr", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "maghrib", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "isha", "required": true, "thingTypes": ["xsd:time"]},
+    {"id": "city", "required": true, "thingTypes": ["xsd:string"], "initial": "Bandung"},
+    {"id": "date", "required": true, "thingTypes": ["xsd:date"]}
+  ]
+}

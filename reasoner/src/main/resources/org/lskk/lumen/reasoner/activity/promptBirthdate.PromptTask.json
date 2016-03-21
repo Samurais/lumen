@@ -1,0 +1,18 @@
+{
+  "@type": "PromptTask",
+  "askSsmls": [
+    {"inLanguage": "id-ID", "object": "kapan tanggal lahirmu?"},
+    {"inLanguage": "id-ID", "object": "kamu lahir tanggal berapa?"},
+    {"inLanguage": "en-US", "object": "when were you born?"}
+  ],
+  "utterancePatterns": [
+    {"pattern": "{birthdate}", "scope": "LOCAL"},
+    {"inLanguage": "id-ID", "pattern": "aku lahir tanggal {birthdate}"},
+    {"inLanguage": "id-ID", "pattern": "tanggal lahirku {birthdate}"},
+    {"inLanguage": "en-US", "pattern": "I was born on {birthdate}"}
+  ],
+  "property": "yago:wasBornOnDate",
+  "outSlots": [
+    {"id": "birthdate", "thingTypes": ["xs:date"]}
+  ]
+}

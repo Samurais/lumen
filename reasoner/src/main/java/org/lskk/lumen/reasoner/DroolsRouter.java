@@ -4,6 +4,7 @@ import org.apache.camel.builder.LoggingErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.kie.api.runtime.KieSession;
 import org.lskk.lumen.core.util.AsError;
+import org.lskk.lumen.core.util.ToJson;
 import org.lskk.lumen.reasoner.event.GreetingReceived;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +15,11 @@ import javax.inject.Inject;
 
 /**
  * Created by ceefour on 10/2/15.
+ * @deprecated Now uses {@link ReasonerRouter}
  */
 @Component
-@Profile("reasonerApp")
+@Profile({"reasonerApp", "reasonerSocmedApp"})
+@Deprecated
 public class DroolsRouter extends RouteBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(DroolsRouter.class);

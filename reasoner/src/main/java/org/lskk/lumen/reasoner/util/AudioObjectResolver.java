@@ -32,7 +32,8 @@ public class AudioObjectResolver {
 
         log.debug("Resolving audio {} ...", audioObject.getUrl());
         final Resource res = resourceResolver.getResource(audioObject.getUrl());
-        Preconditions.checkState(res.exists() && res.isReadable(), "%s does not exist or is not readable", res);
+        Preconditions.checkState(res.exists() && res.isReadable(),
+                "Cannot resolve AudioObject: %s does not exist or is not readable", res);
         final byte[] media = IOUtils.toByteArray(res.getURL());
         audioObject.setContent(media);
         if (audioObject.getContentType() == null) {

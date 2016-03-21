@@ -1,0 +1,9 @@
+{
+  "name": "Recite Quran Verse",
+  "description": "Recite specific chapter and verse from Al-Quranul Karim.",
+  "autoPoll": true,
+  "inSlots": [
+    {"id": "chapter", "thingTypes": ["xsd:string"], "required": true},
+    {"id": "verse", "thingTypes": ["xsd:integer"], "required": true}
+  ]
+}

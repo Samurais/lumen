@@ -1,5 +1,7 @@
 package org.lskk.lumen.reasoner.quran;
 
+import com.google.common.base.MoreObjects;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -98,16 +100,16 @@ public class QuranChapter implements Serializable {
 
     @Override
     public String toString() {
-        return "QuranChapter{" +
-                "id='" + id + '\'' +
-                ", canonicalSlug='" + canonicalSlug + '\'' +
-                ", name='" + name + '\'' +
-                ", slug='" + slug + '\'' +
-                ", author='" + author + '\'' +
-                ", inLanguage='" + inLanguage + '\'' +
-                ", chapterNum=" + chapterNum +
-                ", nameWithTashkeel='" + nameWithTashkeel + '\'' +
-                ", nameTransliteration_id='" + nameTransliteration_id + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this).omitNullValues()
+                .add("id", id)
+                .add("canonicalSlug", canonicalSlug)
+                .add("name", name)
+                .add("slug", slug)
+                .add("author", author)
+                .add("inLanguage", inLanguage)
+                .add("chapterNum", chapterNum)
+                .add("nameWithTashkeel", nameWithTashkeel)
+                .add("nameTransliteration_id", nameTransliteration_id)
+                .toString();
     }
 }
