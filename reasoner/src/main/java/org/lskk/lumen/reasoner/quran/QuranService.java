@@ -1,5 +1,6 @@
 package org.lskk.lumen.reasoner.quran;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.lskk.lumen.core.AudioObject;
 import org.lskk.lumen.core.CommunicateAction;
@@ -50,16 +51,21 @@ public class QuranService {
             log.info("I want to recite chapter {} verse {}", reciteQuran.getUpChapter(), reciteQuran.getUpVerses());
             resolve(reciteQuran);
             log.info("I want to see chapter {} verse {}", reciteQuran.getChapterNumber(), reciteQuran.getVerseNumbers());
-            QuranChapter quranChapter = quranChapterRepo.findOne("quran_" + reciteQuran.getChapterNumber());
+            final String quranChapterId = "quran_" + reciteQuran.getChapterNumber();
+            QuranChapter quranChapter = Preconditions.checkNotNull(
+                    quranChapterRepo.findOne(quranChapterId),
+                    "Cannot find QuranChapter '%s'", quranChapterId);
             log.info("I want to see quran chapter {}", quranChapter);
 
             final String quranChapterAndVerseId = "quran_" + reciteQuran.getChapterNumber() + "_verse_" + reciteQuran.getVerseNumbers().get(0);
-            final QuranVerse quranVerse = quranVerseRepo.findOne(quranChapterAndVerseId);
+            final QuranVerse quranVerse = Preconditions.checkNotNull(quranVerseRepo.findOne(quranChapterAndVerseId),
+                    "Cannot find QuranVerse '%s'", quranChapterAndVerseId);
 
             log.info("I want to see quran chapter and verse id {} quran verse {}", quranChapterAndVerseId, quranVerse);
             final String literalId = "quran_" + reciteQuran.getChapterNumber() + "_verse_" + reciteQuran.getVerseNumbers().get(0) + "_ind";
 
-            final Literal literal = literalRepo.findOne(literalId);
+            final Literal literal = Preconditions.checkNotNull(literalRepo.findOne(literalId),
+                    "Cannot find Literal '%s'", literalId);
             log.info("I want to see literal id {} Literal{}", literalId, literal);
 
             final CommunicateAction communicateAction = new CommunicateAction();

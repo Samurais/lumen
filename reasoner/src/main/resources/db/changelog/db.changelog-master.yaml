@@ -117,6 +117,7 @@ databaseChangeLog:
   - changeSet:
       id: 5
       author: ceefour
+      runOnChange: true
       changes:
         - sql:
-            "CREATE EXTENSION fuzzystrmatch"
+            "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch SCHEMA public"

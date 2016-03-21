@@ -11,8 +11,8 @@
 
         \copy sanad.quranchapter from 'quranchapter.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
         \copy sanad.literal from 'literal-quran.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
-        \copy sanad.quranverse from 'quranverse.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
         \copy sanad.transliteration from 'transliteration-quran.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
+        \copy sanad.quranverse from 'quranverse.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
         \copy sanad.spellingproperty from 'spellingproperty-quran.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
         \copy sanad.authenticityproperty from 'authenticityproperty-quran.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
         \copy sanad.successionproperty from 'successionproperty-quran.tsv' (format csv, delimiter E'\t', header true, escape E'\\', encoding 'UTF-8')
