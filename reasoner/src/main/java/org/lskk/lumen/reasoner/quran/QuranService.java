@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import java.util.Locale;
 
 /**
+ * logic utama dari aplikasi quran
  * Created by ceefour on 29/11/2015.
  */
 @Service @Scriptable

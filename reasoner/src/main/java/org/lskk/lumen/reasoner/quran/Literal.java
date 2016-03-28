@@ -9,6 +9,7 @@ import javax.persistence.Table;
 import java.io.Serializable;
 
 /**
+ * memetakan antara yang di java dan di table yang ada di database
  * Created by aina on 25/11/2015.
  */
 @Entity

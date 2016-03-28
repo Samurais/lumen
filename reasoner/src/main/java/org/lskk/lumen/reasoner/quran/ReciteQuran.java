@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
+ * event yang dikirimkan oleh modul reasoner ke modul quran, yang menandakan bahwa manusia ingin dibacakan quran
  * First, set user-provided chapter {@link #setUpChapter(String)} and verses {@link #setUpVerses(String)},
  * then resolve using {@link QuranService},
  * before can be recited.

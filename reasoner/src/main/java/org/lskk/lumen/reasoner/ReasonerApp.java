@@ -13,6 +13,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
+/**
+ * aplikasi utama untuk menjalankan modul reasoner
+ */
 @SpringBootApplication(exclude = {GroovyTemplateAutoConfiguration.class})
 @Profile({"reasonerApp", "reasonerSocmedApp"})
 @Import(LumenCoreConfig.class)
