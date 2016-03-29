@@ -5,6 +5,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 
 /**
+ *  tujuannya untuk melakukan manipulasi ditabel sesuai dengan entity, select, update, insert dan delete
  * Created by aina on 18/11/2015.
  */
 public interface QuranChapterRepository extends PagingAndSortingRepository<QuranChapter, String> {
