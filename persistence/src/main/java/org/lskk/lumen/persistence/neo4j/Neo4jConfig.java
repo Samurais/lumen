@@ -39,10 +39,11 @@ public class Neo4jConfig extends Neo4jConfiguration {
     @Inject
     protected Environment env;
 
-    @Override
-    public Neo4jServer neo4jServer() {
-        return new RemoteServer(env.getRequiredProperty("spring.neo4j.url"));
-    }
+//    @Override
+//    public Neo4jServer neo4jServer() {
+//        return new RemoteServer(env.getRequiredProperty("spring.neo4j.url"),
+//                env.getRequiredProperty("spring.neo4j.username"), env.getRequiredProperty("spring.neo4j.password"));
+//    }
 
 //    @Bean
 //    public org.neo4j.ogm.config.Configuration neo4jOgmConfiguration() {

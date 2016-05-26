@@ -250,7 +250,7 @@ public class ImportYagoTaxonomy1App implements CommandLineRunner {
     @Bean(destroyMethod = "shutdown")
     public GraphDatabaseService taxonomyDb() {
         log.info("Opening taxonomy DB: {} ...", taxonomyDbFolder);
-        return new GraphDatabaseFactory().newEmbeddedDatabase(taxonomyDbFolder.getPath());
+        return new GraphDatabaseFactory().newEmbeddedDatabase(taxonomyDbFolder);
     }
 
     /**

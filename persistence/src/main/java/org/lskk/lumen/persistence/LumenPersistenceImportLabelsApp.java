@@ -40,7 +40,7 @@ public class LumenPersistenceImportLabelsApp implements CommandLineRunner {
         log.info("Importing {} ({} KiB) to {} ...", file, NUMBER.format(DefaultGroovyMethods.asType(file.length() / 1024, Long.class)), dbPath);
         long importeds = 0l;
 
-        final BatchInserter inserter = BatchInserters.inserter(dbPath.getPath());
+        final BatchInserter inserter = BatchInserters.inserter(dbPath);
         try {
             final Label resourceLabel = DynamicLabel.label("Resource");
             final Label labelLabel = DynamicLabel.label("Label");

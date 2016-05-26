@@ -1,13 +1,12 @@
 package org.lskk.lumen.persistence;
 
-import com.opencsv.CSVParser;
-import com.opencsv.CSVReader;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterators;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVReader;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.sparql.util.NodeFactoryExtra;
@@ -156,21 +155,23 @@ public class LumenPersistenceImportLegacyApp implements CommandLineRunner {
                             // are only set as node properties but not as relationships meaning no factIds as well.
                             // Processed ONLY IF node didn't exist or node has no prefLabel.
                             // It will *not* create `rdfs_label` relationship.
-                            Node subjectGraphNode = Iterators.getNext(db.findNodesByLabelAndProperty(resourceLabel, "href", subjectHref).iterator(), null);
-                            if (subjectGraphNode == null || !subjectGraphNode.hasProperty("prefLabel")) {
-                                if (subjectGraphNode == null) {
-                                    subjectGraphNode = db.createNode(resourceLabel);
-                                    subjectGraphNode.setProperty("href", subjectHref);
-                                }
+                            try (final ResourceIterator<Node> nodes = db.findNodes(resourceLabel, "href", subjectHref)) {
+                                Node subjectGraphNode = nodes.stream().findAny().orElse(null);
+                                if (subjectGraphNode == null || !subjectGraphNode.hasProperty("prefLabel")) {
+                                    if (subjectGraphNode == null) {
+                                        subjectGraphNode = db.createNode(resourceLabel);
+                                        subjectGraphNode.setProperty("href", subjectHref);
+                                    }
 
-                                if (ImmutableSet.of("rdfs:label", "skos:prefLabel").contains(property)) {
-                                    subjectGraphNode.setProperty("prefLabel", literalValue);
-                                } else if ("<isPreferredMeaningOf>".equals(property)) {
-                                    subjectGraphNode.setProperty("isPreferredMeaningOf", literalValue);
+                                    if (ImmutableSet.of("rdfs:label", "skos:prefLabel").contains(property)) {
+                                        subjectGraphNode.setProperty("prefLabel", literalValue);
+                                    } else if ("<isPreferredMeaningOf>".equals(property)) {
+                                        subjectGraphNode.setProperty("isPreferredMeaningOf", literalValue);
+                                    }
+                                    importeds++;
                                 }
-                                importeds++;
                             }
-// otherwise ignored
+                            // otherwise ignored
                         } else {
                             LinkedHashMap<String, Object> map1 = new LinkedHashMap<String, Object>(1);
                             map1.put("v", literalValue);

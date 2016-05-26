@@ -1,7 +1,7 @@
 package org.lskk.lumen.persistence;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableMap;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -9,8 +9,8 @@ import org.apache.camel.spring.boot.CamelAutoConfiguration;
 import org.lskk.lumen.core.LumenProperty;
 import org.lskk.lumen.persistence.neo4j.PartitionKey;
 import org.lskk.lumen.persistence.neo4j.ThingRepository;
+import org.neo4j.ogm.model.Result;
 import org.neo4j.ogm.session.Session;
-import org.neo4j.ogm.session.result.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
