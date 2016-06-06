@@ -69,7 +69,7 @@ public class FactServiceImplWriteTest {
         final ThingLabel label4 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_hasGivenName.getQName(), "Hendy", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
         log.info("yago:hasGivenName = {}", label1);
-        final ThingLabel label5 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_hasFamilyName.getQName(), "Hendy", "id-ID", new float[]{1f, 1f},
+        final ThingLabel label5 = factService.assertLabel("lumen:Hendy_Irawan", LumenProperty.yago_hasFamilyName.getQName(), "Irawan", "id-ID", new float[]{1f, 1f},
                 new DateTime(), null);
         log.info("yago:hasFamilyName = {}", label1);
     }
